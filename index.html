@@ -65,7 +65,7 @@ body {
 
 .wrapper {
   width: 100%;
-  max-width: 560px;
+  max-width:560px;
   margin: 0 auto;
 }
 
@@ -787,6 +787,12 @@ let currentCat = "default";
 let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
 let currentCatName = "波波";
 
+// 監聽控制
+let waterUnsubscribe = null;
+let weightUnsubscribe = null;
+let dewormUnsubscribe = null;
+let medUnsubscribe = null;
+
 function initCatSystem(){
   renderCatSelect();
   switchCat();
@@ -806,10 +812,31 @@ function addNewCat(){
   document.getElementById("catSelect").value = id;
   switchCat();
 }
+
+// 關閉舊監聽 + 切換貓 + 重新監聽
 function switchCat(){
+  // 先取消舊的監聽
+  if(waterUnsubscribe) waterUnsubscribe();
+  if(weightUnsubscribe) weightUnsubscribe();
+  if(dewormUnsubscribe) dewormUnsubscribe();
+  if(medUnsubscribe) medUnsubscribe();
+
+  // 切換當前貓
   currentCat = document.getElementById("catSelect").value;
   const catObj = catList.find(c=>c.id === currentCat);
   currentCatName = catObj ? catObj.name : "貓咪";
+
+  // 清空畫面
+  recordData = [];
+  weightData = [];
+  dewormData = [];
+  medData = [];
+  renderPage();
+  renderWeight();
+  renderDeworm();
+  renderMedList();
+
+  // 重新監聽
   listenAllData();
 }
 
@@ -837,28 +864,29 @@ const { jsPDF } = window.jspdf;
 const pdfLib = window.pdfjsLib;
 pdfLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
 
+// 正確監聽 + 取消舊監聽
 function listenAllData(){
   waterCol = db.collection(`catWater_${currentCat}`);
-  medCol = db.collection(`catMed_${currentCat}`);
   weightCol = db.collection(`catWeight_${currentCat}`);
   dewormCol = db.collection(`catDeworm_${currentCat}`);
+  medCol = db.collection(`catMed_${currentCat}`);
 
-  waterCol.onSnapshot(snap=>{
+  waterUnsubscribe = waterCol.onSnapshot(snap=>{
     recordData=[]; snap.forEach(d=>recordData.push(d.data()));
     renderPage();
     document.getElementById("syncBadge").innerText="☁️ 已同步";
   });
-  medCol.onSnapshot(snap=>{
-    medData=[]; snap.forEach(d=>{let x=d.data();x.docId=d.id;medData.push(x);});
-    renderMedList();
-  });
-  weightCol.onSnapshot(snap=>{
+  weightUnsubscribe = weightCol.onSnapshot(snap=>{
     weightData=[]; snap.forEach(d=>weightData.push(d.data()));
     renderWeight();
   });
-  dewormCol.onSnapshot(snap=>{
+  dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
     renderDeworm();
+  });
+  medUnsubscribe = medCol.onSnapshot(snap=>{
+    medData=[]; snap.forEach(d=>{let x=d.data();x.docId=d.id;medData.push(x);});
+    renderMedList();
   });
 }
 
