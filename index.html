@@ -1176,9 +1176,7 @@ function calcStat(){
 
 function renderPage(){
   const d=document.getElementById("selectDate").value;
-  function renderPage(){
-  const d=document.getElementById("selectDate").value;
-  // 這行改成依時間排序，新的在上面
+  // 依時間排序，新的在上面
   const list=recordData.filter(x=>x.date===d)
     .sort((a,b)=>{
       if(a.time > b.time) return -1;
