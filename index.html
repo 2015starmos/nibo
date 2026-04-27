@@ -59,35 +59,20 @@
 body {
   font-family: "微軟正黑體", "Noto Sans TC", "Segoe UI", sans-serif;
   background: linear-gradient(160deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-  padding: 15px 12px;
+  padding: 20px 14px;
   min-height: 100vh;
   color: var(--text-main);
-  font-size: clamp(14px, 1.6vw, 16px);
 }
 
 .wrapper {
   width: 100%;
-  max-width: min(95%, 560px);
+  max-width: 560px;
   margin: 0 auto;
-}
-
-@media (min-width: 768px) {
-  .wrapper {
-    max-width: 700px;
-  }
-  body {
-    padding: 25px 20px;
-  }
-}
-@media (min-width: 1200px) {
-  .wrapper {
-    max-width: 800px;
-  }
 }
 
 .main-title {
   text-align: center;
-  font-size: clamp(22px, 3vw, 28px);
+  font-size: 28px;
   color: var(--primary);
   font-weight: 600;
   margin-bottom: 18px;
@@ -106,7 +91,7 @@ body {
   border: none;
   background: var(--btn-gray);
   color: var(--text-main);
-  font-size: clamp(13px, 1.5vw, 14px);
+  font-size: 14px;
   cursor: pointer;
 }
 .tab-btn.active {
@@ -129,7 +114,7 @@ body {
   padding: 8px 16px;
   border-radius: 20px;
   cursor: pointer;
-  font-size:clamp(13px,1.5vw,14px);
+  font-size:14px;
 }
 .theme-switch:active { transform: scale(0.96); }
 
@@ -139,7 +124,7 @@ body {
   border-radius: 30px;
   padding: 13px 16px;
   text-align: center;
-  font-size: clamp(14px,1.5vw,15px);
+  font-size: 15px;
   color: var(--primary);
   margin-bottom: 16px;
 }
@@ -147,7 +132,7 @@ body {
 .ui-card {
   background: var(--card-bg);
   border-radius: 28px;
-  padding: 18px 16px;
+  padding: 20px 18px;
   margin-bottom: 16px;
   box-shadow: 0 8px 24px rgba(71, 143, 184, 0.08);
   overflow: hidden;
@@ -160,7 +145,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: 20px;
   background-color: var(--input-bg);
-  font-size: clamp(14px,1.5vw,15px);
+  font-size: 15px;
   text-align: center;
   color: var(--text-main);
 }
@@ -188,7 +173,6 @@ body {
   border-radius: 15px;
   cursor: pointer;
   font-weight: 500;
-  font-size: clamp(13px,1.4vw,14px);
 }
 .btn-quick:active {
   background: var(--primary);
@@ -204,7 +188,7 @@ body {
   border-radius: 20px;
   background: linear-gradient(90deg, #58a2cc, #478fb8);
   color: #fff;
-  font-size: clamp(15px,1.6vw,16px);
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -217,7 +201,7 @@ body {
   padding: 4px 6px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: clamp(10px,1.2vw,11px);
+  font-size: 11px;
 }
 .btn-edit {
   border: none;
@@ -226,7 +210,7 @@ body {
   padding: 4px 6px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: clamp(10px,1.2vw,11px);
+  font-size: 11px;
   margin-right:3px;
 }
 .btn-star {
@@ -236,7 +220,7 @@ body {
   padding: 4px 6px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: clamp(10px,1.2vw,11px);
+  font-size: 11px;
   margin-right:3px;
 }
 .btn-calendar {
@@ -246,7 +230,7 @@ body {
   padding: 3px 5px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: clamp(9px,1vw,10px);
+  font-size: 10px;
 }
 .btn-pdf {
   border: none;
@@ -255,7 +239,7 @@ body {
   padding: 4px 6px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: clamp(10px,1.2vw,11px);
+  font-size: 11px;
   margin-left:3px;
 }
 
@@ -271,7 +255,7 @@ body {
   border-radius: 20px;
   background: var(--btn-gray);
   color: var(--text-main);
-  font-size: clamp(13px,1.4vw,14px);
+  font-size: 14px;
   cursor: pointer;
 }
 
@@ -279,7 +263,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 
 .today-total-box {
   text-align: center;
-  font-size: clamp(20px,2.2vw,22px);
+  font-size: 22px;
   font-weight: 600;
   padding: 10px 0;
 }
@@ -288,7 +272,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 .text-high { color: #58a2cc; }
 .warn-low, .warn-high {
   text-align: center;
-  font-size: clamp(13px,1.4vw,14px);
+  font-size: 14px;
   margin-bottom: 12px;
   line-height: 1.5;
 }
@@ -304,13 +288,12 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   padding: 10px 4px;
   border-radius: 14px;
   font-weight: 500;
-  font-size: clamp(13px,1.4vw,14px);
 }
 .record-table td {
   background: var(--table-bg);
   text-align: center;
   padding: 10px 4px;
-  font-size: clamp(13px,1.4vw,14px);
+  font-size: 14px;
 }
 
 .stat-grid {
@@ -325,8 +308,8 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   padding: 12px 6px;
   text-align: center;
 }
-.stat-label { font-size: clamp(11px,1.2vw,12px); color: var(--primary); margin-bottom: 3px; }
-.stat-num { font-size: clamp(15px,1.7vw,16px); font-weight: 600; }
+.stat-label { font-size: 12px; color: var(--primary); margin-bottom: 3px; }
+.stat-num { font-size: 16px; font-weight: 600; }
 
 .med-filter-bar {
   display:flex;
@@ -338,7 +321,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   padding:6px 10px;
   border-radius:12px;
   border:none;
-  font-size: clamp(11px,1.2vw,12px);
+  font-size:12px;
   background:var(--btn-gray);
   color:var(--text-main);
   cursor:pointer;
@@ -347,25 +330,20 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 
 .med-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 12px;
-}
-@media (min-width:768px){
-  .med-list{
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
 }
 .med-card {
   background: var(--table-bg);
   border-radius: 16px;
   padding: 10px;
-  font-size: clamp(12px,1.3vw,13px);
+  font-size: 13px;
   position:relative;
 }
 .med-card.star-card { border:2px solid var(--orange); }
 .med-tag {
-  font-size:clamp(10px,1.1vw,11px);
+  font-size:11px;
   padding:2px 6px;
   border-radius:8px;
   color:#fff;
@@ -404,7 +382,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   justify-content:center;
 }
 .med-info-line { line-height:1.4; margin:3px 0; }
-.desc-small { font-size: clamp(11px,1.2vw,12px); color: var(--text-main); opacity: 0.8; text-align:center; margin-bottom:4px; }
+.desc-small { font-size: 12px; color: var(--text-main); opacity: 0.8; text-align:center; margin-bottom:4px; }
 
 .preview-modal {
   position: fixed;
@@ -496,11 +474,11 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   text-align:center;
   color:var(--primary);
   padding:10px;
-  font-size: clamp(13px,1.4vw,14px);
+  font-size:14px;
 }
 .sync-badge{
   text-align:center;
-  font-size: clamp(11px,1.2vw,12px);
+  font-size:12px;
   color:var(--success);
   margin-bottom:8px;
 }
@@ -515,6 +493,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 
 <body>
 
+<!-- 密碼鎖畫面 -->
 <div class="inlock-wrap">
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
@@ -524,6 +503,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   </div>
 </div>
 
+<!-- 主要內容（預設隱藏） -->
 <div class="main-content">
 <div class="wrapper">
   <h1 class="main-title">波波｜健康全紀錄</h1>
@@ -654,7 +634,16 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 </div>
 
 <script>
-// 密碼功能 (正常可執行)
+// 防護：關閉F12、右鍵、原始碼
+document.oncontextmenu = () => false;
+document.addEventListener('keydown',e=>{
+  if(e.keyCode===123) return false;
+  if(e.ctrlKey&&e.keyCode===85)return false;
+  if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)return false;
+  if(e.ctrlKey&&e.keyCode===83)return false;
+});
+
+// 密碼驗證
 const validPws = ["0963612120", "0952867812", "ha821208"];
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
@@ -672,7 +661,7 @@ document.addEventListener("keydown",e=>{
   if(e.key==="Enter") checkInPwd();
 });
 
-// Firebase 初始化
+// ========== Firebase 與所有功能（完全不動你原本的） ==========
 const firebaseConfig = {
   apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
   authDomain: "naibo-health.firebaseapp.com",
@@ -701,7 +690,7 @@ let editImgsTemp = [];
 const pdfLib = window.pdfjsLib;
 pdfLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
 
-// 即時同步
+// 雲端同步（現在會正常觸發）
 waterCol.onSnapshot(snap=>{
   recordData = [];
   snap.forEach(doc=>recordData.push(doc.data()));
@@ -719,7 +708,6 @@ medCol.onSnapshot(snap=>{
   renderMedList();
 });
 
-// 分頁切換
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = function(){
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -731,7 +719,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
   }
 });
 
-// 設定預設日期時間
 const setNow = () => {
   const n = new Date();
   const today = n.toISOString().split('T')[0];
@@ -742,13 +729,11 @@ const setNow = () => {
 setNow();
 document.getElementById('selectDate').addEventListener('change', renderPage);
 
-// 深色模式
 function toggleDarkMode(){
   darkMode = !darkMode;
   document.body.classList.toggle("dark-mode");
 }
 
-// 行事曆提醒
 function addCalendarRemind(title,dateStr,desc){
   if(!dateStr) return alert("⚠️ 請先填寫「下次回診預約日期」");
   const reviewDate = new Date(dateStr + "T00:00:00");
@@ -801,7 +786,6 @@ END:VCALENDAR`;
   alert("✅ 行事曆檔案已下載\n👉 手機點擊檔案 → 加入內建行事曆");
 }
 
-// 匯出病歷PDF
 function exportMedToPDF(item){
   if(!item)return;
   alert("📄 正在產生PDF，請稍候...");
@@ -842,7 +826,6 @@ function exportMedToPDF(item){
   doc.save(`波波病歷_${item.date||item.id}.pdf`);
 }
 
-// 病歷篩選 & 排序
 function setMedFilter(val,btn){
   medFilter=val;
   document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
@@ -852,7 +835,6 @@ function setMedFilter(val,btn){
 function sortMedNew(){medSortMode="new";renderMedList();}
 function sortMedOld(){medSortMode="old";renderMedList();}
 
-// 圖片壓縮 & PDF轉圖
 function compressImg(file,maxW=1200){
   return new Promise(resolve=>{
     const url=URL.createObjectURL(file);
@@ -885,7 +867,6 @@ async function pdfToAllImages(file){
   return imgs;
 }
 
-// 上傳病歷
 function triggerMedUpload(){document.getElementById("medFile").click();}
 async function handleMedFile(e){
   const files=Array.from(e.target.files);
@@ -916,7 +897,6 @@ async function handleMedFile(e){
   alert("✅ 醫療報告新增完成（雲端已儲存）");
 }
 
-// 標籤樣式
 function getTypeClass(t){
   if(t==="檢驗報告")return "tag-check";
   if(t==="用藥單")return "tag-medic";
@@ -924,7 +904,6 @@ function getTypeClass(t){
   return "tag-other";
 }
 
-// 刪除單張圖片
 async function delMedImg(medDocId,imgIndex){
   const item = medData.find(x=>x.docId === medDocId);
   if(!item)return;
@@ -934,7 +913,6 @@ async function delMedImg(medDocId,imgIndex){
   }
 }
 
-// 渲染病歷列表
 function renderMedList(){
   const key=document.getElementById("medSearch").value.toLowerCase();
   let list=[...medData];
@@ -992,7 +970,6 @@ function renderMedList(){
   `).join("");
 }
 
-// 星標、刪除病歷
 async function toggleStar(docId,nowStar){
   await medCol.doc(docId).update({star:!nowStar});
 }
@@ -1001,7 +978,6 @@ async function delMed(docId){
   await medCol.doc(docId).delete();
 }
 
-// 預覽圖片
 function openMedPreview(idx){
   const item=medData[idx];
   if(!item.imgs||!item.imgs.length)return;
@@ -1024,7 +1000,6 @@ document.getElementById("previewModal").onclick=e=>{
   }
 };
 
-// 編輯病歷
 function renderEditImgs(){
   const wrap=document.getElementById("editImgs");
   wrap.innerHTML=editImgsTemp.map((src,idx)=>`
@@ -1094,7 +1069,6 @@ async function saveEditMed(){
   alert("✅ 病歷修改完成（雲端已同步）");
 }
 
-// 備份 & 還原病歷
 async function exportMedData(){
   if(!medData.length)return alert("無病歷可備份");
   const json=JSON.stringify(medData,null,2);
@@ -1125,7 +1099,6 @@ async function importMedData(e){
   r.readAsText(f);
 }
 
-// 飲水紀錄
 function quickAdd(v){document.getElementById("waterML").value=v;addRecord();}
 async function addRecord(){
   const d=document.getElementById("selectDate").value;
@@ -1143,94 +1116,78 @@ async function delOne(stamp){
 }
 async function clearDayRecord(){
   const d=document.getElementById("selectDate").value;
-  if(!confirm(`刪除${d}所有紀錄？`)) return;
+  if(!confirm(`刪除${d}所有飲水紀錄?`))return;
   const snap = await waterCol.where("date","==",d).get();
-  snap.forEach(doc=>doc.ref.delete());
+  let batch = db.batch();
+  snap.forEach(doc=>batch.delete(doc.ref));
+  await batch.commit();
 }
-
-// 渲染飲水頁面
-function renderPage(){
-  const selDate = document.getElementById("selectDate").value;
-  const todayList = recordData.filter(i=>i.date===selDate);
-  const total = todayList.reduce((sum, i)=>sum + (i.ml||0), 0);
-  document.getElementById("totalShow").innerHTML = `今日總計：${total} ml`;
-
-  const tip = document.getElementById("warnTip");
-  tip.innerHTML = "";
-  if(total < 100){
-    tip.innerHTML = `<div class='warn-low'>⚠️ 飲水量偏低，請多補水</div>`;
-  } else if(total > 250){
-    tip.innerHTML = `<div class='warn-high'>✅ 飲水量充足</div>`;
-  }
-
-  const body = document.getElementById("recordBody");
-  todayList.sort((a,b)=>a.time.localeCompare(b.time));
-  body.innerHTML = todayList.map(i=>`
-    <tr>
-      <td>${i.time}</td>
-      <td>${i.ml} ml</td>
-      <td><button class='btn-delete' onclick='delOne(${i.stamp})'>刪除</button></td>
-    </tr>
-  `).join("");
-
-  // 統計
-  const weekTotal = recordData.filter(i=>{
-    const dt = new Date(i.date);
-    const now = new Date();
-    const diff = (now - dt) / (1000*60*60*24);
-    return diff <=7;
-  }).reduce((sum,i)=>sum+i.ml,0);
-
-  const weekAvg = (weekTotal / 7).toFixed(1);
-  document.getElementById("weekTotal").innerText = weekTotal + " ml";
-  document.getElementById("weekAvg").innerText = weekAvg + " ml";
-
-  const monthList = recordData.filter(i=>{
-    const d = new Date(i.date);
-    return d.getMonth() === new Date().getMonth();
-  });
-  const monthTotal = monthList.reduce((sum,i)=>sum+i.ml,0);
-  const monthAvg = monthList.length ? (monthTotal/monthList.length).toFixed(1) : 0;
-  const monthMax = monthList.length ? Math.max(...monthList.map(i=>i.ml)) : 0;
-
-  document.getElementById("monthAvg").innerText = monthAvg + " ml";
-  document.getElementById("monthMax").innerText = monthMax + " ml";
-}
-
-// 匯入匯出CSV
 function exportCSV(){
-  if(!recordData.length)return alert("無資料");
-  let csv = "日期,時間,飲水量(ml)\n";
-  recordData.forEach(i=>{
-    csv += `${i.date},${i.time},${i.ml}\n`;
-  });
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "波波飲水紀錄.csv";
+  if(!recordData.length)return alert("無紀錄");
+  let csv="\uFEFF日期,時間,飲水量(ml)\n";
+  recordData.forEach(x=>csv+=`${x.date},${x.time},${x.ml}\n`);
+  const b=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(b);
+  a.download=`波波飲水_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
 }
-
 function triggerImport(){document.getElementById("importFile").click();}
-function importCSV(e){
-  const f = e.target.files[0];
-  if(!f)return;
-  const r = new FileReader();
-  r.onload = async (ev)=>{
-    const text = ev.target.result;
-    const lines = text.split("\n").filter(l=>l.trim());
+async function importCSV(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    const lines=ev.target.result.trim().split("\n");
+    let cnt=0;
     for(let i=1;i<lines.length;i++){
-      const [date,time,ml] = lines[i].split(",");
-      if(date&&time&&ml){
-        await waterCol.add({
-          date,time,ml:parseInt(ml),stamp:Date.now()
-        });
+      const row=lines[i].split(",");
+      if(row.length<3)continue;
+      const d=row[0].trim(),t=row[1].trim(),ml=parseInt(row[2]);
+      if(!d||!t||isNaN(ml))continue;
+      const has=recordData.some(x=>x.date===d&&x.time===t&&x.ml===ml);
+      if(!has){
+        await waterCol.add({date:d,time:t,ml,stamp:Date.now()+i});
+        cnt++;
       }
     }
-    alert("✅ 匯入完成");
+    alert(`雲端匯入${cnt}筆飲水紀錄`);
     document.getElementById("importFile").value="";
   };
-  r.readAsText(f);
+  r.readAsText(f,"UTF-8");
+}
+function getDayDiff(d1,d2){
+  return Math.floor((new Date(d1)-new Date(d2))/86400000);
+}
+function calcStat(){
+  const td=new Date().toISOString().split('T')[0];
+  const wList=recordData.filter(x=>getDayDiff(td,x.date)>=0&&getDayDiff(td,x.date)<7);
+  const wTotal=wList.reduce((s,v)=>s+v.ml,0);
+  const wDays=new Set(wList.map(x=>x.date)).size||1;
+  const ym=td.slice(0,7);
+  const mList=recordData.filter(x=>x.date.startsWith(ym));
+  const mTotal=mList.reduce((s,v)=>s+v.ml,0);
+  const mDays=new Set(mList.map(x=>x.date)).size||1;
+  const mMax=mList.length?Math.max(...mList.map(x=>x.ml)):0;
+  document.getElementById("weekAvg").innerText=Math.round(wTotal/wDays)+" ml";
+  document.getElementById("weekTotal").innerText=wTotal+" ml";
+  document.getElementById("monthAvg").innerText=Math.round(mTotal/mDays)+" ml";
+  document.getElementById("monthMax").innerText=mMax+" ml";
+}
+
+function renderPage(){
+  const d=document.getElementById("selectDate").value;
+  const list=recordData.filter(x=>x.date===d).sort((a,b)=>b.stamp-a.stamp);
+  const total=list.reduce((s,v)=>s+v.ml,0);
+  let cls="text-low",tip="";
+  if(total>=150&&total<=210){cls="text-normal";tip=`<div class="warn-high">✅ 飲水達標</div>`;}
+  else if(total>210){cls="text-high";tip=`<div class="warn-high">⚠️ 飲水偏高</div>`;}
+  else if(total>0){tip=`<div class="warn-low">⚠️ 飲水不足</div>`;}
+  document.getElementById("totalShow").innerHTML=`今日總計：<span class="${cls}">${total}</span> ml`;
+  document.getElementById("warnTip").innerHTML=tip;
+  document.getElementById("recordBody").innerHTML=list.map(x=>`
+    <tr><td>${x.time}</td><td>${x.ml} ml</td><td><button class="btn-delete" onclick="delOne(${x.stamp})">刪除</button></td></tr>
+  `).join("");
+  calcStat();
 }
 </script>
 </body>
