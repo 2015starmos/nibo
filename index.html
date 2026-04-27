@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no">
-<title>小貓醫療紀錄系統(增強版)</title>
+<title>小貓醫療紀錄系統</title>
 
 <style>
 /* 內嵌密碼鎖 不彈窗 */
@@ -12,7 +12,6 @@
 .inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
 .inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
 .inlock-input{width:100%;padding:13px 16px;border:1px solid #dce9f2;border-radius:18px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:10px;}
-.remember-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;font-size:14px;color:var(--text-main);}
 .inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
@@ -78,131 +77,6 @@ body {
   font-weight: 600;
   margin-bottom: 12px;
   letter-spacing: 1px;
-}
-
-/* 寵物照片 */
-.pet-photo-area {
-  text-align: center;
-  margin-bottom: 14px;
-}
-.pet-img-frame {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background: var(--input-bg);
-  margin: 0 auto;
-  overflow: hidden;
-  border: 3px solid var(--primary-light);
-  position: relative;
-}
-.pet-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.upload-pet-photo {
-  margin-top: 8px;
-  font-size: 13px;
-  color: var(--primary);
-  cursor: pointer;
-}
-
-/* 寵物資料卡片 */
-.pet-info-card {
-  background: var(--card-bg);
-  border-radius: 28px;
-  padding: 20px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(71, 143, 184, 0.08);
-}
-.pet-info-title {
-  text-align: center;
-  font-size: 18px;
-  color: var(--primary);
-  font-weight: 600;
-  margin-bottom: 14px;
-}
-.pet-info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.pet-info-item {
-  background: var(--input-bg);
-  padding: 10px;
-  border-radius: 16px;
-  text-align: center;
-}
-.pet-info-label {
-  font-size: 12px;
-  color: var(--primary);
-  margin-bottom: 4px;
-}
-.pet-info-value {
-  font-size: 15px;
-  font-weight: 500;
-}
-.pet-desc {
-  background: var(--input-bg);
-  padding: 12px;
-  border-radius: 16px;
-  margin-top: 10px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-.pet-btn-group {
-  display: flex;
-  gap: 10px;
-  margin-top: 14px;
-}
-.btn-pet {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 18px;
-  background: var(--primary);
-  color: #fff;
-  cursor: pointer;
-  font-size: 14px;
-}
-.btn-pet-outline {
-  flex: 1;
-  padding: 12px;
-  border: 1px solid var(--primary);
-  background: transparent;
-  color: var(--primary);
-  border-radius: 18px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-/* 寵物編輯彈窗 */
-.pet-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.8);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 20px;
-}
-.pet-modal.show {
-  display: flex;
-}
-.pet-modal-box {
-  width: 100%;
-  max-width: 480px;
-  background: var(--card-bg);
-  border-radius: 24px;
-  padding: 24px;
-}
-.modal-title {
-  text-align: center;
-  font-size: 18px;
-  color: var(--primary);
-  margin-bottom: 16px;
-  font-weight: 600;
 }
 
 .cat-selector {
@@ -413,7 +287,7 @@ body {
   cursor: pointer;
 }
 
-input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { display: none; }
+input#importFile, input#medFile, input#editMedFile { display: none; }
 
 .today-total-box {
   text-align: center;
@@ -531,7 +405,9 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
   border:none;
   font-size:14px;
   cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .med-info-line { line-height:1.4; margin:3px 0; }
 .desc-small { font-size: 12px; color: var(--text-main); opacity: 0.8; text-align:center; margin-bottom:4px; }
@@ -548,14 +424,12 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
   justify-content: center;
   z-index: 999;
   padding: 15px;
-  touch-action: manipulation;
 }
 .preview-modal.show { display: flex; }
 .preview-img {
   max-width: 100%;
   max-height: 88vh;
   border-radius: 12px;
-  object-fit: contain;
 }
 .preview-btn {
   position:absolute;
@@ -567,6 +441,7 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
   border:none;
   background:rgba(255,255,255,0.2);
   color:#fff;
+  font-size:18px;
   z-index:10;
 }
 .prev-left { left:10px; }
@@ -577,13 +452,15 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
   inset:0;
   background:rgba(0,0,0,0.8);
   display:none;
-  align-items:center;justify-content:center;
+  align-items:center;
+  justify-content:center;
   z-index:1000;
   padding:15px;
 }
 .edit-modal.show { display:flex; }
 .edit-box {
-  width:100%;max-width:480px;
+  width:100%;
+  max-width:480px;
   background:var(--card-bg);
   border-radius:24px;
   padding:20px;
@@ -599,21 +476,26 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
   aspect-ratio:1;
 }
 .edit-img {
-  width:100%;height:100%;
+  width:100%;
+  height:100%;
   object-fit:cover;
   border-radius:8px;
 }
 .edit-img-del {
   position:absolute;
-  top:2px;right:2px;
-  width:20px;height:20px;
+  top:2px;
+  right:2px;
+  width:20px;
+  height:20px;
   border-radius:50%;
   background:var(--danger);
   color:#fff;
   border:none;
   font-size:12px;
   cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .loading-text {
@@ -628,22 +510,11 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
   color:var(--success);
   margin-bottom:8px;
 }
-
-.ins-expire-good {color:var(--success);font-weight:bold;}
-.ins-expire-warn {color:var(--warn);font-weight:bold;}
-.ins-expire-danger {color:var(--danger);font-weight:bold;}
-
-/* 列印專用 */
-@media print {
-  body * { visibility: hidden; }
-  #printArea, #printArea * { visibility: visible; }
-  #printArea { position: absolute; top: 0; left: 0; width: 100%; }
-}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
@@ -655,10 +526,6 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
   <div class="inlock-box">
     <div class="inlock-title">🔐 寵物健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
-    <div class="remember-row">
-      <input type="checkbox" id="rememberPwd">
-      <label for="rememberPwd">記住密碼（下次自動登入）</label>
-    </div>
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
   </div>
@@ -667,136 +534,25 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
 <!-- 主要內容（預設隱藏） -->
 <div class="main-content">
 <div class="wrapper">
-  <h1 class="main-title">🐾 寵物健康全紀錄(增強版)</h1>
+  <h1 class="main-title">🐾 寵物健康全紀錄</h1>
   <div class="sync-badge" id="syncBadge">☁️ 雲端同步連線中...</div>
   <button class="theme-switch" onclick="toggleDarkMode()">🌓 切換深色模式</button>
 
   <!-- 貓咪切換 -->
   <div class="cat-selector">
     <select class="cat-select" id="catSelect" onchange="switchCat()"></select>
-    <button class="cat-add-btn" onclick="addNewCat()">+ 新增寵物</button>
+    <button class="cat-add-btn" onclick="addNewCat()">+ 新增貓咪</button>
   </div>
 
   <div class="tab-wrap">
-    <button class="tab-btn active" data-tab="home">🏠 首頁（寵物資料）</button>
-    <button class="tab-btn" data-tab="water">💧 飲水</button>
-    <button class="tab-btn" data-tab="weight">⚖️ 體重</button>
-    <button class="tab-btn" data-tab="deworm">🪲 驅蟲</button>
-    <button class="tab-btn" data-tab="medical">🏥 病歷</button>
-  </div>
-
-  <!-- 首頁：寵物資料 + 保險 + 飼料 + 醫院 -->
-  <div class="tab-content active" id="tab-home">
-    <!-- 寵物照片 -->
-    <div class="pet-photo-area">
-      <div class="pet-img-frame">
-        <img id="petPhotoImg" class="pet-img" src="">
-      </div>
-      <label class="upload-pet-photo" onclick="document.getElementById('petPhotoInput').click()">更換寵物照片</label>
-      <input type="file" id="petPhotoInput" accept="image/*" onchange="uploadPetPhoto(event)">
-    </div>
-
-    <!-- 寵物基本資料 -->
-    <div class="pet-info-card" id="petInfoCard">
-      <div class="pet-info-title">📋 寵物基本資料</div>
-      <div class="pet-info-grid">
-        <div class="pet-info-item">
-          <div class="pet-info-label">寵物名</div>
-          <div class="pet-info-value" id="petName">-</div>
-        </div>
-        <div class="pet-info-item">
-          <div class="pet-info-label">品種</div>
-          <div class="pet-info-value" id="petBreed">-</div>
-        </div>
-        <div class="pet-info-item">
-          <div class="pet-info-label">生日</div>
-          <div class="pet-info-value" id="petBirth">-</div>
-        </div>
-        <div class="pet-info-item">
-          <div class="pet-info-label">晶片號</div>
-          <div class="pet-info-value" id="petChip">-</div>
-        </div>
-        <div class="pet-info-item">
-          <div class="pet-info-label">毛色</div>
-          <div class="pet-info-value" id="petColor">-</div>
-        </div>
-        <div class="pet-info-item">
-          <div class="pet-info-label">飼主</div>
-          <div class="pet-info-value" id="petOwner">-</div>
-        </div>
-      </div>
-      <div class="pet-desc" id="petDesc">無備註</div>
-      <div class="pet-btn-group">
-        <button class="btn-pet-outline" onclick="openEditPetModal()">編輯資料</button>
-        <button class="btn-pet" onclick="deletePet()">刪除寵物</button>
-      </div>
-    </div>
-
-    <!-- 一鍵功能 -->
-    <div class="ui-card">
-      <div class="pet-info-title">⚡ 快速功能</div>
-      <div class="btn-row">
-        <button class="btn-export" onclick="exportPetData()">📤 匯出寵物資料</button>
-        <button class="btn-import" onclick="printPetCard()">🖨️ 列印寵物身分</button>
-      </div>
-    </div>
-
-    <!-- 保險 -->
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🛡️ 寵物保險</div>
-      <input class="form-input" id="insCompany" placeholder="保險公司">
-      <input class="form-input" id="insPlan" placeholder="保險方案">
-      <input class="form-input" id="insPolicy" placeholder="保單號碼">
-      <input class="form-input" type="date" id="insStart" placeholder="投保日期">
-      <input class="form-input" type="date" id="insEnd" placeholder="保險到期日">
-      <input class="form-input" id="insPhone" placeholder="保險聯絡電話">
-      <div id="insWarn" style="text-align:center; margin-top:8px; font-size:14px;"></div>
-    </div>
-
-    <!-- 飼料 -->
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🥣 飼料資訊</div>
-      <input class="form-input" id="foodBrand" placeholder="飼料品牌">
-      <input class="form-input" id="foodType" placeholder="飼料種類（乾/濕/生食）">
-      <input class="form-input" id="foodDaily" placeholder="每日建議食量">
-    </div>
-
-    <!-- 醫院 -->
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🏥 就醫院所 & 醫師</div>
-      <input class="form-input" id="hospitalName" placeholder="醫院名稱">
-      <input class="form-input" id="hospitalAddr" placeholder="醫院地址">
-      <input class="form-input" id="hospitalPhone" placeholder="醫院電話">
-      <input class="form-input" id="doctorName" placeholder="主治醫師">
-      <textarea class="form-input form-textarea" id="hospitalNote" placeholder="備註：就醫習慣、醫師叮嚀"></textarea>
-    </div>
-
-    <!-- 理賠紀錄 -->
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🧾 保險理賠紀錄</div>
-      <input class="form-input" type="date" id="claimDate" placeholder="申請日期">
-      <input class="form-input" id="claimSubject" placeholder="項目（就診/住院/手術）">
-      <input class="form-input" type="number" id="claimFee" placeholder="花費金額">
-      <input class="form-input" type="number" id="claimPay" placeholder="理賠金額">
-      <input class="form-input" id="claimStatus" placeholder="狀態（處理中/已給付/拒賠）">
-      <button class="btn-primary" onclick="addClaimRecord()" style="margin-top:10px;">✅ 新增理賠紀錄</button>
-    </div>
-
-    <div class="ui-card">
-      <div style="text-align:center; margin-bottom:10px; font-weight:500;">🧾 理賠紀錄列表</div>
-      <table class="record-table">
-        <thead><tr><th>日期</th><th>項目</th><th>金額</th><th>理賠</th><th>狀態</th><th>刪除</th></tr></thead>
-        <tbody id="claimBody"></tbody>
-      </table>
-    </div>
-
-    <div class="ui-card">
-      <button class="btn-primary" onclick="saveExtraInfo()">💾 儲存所有資料</button>
-    </div>
+    <button class="tab-btn active" data-tab="water">飲水紀錄</button>
+    <button class="tab-btn" data-tab="weight">體重紀錄</button>
+    <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
+    <button class="tab-btn" data-tab="medical">醫療病歷</button>
   </div>
 
   <!-- 飲水 -->
-  <div class="tab-content" id="tab-water">
+  <div class="tab-content active" id="tab-water">
     <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="selectDate">
@@ -833,7 +589,7 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
         <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
-        <div class="stat-item"><div class="stat-label">本月最高</div><div class="stat-num" id="monthMax">0 ml</div></div>
+        <div class="stat-item"><div class="stat-label">單次最高飲水量</div><div class="stat-num" id="monthMax">0 ml</div></div>
       </div>
     </div>
   </div>
@@ -887,10 +643,10 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
 
   <!-- 醫療 -->
   <div class="tab-content" id="tab-medical">
-    <div class="info-banner">🏥 完整病歷管理｜檢驗/用藥/回診/報告 + 手機行事曆提醒 + PDF匯出</div>
+    <div class="info-banner">🏥 完整病歷管理｜檢驗/用藥/回診/報告 + <span style="color:#34a873">手機行事曆雙重提醒</span> + PDF匯出</div>
 
     <div class="ui-card">
-      <input class="form-input" placeholder="🔍 搜尋：日期、症狀、醫師、檢驗數值..." id="medSearch" oninput="renderMedList()">
+      <input class="form-input" placeholder="🔍 關鍵字搜尋病歷" id="medSearch" oninput="renderMedList()">
       <div class="med-filter-bar">
         <button class="filter-btn active" data-filter="all" onclick="setMedFilter('all',this)">全部</button>
         <button class="filter-btn" data-filter="檢驗報告" onclick="setMedFilter('檢驗報告',this)">檢驗</button>
@@ -934,41 +690,6 @@ input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { displa
       <div class="med-list" id="medList"></div>
     </div>
   </div>
-
-  <!-- 列印專用區域 -->
-  <div id="printArea" style="display:none;padding:20px;background:#fff;border-radius:20px;">
-    <div style="text-align:center;">
-      <img id="printPetImg" style="width:140px;height:140px;object-fit:cover;border-radius:50%;border:3px solid #478fb8;">
-      <h2 style="margin:10px 0;color:#478fb8;" id="printPetName"></h2>
-    </div>
-    <div style="margin-top:20px;font-size:16px;line-height:2;">
-      <div><b>品種：</b><span id="printBreed"></span></div>
-      <div><b>生日：</b><span id="printBirth"></span></div>
-      <div><b>晶片：</b><span id="printChip"></span></div>
-      <div><b>毛色：</b><span id="printColor"></span></div>
-      <div><b>飼主：</b><span id="printOwner"></span></div>
-      <div style="margin-top:10px;"><b>備註：</b><span id="printDesc"></span></div>
-    </div>
-  </div>
-
-</div>
-
-<!-- 寵物資料編輯彈窗 -->
-<div class="pet-modal" id="petModal">
-  <div class="pet-modal-box">
-    <div class="modal-title">✏️ 編輯寵物資料</div>
-    <input class="form-input" id="editPetName" placeholder="寵物名稱">
-    <input class="form-input" id="editPetBreed" placeholder="品種">
-    <input class="form-input" type="date" id="editPetBirth" placeholder="生日">
-    <input class="form-input" id="editPetChip" placeholder="晶片號碼">
-    <input class="form-input" id="editPetColor" placeholder="毛色">
-    <input class="form-input" id="editPetOwner" placeholder="飼主姓名">
-    <textarea class="form-input form-textarea" id="editPetDesc" placeholder="備註（個性、習慣、病史...）"></textarea>
-    <div class="btn-row" style="margin-top:16px;">
-      <button class="btn-import" onclick="closePetModal()">取消</button>
-      <button class="btn-primary" onclick="savePetData()">儲存</button>
-    </div>
-  </div>
 </div>
 
 <!-- 預覽 -->
@@ -1009,15 +730,12 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)return false;
 });
 
-// 密碼 + 記住我
+// 密碼
 const validPws = ["0963612120", "0952867812", "ha821208"];
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
-  const remember = document.getElementById("rememberPwd").checked;
   if(validPws.includes(val)){
-    if(remember) localStorage.setItem("savedPwd", val);
-    else localStorage.removeItem("savedPwd");
     document.querySelector(".inlock-wrap").style.display="none";
     document.querySelector(".main-content").style.display="block";
     tip.innerText = "";
@@ -1027,15 +745,9 @@ function checkInPwd(){
     document.getElementById("inPwd").value = "";
   }
 }
-document.addEventListener("keydown",e=>{if(e.key==="Enter") checkInPwd();});
-window.onload = () => {
-  const saved = localStorage.getItem("savedPwd");
-  if(saved && validPws.includes(saved)){
-    document.getElementById("inPwd").value = saved;
-    document.getElementById("rememberPwd").checked = true;
-    setTimeout(checkInPwd, 300);
-  }
-};
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter") checkInPwd();
+});
 
 // Firebase
 const firebaseConfig = {
@@ -1049,36 +761,10 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 多寵物核心
+// 多貓核心
 let currentCat = "default";
-let catList = JSON.parse(localStorage.getItem("petCats") || `[{
-  "id":"default",
-  "name":"波波",
-  "breed":"米克斯",
-  "birth":"",
-  "chip":"",
-  "color":"",
-  "owner":"",
-  "desc":"",
-  "photo":""
-}]`);
+let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
 
-// 寵物照片（自動裁切）
-function uploadPetPhoto(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    const photo = ev.target.result;
-    const pet = catList.find(x => x.id === currentCat);
-    pet.photo = photo;
-    localStorage.setItem("petCats", JSON.stringify(catList));
-    document.getElementById("petPhotoImg").src = photo;
-  };
-  reader.readAsDataURL(file);
-}
-
-// 寵物系統
 function initCatSystem(){
   renderCatSelect();
   switchCat();
@@ -1089,10 +775,10 @@ function renderCatSelect(){
   sel.innerHTML = catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
 }
 function addNewCat(){
-  const name = prompt("輸入新寵物名稱：");
+  const name = prompt("輸入新貓咪名稱：");
   if(!name)return;
   const id = "cat_"+Date.now();
-  catList.push({id,name,breed:"",birth:"",chip:"",color:"",owner:"",desc:"",photo:""});
+  catList.push({id,name});
   localStorage.setItem("petCats",JSON.stringify(catList));
   renderCatSelect();
   document.getElementById("catSelect").value = id;
@@ -1100,64 +786,7 @@ function addNewCat(){
 }
 function switchCat(){
   currentCat = document.getElementById("catSelect").value;
-  renderPetInfo();
-  loadExtraInfo();
-  loadClaimList();
-  checkInsuranceWarn();
   listenAllData();
-}
-
-// 渲染寵物資料
-function renderPetInfo(){
-  const pet = catList.find(x=>x.id === currentCat) || catList[0];
-  document.getElementById("petName").innerText = pet.name || "-";
-  document.getElementById("petBreed").innerText = pet.breed || "未填";
-  document.getElementById("petBirth").innerText = pet.birth || "未填";
-  document.getElementById("petChip").innerText = pet.chip || "未填";
-  document.getElementById("petColor").innerText = pet.color || "未填";
-  document.getElementById("petOwner").innerText = pet.owner || "未填";
-  document.getElementById("petDesc").innerText = pet.desc || "無備註";
-  document.getElementById("petPhotoImg").src = pet.photo || "";
-}
-
-// 編輯寵物
-function openEditPetModal(){
-  const pet = catList.find(x=>x.id === currentCat);
-  document.getElementById("editPetName").value = pet.name || "";
-  document.getElementById("editPetBreed").value = pet.breed || "";
-  document.getElementById("editPetBirth").value = pet.birth || "";
-  document.getElementById("editPetChip").value = pet.chip || "";
-  document.getElementById("editPetColor").value = pet.color || "";
-  document.getElementById("editPetOwner").value = pet.owner || "";
-  document.getElementById("editPetDesc").value = pet.desc || "";
-  document.getElementById("petModal").classList.add("show");
-}
-function closePetModal(){
-  document.getElementById("petModal").classList.remove("show");
-}
-function savePetData(){
-  const pet = catList.find(x=>x.id === currentCat);
-  pet.name = document.getElementById("editPetName").value.trim();
-  pet.breed = document.getElementById("editPetBreed").value.trim();
-  pet.birth = document.getElementById("editPetBirth").value.trim();
-  pet.chip = document.getElementById("editPetChip").value.trim();
-  pet.color = document.getElementById("editPetColor").value.trim();
-  pet.owner = document.getElementById("editPetOwner").value.trim();
-  pet.desc = document.getElementById("editPetDesc").value.trim();
-  localStorage.setItem("petCats",JSON.stringify(catList));
-  renderPetInfo();
-  renderCatSelect();
-  closePetModal();
-  alert("✅ 寵物資料儲存完成");
-}
-function deletePet(){
-  if(catList.length <= 1){alert("❌ 至少保留一隻寵物");return;}
-  if(!confirm("⚠️ 確定刪除這隻寵物？")) return;
-  catList = catList.filter(x=>x.id !== currentCat);
-  localStorage.setItem("petCats",JSON.stringify(catList));
-  currentCat = catList[0].id;
-  renderCatSelect();
-  switchCat();
 }
 
 // 切換分頁
@@ -1167,7 +796,6 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     this.classList.add('active');
     const t = this.dataset.tab;
-    if(t==="home")document.getElementById("tab-home").classList.add("active");
     if(t==="water")document.getElementById("tab-water").classList.add("active");
     if(t==="weight")document.getElementById("tab-weight").classList.add("active");
     if(t==="deworm")document.getElementById("tab-deworm").classList.add("active");
@@ -1216,137 +844,13 @@ const setNow = () => {
   document.getElementById('weightDate').value = today;
   document.getElementById('dewormDate').value = today;
   document.getElementById('medDate').value = today;
-  document.getElementById('claimDate').value = today;
 };
 function toggleDarkMode(){
   darkMode=!darkMode;
   document.body.classList.toggle("dark-mode");
 }
 
-// 匯出/列印寵物資料
-function exportPetData() {
-  const pet = catList.find(x => x.id === currentCat);
-  const extra = JSON.parse(localStorage.getItem(`extraInfo_${currentCat}`) || "{}");
-  const data = { pet, extra };
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
-  a.download = `${pet.name}_寵物資料.json`;
-  a.click();
-}
-function printPetCard() {
-  const pet = catList.find(x => x.id === currentCat);
-  document.getElementById("printPetImg").src = pet.photo || "";
-  document.getElementById("printPetName").innerText = pet.name || "";
-  document.getElementById("printBreed").innerText = pet.breed || "";
-  document.getElementById("printBirth").innerText = pet.birth || "";
-  document.getElementById("printChip").innerText = pet.chip || "";
-  document.getElementById("printColor").innerText = pet.color || "";
-  document.getElementById("printOwner").innerText = pet.owner || "";
-  document.getElementById("printDesc").innerText = pet.desc || "";
-  setTimeout(() => window.print(), 300);
-}
-
-// 額外資料儲存
-function saveExtraInfo(){
-  const data = {
-    insCompany: document.getElementById("insCompany").value,
-    insPlan: document.getElementById("insPlan").value,
-    insPolicy: document.getElementById("insPolicy").value,
-    insStart: document.getElementById("insStart").value,
-    insEnd: document.getElementById("insEnd").value,
-    insPhone: document.getElementById("insPhone").value,
-    foodBrand: document.getElementById("foodBrand").value,
-    foodType: document.getElementById("foodType").value,
-    foodDaily: document.getElementById("foodDaily").value,
-    hospitalName: document.getElementById("hospitalName").value,
-    hospitalAddr: document.getElementById("hospitalAddr").value,
-    hospitalPhone: document.getElementById("hospitalPhone").value,
-    doctorName: document.getElementById("doctorName").value,
-    hospitalNote: document.getElementById("hospitalNote").value
-  };
-  localStorage.setItem(`extraInfo_${currentCat}`, JSON.stringify(data));
-  checkInsuranceWarn();
-  alert("✅ 儲存完成！");
-}
-function loadExtraInfo(){
-  const data = JSON.parse(localStorage.getItem(`extraInfo_${currentCat}`) || "{}");
-  document.getElementById("insCompany").value = data.insCompany || "";
-  document.getElementById("insPlan").value = data.insPlan || "";
-  document.getElementById("insPolicy").value = data.insPolicy || "";
-  document.getElementById("insStart").value = data.insStart || "";
-  document.getElementById("insEnd").value = data.insEnd || "";
-  document.getElementById("insPhone").value = data.insPhone || "";
-  document.getElementById("foodBrand").value = data.foodBrand || "";
-  document.getElementById("foodType").value = data.foodType || "";
-  document.getElementById("foodDaily").value = data.foodDaily || "";
-  document.getElementById("hospitalName").value = data.hospitalName || "";
-  document.getElementById("hospitalAddr").value = data.hospitalAddr || "";
-  document.getElementById("hospitalPhone").value = data.hospitalPhone || "";
-  document.getElementById("doctorName").value = data.doctorName || "";
-  document.getElementById("hospitalNote").value = data.hospitalNote || "";
-}
-
-// 保險到期提醒（增強版）
-function checkInsuranceWarn(){
-  const data = JSON.parse(localStorage.getItem(`extraInfo_${currentCat}`) || "{}");
-  const end = data.insEnd;
-  const warn = document.getElementById("insWarn");
-  if(!end){ warn.innerText = ""; warn.className = ""; return; }
-  const now = new Date();
-  const endDate = new Date(end);
-  const diff = Math.ceil((endDate - now)/(1000*60*60*24));
-  if(diff <= 0){
-    warn.innerText = "⚠️ 保險已到期！請盡速續保";
-    warn.className = "ins-expire-danger";
-  }else if(diff <= 30){
-    warn.innerText = `⚠️ 保險即將到期，剩餘 ${diff} 天`;
-    warn.className = "ins-expire-warn";
-  }else{
-    warn.innerText = `✅ 保險有效，剩餘 ${diff} 天`;
-    warn.className = "ins-expire-good";
-  }
-}
-
-// 理賠紀錄
-function addClaimRecord(){
-  const date = document.getElementById("claimDate").value;
-  const subject = document.getElementById("claimSubject").value;
-  const fee = document.getElementById("claimFee").value;
-  const pay = document.getElementById("claimPay").value;
-  const status = document.getElementById("claimStatus").value;
-  if(!date || !subject){ alert("請填寫日期與項目"); return; }
-  const list = JSON.parse(localStorage.getItem(`claimList_${currentCat}`) || "[]");
-  list.push({date, subject, fee, pay, status, stamp:Date.now()});
-  localStorage.setItem(`claimList_${currentCat}`, JSON.stringify(list));
-  document.getElementById("claimSubject").value = "";
-  document.getElementById("claimFee").value = "";
-  document.getElementById("claimPay").value = "";
-  document.getElementById("claimStatus").value = "";
-  loadClaimList();
-  alert("✅ 理賠紀錄已新增");
-}
-function loadClaimList(){
-  const list = JSON.parse(localStorage.getItem(`claimList_${currentCat}`) || "[]");
-  const sortList = list.sort((a,b)=>new Date(b.date)-new Date(a.date));
-  const html = sortList.map(item=>`
-  <tr>
-    <td>${item.date}</td>
-    <td>${item.subject}</td>
-    <td>${item.fee || 0}</td>
-    <td>${item.pay || 0}</td>
-    <td>${item.status || "-"}</td>
-    <td><button class="btn-delete" onclick="delClaim(${item.stamp})">刪</button></td>
-  </tr>`).join("");
-  document.getElementById("claimBody").innerHTML = html;
-}
-function delClaim(stamp){
-  let list = JSON.parse(localStorage.getItem(`claimList_${currentCat}`) || "[]");
-  list = list.filter(x=>x.stamp !== stamp);
-  localStorage.setItem(`claimList_${currentCat}`, JSON.stringify(list));
-  loadClaimList();
-}
-
-// 飲水
+// ---------------- 飲水 ----------------
 function quickAdd(v){document.getElementById("waterML").value=v;addRecord();}
 async function addRecord(){
   const d=document.getElementById("selectDate").value;
@@ -1417,7 +921,7 @@ function renderPage(){
 }
 document.getElementById("selectDate").addEventListener("change",renderPage);
 
-// 體重
+// ---------------- 體重 ----------------
 async function addWeight(){
   const d=document.getElementById("weightDate").value;
   const v=parseFloat(document.getElementById("weightVal").value);
@@ -1440,6 +944,7 @@ function renderWeight(){
     <td>${x.note||"-"}</td>
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
+
   if(list.length){
     document.getElementById("weightLatest").innerText=`最新：${list[0].val.toFixed(2)} kg`;
     const vals=list.map(x=>x.val);
@@ -1454,7 +959,7 @@ function renderWeight(){
   }
 }
 
-// 驅蟲
+// ---------------- 體外驅蟲 ----------------
 async function addDeworm(){
   const d=document.getElementById("dewormDate").value;
   const drug=document.getElementById("dewormDrug").value.trim();
@@ -1479,7 +984,7 @@ function renderDeworm(){
   </tr>`).join("");
 }
 
-// 病歷
+// ---------------- 病歷 ----------------
 function addCalendarRemind(title,dateStr,desc){
   if(!dateStr)return alert("請填下次日期");
   const rev=new Date(dateStr);
@@ -1590,16 +1095,10 @@ async function delMedImg(docId,i){
 }
 function renderMedList(){
   let list=[...medData];
-  const key=document.getElementById("medSearch").value.toLowerCase().trim();
+  const key=document.getElementById("medSearch").value.toLowerCase();
   if(medFilter==="star")list=list.filter(x=>x.star);
   else if(medFilter!=="all")list=list.filter(x=>x.type===medFilter);
-  if(key){
-    list=list.filter(x=>
-      x.note?.toLowerCase().includes(key) ||
-      x.type.toLowerCase().includes(key) ||
-      x.date?.includes(key)
-    );
-  }
+  if(key)list=list.filter(x=>x.note?.toLowerCase().includes(key)||x.type.includes(key));
   list.sort(medSortMode==="new"?(a,b)=>b.id-a.id:(a,b)=>new Date(a.date)-new Date(b.date));
   const wrap=document.getElementById("medList");
   if(!list.length){wrap.innerHTML="<div style='grid-column:1/-1;text-align:center'>無資料</div>";return;}
@@ -1695,18 +1194,6 @@ async function importMedData(e){
   };
   r.readAsText(f);
 }
-
-// Enter 快速送出表單
-document.querySelectorAll(".form-input").forEach(input=>{
-  input.addEventListener("keydown",e=>{
-    if(e.key==="Enter"){
-      const activeTab = document.querySelector(".tab-btn.active").dataset.tab;
-      if(activeTab==="water") addRecord();
-      if(activeTab==="weight") addWeight();
-      if(activeTab==="deworm") addDeworm();
-    }
-  });
-});
 </script>
 </body>
 </html>
