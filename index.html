@@ -1176,7 +1176,28 @@ function calcStat(){
 
 function renderPage(){
   const d=document.getElementById("selectDate").value;
-  const list=recordData.filter(x=>x.date===d).sort((a,b)=>b.stamp-a.stamp);
+  function renderPage(){
+  const d=document.getElementById("selectDate").value;
+  // 這行改成依時間排序，新的在上面
+  const list=recordData.filter(x=>x.date===d)
+    .sort((a,b)=>{
+      if(a.time > b.time) return -1;
+      if(a.time < b.time) return 1;
+      return b.stamp - a.stamp;
+    });
+  
+  const total=list.reduce((s,v)=>s+v.ml,0);
+  let cls="text-low",tip="";
+  if(total>=150&&total<=210){cls="text-normal";tip=`<div class="warn-high">✅ 飲水達標</div>`;}
+  else if(total>210){cls="text-high";tip=`<div class="warn-high">⚠️ 飲水偏高</div>`;}
+  else if(total>0){tip=`<div class="warn-low">⚠️ 飲水不足</div>`;}
+  document.getElementById("totalShow").innerHTML=`今日總計：<span class="${cls}">${total}</span> ml`;
+  document.getElementById("warnTip").innerHTML=tip;
+  document.getElementById("recordBody").innerHTML=list.map(x=>`
+    <tr><td>${x.time}</td><td>${x.ml} ml</td><td><button class="btn-delete" onclick="delOne(${x.stamp})">刪除</button></td></tr>
+  `).join("");
+  calcStat();
+}
   const total=list.reduce((s,v)=>s+v.ml,0);
   let cls="text-low",tip="";
   if(total>=150&&total<=210){cls="text-normal";tip=`<div class="warn-high">✅ 飲水達標</div>`;}
