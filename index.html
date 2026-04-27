@@ -588,8 +588,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
       <div class="stat-grid">
         <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
-        <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
-        <div class="stat-item"><div class="stat-label">單次最高飲水量</div><div class="stat-num" id="monthMax">0 ml</div></div>
+        <div class="stat-item"><div class="stat-item"><div class="stat-label">單次最高飲水量</div><div class="stat-num" id="monthMax">0 ml</div></div>
       </div>
     </div>
   </div>
@@ -673,6 +672,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
       <div class="desc-small">▼ 下次回診預約日期</div>
       <input class="form-input" type="date" id="medReview" placeholder="填寫後可匯入手機行事曆">
       <textarea class="form-input form-textarea" id="medNote" placeholder="備註：症狀、檢驗數值、用藥名稱、醫師囑咐..."></textarea>
+      <button class="btn-primary" onclick="saveMedicalRecord()">✅ 儲存病歷紀錄</button>
       <button class="btn-primary" onclick="triggerMedUpload()">📎 上傳PDF/圖片報告</button>
       <input type="file" id="medFile" accept=".pdf,image/*" multiple onchange="handleMedFile(event)">
     </div>
@@ -985,6 +985,31 @@ function renderDeworm(){
 }
 
 // ---------------- 病歷 ----------------
+// 單獨儲存病歷（文字也能存）
+async function saveMedicalRecord() {
+  const type = document.getElementById("medType").value;
+  const date = document.getElementById("medDate").value;
+  const review = document.getElementById("medReview").value;
+  const note = document.getElementById("medNote").value;
+
+  if (!date) {
+    alert("請填寫就診日期");
+    return;
+  }
+
+  await medCol.add({
+    id: Date.now(),
+    type: type,
+    date: date,
+    review: review,
+    note: note,
+    imgs: [],
+    star: false
+  });
+  alert("病歷儲存成功！");
+  document.getElementById("medNote").value = "";
+}
+
 function addCalendarRemind(title,dateStr,desc){
   if(!dateStr)return alert("請填下次日期");
   const rev=new Date(dateStr);
@@ -1078,7 +1103,7 @@ async function handleMedFile(e){
     else imgs.push(await compressImg(f));
   }
   await medCol.add({id:Date.now(),type,date,review,note,imgs,star:false});
-  alert("新增完成");
+  alert("上傳完成");
   document.getElementById("medNote").value="";
 }
 function getTypeClass(t){
