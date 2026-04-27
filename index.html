@@ -79,6 +79,33 @@ body {
   letter-spacing: 1px;
 }
 
+/* 寵物照片 */
+.pet-photo-area {
+  text-align: center;
+  margin-bottom: 14px;
+}
+.pet-img-frame {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  margin: 0 auto;
+  overflow: hidden;
+  border: 3px solid var(--primary-light);
+  position: relative;
+}
+.pet-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.upload-pet-photo {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--primary);
+  cursor: pointer;
+}
+
 /* 寵物資料卡片 */
 .pet-info-card {
   background: var(--card-bg);
@@ -385,7 +412,7 @@ body {
   cursor: pointer;
 }
 
-input#importFile, input#medFile, input#editMedFile { display: none; }
+input#importFile, input#medFile, input#editMedFile, input#petPhotoInput { display: none; }
 
 .today-total-box {
   text-align: center;
@@ -603,6 +630,13 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   color:var(--success);
   margin-bottom:8px;
 }
+
+/* 列印專用 */
+@media print {
+  body * { visibility: hidden; }
+  #printArea, #printArea * { visibility: visible; }
+  #printArea { position: absolute; top: 0; left: 0; width: 100%; }
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -631,42 +665,6 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   <div class="sync-badge" id="syncBadge">☁️ 雲端同步連線中...</div>
   <button class="theme-switch" onclick="toggleDarkMode()">🌓 切換深色模式</button>
 
-  <!-- 寵物資料卡片 -->
-  <div class="pet-info-card" id="petInfoCard">
-    <div class="pet-info-title">📋 寵物基本資料</div>
-    <div class="pet-info-grid">
-      <div class="pet-info-item">
-        <div class="pet-info-label">寵物名</div>
-        <div class="pet-info-value" id="petName">-</div>
-      </div>
-      <div class="pet-info-item">
-        <div class="pet-info-label">品種</div>
-        <div class="pet-info-value" id="petBreed">-</div>
-      </div>
-      <div class="pet-info-item">
-        <div class="pet-info-label">生日</div>
-        <div class="pet-info-value" id="petBirth">-</div>
-      </div>
-      <div class="pet-info-item">
-        <div class="pet-info-label">晶片號</div>
-        <div class="pet-info-value" id="petChip">-</div>
-      </div>
-      <div class="pet-info-item">
-        <div class="pet-info-label">毛色</div>
-        <div class="pet-info-value" id="petColor">-</div>
-      </div>
-      <div class="pet-info-item">
-        <div class="pet-info-label">飼主</div>
-        <div class="pet-info-value" id="petOwner">-</div>
-      </div>
-    </div>
-    <div class="pet-desc" id="petDesc">無備註</div>
-    <div class="pet-btn-group">
-      <button class="btn-pet-outline" onclick="openEditPetModal()">編輯資料</button>
-      <button class="btn-pet" onclick="deletePet()">刪除寵物</button>
-    </div>
-  </div>
-
   <!-- 貓咪切換 -->
   <div class="cat-selector">
     <select class="cat-select" id="catSelect" onchange="switchCat()"></select>
@@ -674,15 +672,125 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   </div>
 
   <div class="tab-wrap">
-    <button class="tab-btn active" data-tab="water">飲水紀錄</button>
-    <button class="tab-btn" data-tab="weight">體重紀錄</button>
-    <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
-    <button class="tab-btn" data-tab="medical">醫療病歷</button>
-    <button class="tab-btn" data-tab="info">保險/飼料/院所</button>
+    <button class="tab-btn active" data-tab="home">🏠 首頁（寵物資料）</button>
+    <button class="tab-btn" data-tab="water">💧 飲水</button>
+    <button class="tab-btn" data-tab="weight">⚖️ 體重</button>
+    <button class="tab-btn" data-tab="deworm">🪲 驅蟲</button>
+    <button class="tab-btn" data-tab="medical">🏥 病歷</button>
+  </div>
+
+  <!-- 首頁：寵物資料 + 保險 + 飼料 + 醫院 -->
+  <div class="tab-content active" id="tab-home">
+    <!-- 寵物照片 -->
+    <div class="pet-photo-area">
+      <div class="pet-img-frame">
+        <img id="petPhotoImg" class="pet-img" src="">
+      </div>
+      <label class="upload-pet-photo" onclick="document.getElementById('petPhotoInput').click()">更換寵物照片</label>
+      <input type="file" id="petPhotoInput" accept="image/*" onchange="uploadPetPhoto(event)">
+    </div>
+
+    <!-- 寵物基本資料 -->
+    <div class="pet-info-card" id="petInfoCard">
+      <div class="pet-info-title">📋 寵物基本資料</div>
+      <div class="pet-info-grid">
+        <div class="pet-info-item">
+          <div class="pet-info-label">寵物名</div>
+          <div class="pet-info-value" id="petName">-</div>
+        </div>
+        <div class="pet-info-item">
+          <div class="pet-info-label">品種</div>
+          <div class="pet-info-value" id="petBreed">-</div>
+        </div>
+        <div class="pet-info-item">
+          <div class="pet-info-label">生日</div>
+          <div class="pet-info-value" id="petBirth">-</div>
+        </div>
+        <div class="pet-info-item">
+          <div class="pet-info-label">晶片號</div>
+          <div class="pet-info-value" id="petChip">-</div>
+        </div>
+        <div class="pet-info-item">
+          <div class="pet-info-label">毛色</div>
+          <div class="pet-info-value" id="petColor">-</div>
+        </div>
+        <div class="pet-info-item">
+          <div class="pet-info-label">飼主</div>
+          <div class="pet-info-value" id="petOwner">-</div>
+        </div>
+      </div>
+      <div class="pet-desc" id="petDesc">無備註</div>
+      <div class="pet-btn-group">
+        <button class="btn-pet-outline" onclick="openEditPetModal()">編輯資料</button>
+        <button class="btn-pet" onclick="deletePet()">刪除寵物</button>
+      </div>
+    </div>
+
+    <!-- 一鍵功能 -->
+    <div class="ui-card">
+      <div class="pet-info-title">⚡ 快速功能</div>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportPetData()">📤 匯出寵物資料</button>
+        <button class="btn-import" onclick="printPetCard()">🖨️ 列印寵物身分</button>
+      </div>
+    </div>
+
+    <!-- 保險 -->
+    <div class="ui-card">
+      <div class="pet-info-title" style="margin-bottom:10px;">🛡️ 寵物保險</div>
+      <input class="form-input" id="insCompany" placeholder="保險公司">
+      <input class="form-input" id="insPlan" placeholder="保險方案">
+      <input class="form-input" id="insPolicy" placeholder="保單號碼">
+      <input class="form-input" type="date" id="insStart" placeholder="投保日期">
+      <input class="form-input" type="date" id="insEnd" placeholder="保險到期日">
+      <input class="form-input" id="insPhone" placeholder="保險聯絡電話">
+      <div id="insWarn" style="text-align:center; margin-top:8px; font-size:14px; color:var(--danger);"></div>
+    </div>
+
+    <!-- 飼料 -->
+    <div class="ui-card">
+      <div class="pet-info-title" style="margin-bottom:10px;">🥣 飼料資訊</div>
+      <input class="form-input" id="foodBrand" placeholder="飼料品牌">
+      <input class="form-input" id="foodType" placeholder="飼料種類（乾/濕/生食）">
+      <input class="form-input" id="foodDaily" placeholder="每日建議食量">
+    </div>
+
+    <!-- 醫院 -->
+    <div class="ui-card">
+      <div class="pet-info-title" style="margin-bottom:10px;">🏥 就醫院所 & 醫師</div>
+      <input class="form-input" id="hospitalName" placeholder="醫院名稱">
+      <input class="form-input" id="hospitalAddr" placeholder="醫院地址">
+      <input class="form-input" id="hospitalPhone" placeholder="醫院電話">
+      <input class="form-input" id="doctorName" placeholder="主治醫師">
+      <textarea class="form-input form-textarea" id="hospitalNote" placeholder="備註：就醫習慣、醫師叮嚀"></textarea>
+    </div>
+
+    <!-- 理賠紀錄 -->
+    <div class="ui-card">
+      <div class="pet-info-title" style="margin-bottom:10px;">🧾 保險理賠紀錄</div>
+      <input class="form-input" type="date" id="claimDate" placeholder="申請日期">
+      <input class="form-input" id="claimSubject" placeholder="項目（就診/住院/手術）">
+      <input class="form-input" type="number" id="claimFee" placeholder="花費金額">
+      <input class="form-input" type="number" id="claimPay" placeholder="理賠金額">
+      <input class="form-input" id="claimStatus" placeholder="狀態（處理中/已給付/拒賠）">
+      <button class="btn-primary" onclick="addClaimRecord()" style="margin-top:10px;">✅ 新增理賠紀錄</button>
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">🧾 理賠紀錄列表</div>
+      <table class="record-table">
+        <thead><tr><th>日期</th><th>項目</th><th>金額</th><th>理賠</th><th>狀態</th><th>刪除</th></tr></thead>
+        <tbody id="claimBody"></tbody>
+      </table>
+    </div>
+
+    <div class="ui-card">
+      <button class="btn-primary" onclick="saveExtraInfo()">💾 儲存所有資料</button>
+    </div>
   </div>
 
   <!-- 飲水 -->
-  <div class="tab-content active" id="tab-water">
+  <div class="tab-content" id="tab-water">
     <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="selectDate">
@@ -773,7 +881,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 
   <!-- 醫療 -->
   <div class="tab-content" id="tab-medical">
-    <div class="info-banner">🏥 完整病歷管理｜檢驗/用藥/回診/報告 + <span style="color:#34a873">手機行事曆雙重提醒</span> + PDF匯出</div>
+    <div class="info-banner">🏥 完整病歷管理｜檢驗/用藥/回診/報告 + 手機行事曆提醒 + PDF匯出</div>
 
     <div class="ui-card">
       <input class="form-input" placeholder="🔍 關鍵字搜尋病歷" id="medSearch" oninput="renderMedList()">
@@ -821,58 +929,19 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
     </div>
   </div>
 
-  <!-- 保險 / 飼料 / 就醫院所 / 醫師 + 理賠紀錄 + 到期提醒 -->
-  <div class="tab-content" id="tab-info">
-    <div class="info-banner">📋 保險資料 / 飼料 / 就醫院所 / 醫師資訊</div>
-    
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🛡️ 寵物保險</div>
-      <input class="form-input" id="insCompany" placeholder="保險公司">
-      <input class="form-input" id="insPlan" placeholder="保險方案">
-      <input class="form-input" id="insPolicy" placeholder="保單號碼">
-      <input class="form-input" type="date" id="insStart" placeholder="投保日期">
-      <input class="form-input" type="date" id="insEnd" placeholder="保險到期日">
-      <input class="form-input" id="insPhone" placeholder="保險聯絡電話">
-      <div id="insWarn" style="text-align:center; margin-top:8px; font-size:14px; color:var(--danger);"></div>
+  <!-- 列印專用區域 -->
+  <div id="printArea" style="display:none;padding:20px;background:#fff;border-radius:20px;">
+    <div style="text-align:center;">
+      <img id="printPetImg" style="width:140px;height:140px;object-fit:cover;border-radius:50%;border:3px solid #478fb8;">
+      <h2 style="margin:10px 0;color:#478fb8;" id="printPetName"></h2>
     </div>
-
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🥣 飼主&飼料資訊</div>
-      <input class="form-input" id="foodBrand" placeholder="飼料品牌">
-      <input class="form-input" id="foodType" placeholder="飼料種類（乾/濕/生食）">
-      <input class="form-input" id="foodDaily" placeholder="每日建議食量">
-    </div>
-
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🏥 主要就醫院所 & 醫師</div>
-      <input class="form-input" id="hospitalName" placeholder="醫院名稱">
-      <input class="form-input" id="hospitalAddr" placeholder="醫院地址">
-      <input class="form-input" id="hospitalPhone" placeholder="醫院電話">
-      <input class="form-input" id="doctorName" placeholder="主治醫師">
-      <textarea class="form-input form-textarea" id="hospitalNote" placeholder="備註：就醫習慣、醫師叮嚀、注意事項"></textarea>
-    </div>
-
-    <!-- 保險理賠紀錄 -->
-    <div class="ui-card">
-      <div class="pet-info-title" style="margin-bottom:10px;">🧾 保險理賠紀錄</div>
-      <input class="form-input" type="date" id="claimDate" placeholder="申請日期">
-      <input class="form-input" id="claimSubject" placeholder="項目（就診/住院/手術）">
-      <input class="form-input" type="number" id="claimFee" placeholder="花費金額">
-      <input class="form-input" type="number" id="claimPay" placeholder="理賠金額">
-      <input class="form-input" id="claimStatus" placeholder="狀態（處理中/已給付/拒賠）">
-      <button class="btn-primary" onclick="addClaimRecord()" style="margin-top:10px;">✅ 新增理賠紀錄</button>
-    </div>
-
-    <div class="ui-card">
-      <div style="text-align:center; margin-bottom:10px; font-weight:500;">🧾 理賠紀錄列表</div>
-      <table class="record-table">
-        <thead><tr><th>日期</th><th>項目</th><th>金額</th><th>理賠</th><th>狀態</th><th>刪除</th></tr></thead>
-        <tbody id="claimBody"></tbody>
-      </table>
-    </div>
-
-    <div class="ui-card">
-      <button class="btn-primary" onclick="saveExtraInfo()">💾 儲存所有資料</button>
+    <div style="margin-top:20px;font-size:16px;line-height:2;">
+      <div><b>品種：</b><span id="printBreed"></span></div>
+      <div><b>生日：</b><span id="printBirth"></span></div>
+      <div><b>晶片：</b><span id="printChip"></span></div>
+      <div><b>毛色：</b><span id="printColor"></span></div>
+      <div><b>飼主：</b><span id="printOwner"></span></div>
+      <div style="margin-top:10px;"><b>備註：</b><span id="printDesc"></span></div>
     </div>
   </div>
 
@@ -975,8 +1044,24 @@ let catList = JSON.parse(localStorage.getItem("petCats") || `[{
   "chip":"",
   "color":"",
   "owner":"",
-  "desc":""
+  "desc":"",
+  "photo":""
 }]`);
+
+// 寵物照片上傳
+function uploadPetPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const photo = ev.target.result;
+    const pet = catList.find(x => x.id === currentCat);
+    pet.photo = photo;
+    localStorage.setItem("petCats", JSON.stringify(catList));
+    document.getElementById("petPhotoImg").src = photo;
+  };
+  reader.readAsDataURL(file);
+}
 
 // 寵物資料功能
 function initCatSystem(){
@@ -993,7 +1078,7 @@ function addNewCat(){
   if(!name)return;
   const id = "cat_"+Date.now();
   catList.push({
-    id,name,breed:"",birth:"",chip:"",color:"",owner:"",desc:""
+    id,name,breed:"",birth:"",chip:"",color:"",owner:"",desc:"",photo:""
   });
   localStorage.setItem("petCats",JSON.stringify(catList));
   renderCatSelect();
@@ -1019,6 +1104,7 @@ function renderPetInfo(){
   document.getElementById("petColor").innerText = pet.color || "未填";
   document.getElementById("petOwner").innerText = pet.owner || "未填";
   document.getElementById("petDesc").innerText = pet.desc || "無備註";
+  document.getElementById("petPhotoImg").src = pet.photo || "";
 }
 
 // 開啟/關閉寵物編輯視窗
@@ -1077,11 +1163,11 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     this.classList.add('active');
     const t = this.dataset.tab;
+    if(t==="home")document.getElementById("tab-home").classList.add("active");
     if(t==="water")document.getElementById("tab-water").classList.add("active");
     if(t==="weight")document.getElementById("tab-weight").classList.add("active");
     if(t==="deworm")document.getElementById("tab-deworm").classList.add("active");
     if(t==="medical")document.getElementById("tab-medical").classList.add("active");
-    if(t==="info")document.getElementById("tab-info").classList.add("active");
   }
 });
 
@@ -1131,6 +1217,34 @@ const setNow = () => {
 function toggleDarkMode(){
   darkMode=!darkMode;
   document.body.classList.toggle("dark-mode");
+}
+
+// ---------------- 匯出寵物資料 ----------------
+function exportPetData() {
+  const pet = catList.find(x => x.id === currentCat);
+  const extra = JSON.parse(localStorage.getItem(`extraInfo_${currentCat}`) || "{}");
+  const data = { pet, extra };
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  a.download = `${pet.name}_寵物資料.json`;
+  a.click();
+}
+
+// ---------------- 列印寵物身分 ----------------
+function printPetCard() {
+  const pet = catList.find(x => x.id === currentCat);
+  document.getElementById("printPetImg").src = pet.photo || "";
+  document.getElementById("printPetName").innerText = pet.name || "";
+  document.getElementById("printBreed").innerText = pet.breed || "";
+  document.getElementById("printBirth").innerText = pet.birth || "";
+  document.getElementById("printChip").innerText = pet.chip || "";
+  document.getElementById("printColor").innerText = pet.color || "";
+  document.getElementById("printOwner").innerText = pet.owner || "";
+  document.getElementById("printDesc").innerText = pet.desc || "";
+  
+  setTimeout(() => {
+    window.print();
+  }, 300);
 }
 
 // ---------------- 保險 / 飼料 / 院所 儲存 & 讀取 ----------------
