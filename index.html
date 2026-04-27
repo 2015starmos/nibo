@@ -1,232 +1,1380 @@
-// ==============================================
-// 醫療病歷 (已修復 PDF 匯出 + 儲存異常)
-// ==============================================
-let medFiles = [];
-function triggerMedUpload(){
-  document.getElementById("medFile").value = "";
-  document.getElementById("medFile").click();
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>小貓醫療紀錄系統</title>
+
+<style>
+.inlock-wrap{position:fixed;inset:0;background:linear-gradient(160deg, #f6f9fe, #eaf2f9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
+.inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
+.inlock-input{width:100%;padding:13px 16px;border:1px solid #dce9f2;border-radius:18px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:10px;}
+.inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
+.inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
+.main-content{display:none;}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
 }
-function handleMedFile(e){
-  const files = e.target.files;
-  if(!files.length) return;
-  medFiles = [];
-  for(let i=0;i<files.length;i++){
-    const f = files[i];
-    const reader = new FileReader();
-    reader.onload = ev=>{
-      medFiles.push(ev.target.result);
-    };
-    if(f.type.includes("image")) reader.readAsDataURL(f);
-    else if(f.name.endsWith(".pdf")) reader.readAsDataURL(f);
+
+:root {
+  --bg-gradient-1: #f6f9fe;
+  --bg-gradient-2: #eaf2f9;
+  --card-bg: #ffffff;
+  --text-main: #506473;
+  --primary: #478fb8;
+  --primary-light: rgba(71, 143, 184, 0.12);
+  --border-color: #dce9f2;
+  --input-bg: #f9fbfe;
+  --btn-gray: #d7e3ec;
+  --table-bg: #f8fbfd;
+  --table-head: #f0f6fb;
+  --danger: #f28484;
+  --success: #34a873;
+  --warn: #e39548;
+  --green: #34a873;
+  --orange: #f2994a;
+}
+
+.dark-mode {
+  --bg-gradient-1: #1a202c;
+  --bg-gradient-2: #121822;
+  --card-bg: #242c37;
+  --text-main: #cbd5e0;
+  --primary: #63b3e0;
+  --primary-light: rgba(99, 179, 224, 0.15);
+  --border-color: #3a4756;
+  --input-bg: #2d3743;
+  --btn-gray: #3a4756;
+  --table-bg: #2d3743;
+  --table-head: #323e4d;
+}
+
+body {
+  font-family: "微軟正黑體", "Noto Sans TC", sans-serif;
+  background: linear-gradient(160deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+  padding: 20px 14px;
+  min-height: 100vh;
+  color: var(--text-main);
+}
+
+.wrapper {
+  width: 100%;
+  max-width:560px;
+  margin: 0 auto;
+}
+
+.main-title {
+  text-align: center;
+  font-size: 24px;
+  color: var(--primary);
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: 1px;
+}
+
+.cat-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+  justify-content: center;
+}
+.cat-select {
+  padding: 10px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-main);
+  font-size: 15px;
+  width: 180px;
+  text-align: center;
+}
+.cat-add-btn {
+  padding: 10px 12px;
+  border-radius: 16px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.tab-wrap {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 16px;
+  border: none;
+  background: var(--btn-gray);
+  color: var(--text-main);
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 80px;
+}
+.tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: block;
+}
+
+.theme-switch {
+  display: block;
+  margin: 0 auto 16px;
+  border: none;
+  background: var(--primary-light);
+  color: var(--primary);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size:14px;
+}
+.theme-switch:active { transform: scale(0.96); }
+
+.info-banner {
+  width: 100%;
+  background: var(--primary-light);
+  border-radius: 30px;
+  padding: 13px 16px;
+  text-align: center;
+  font-size: 15px;
+  color: var(--primary);
+  margin-bottom: 16px;
+}
+
+.ui-card {
+  background: var(--card-bg);
+  border-radius: 28px;
+  padding: 20px 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(71, 143, 184, 0.08);
+  overflow: hidden;
+}
+
+.form-input {
+  width: 100%;
+  padding: 13px 12px;
+  margin: 6px 0;
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  background-color: var(--input-bg);
+  font-size: 15px;
+  text-align: center;
+  color: var(--text-main);
+}
+.form-textarea {
+  text-align: left;
+  min-height: 70px;
+  resize: vertical;
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.quick-btn-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.btn-quick {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid var(--primary);
+  background: transparent;
+  color: var(--primary);
+  border-radius: 15px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.btn-quick:active {
+  background: var(--primary);
+  color: #fff;
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  margin-top: 5px;
+  border: none;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #58a2cc, #478fb8);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-primary:active { opacity: 0.92; transform: scale(0.99); }
+
+.btn-delete {
+  border: none;
+  background: var(--danger);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+}
+.btn-edit {
+  border: none;
+  background: var(--warn);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-right:3px;
+}
+.btn-star {
+  border: none;
+  background: var(--orange);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-right:3px;
+}
+.btn-calendar {
+  border: none;
+  background: var(--success);
+  color: #fff;
+  padding: 3px 5px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 10px;
+}
+.btn-pdf {
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  margin-left:3px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.btn-clear-day, .btn-export, .btn-import {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 20px;
+  background: var(--btn-gray);
+  color: var(--text-main);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+input#importFile, input#medFile, input#editMedFile { display: none; }
+
+.today-total-box {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  padding: 10px 0;
+}
+.text-low { color: #e39548; }
+.text-normal { color: #34a873; }
+.text-high { color: #58a2cc; }
+.warn-low, .warn-high {
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.record-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+}
+.record-table th {
+  background: var(--table-head);
+  color: var(--primary);
+  padding: 10px 4px;
+  border-radius: 14px;
+  font-weight: 500;
+}
+.record-table td {
+  background: var(--table-bg);
+  text-align: center;
+  padding: 10px 4px;
+  font-size: 14px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.stat-item {
+  background: var(--primary-light);
+  border-radius: 20px;
+  padding: 12px 6px;
+  text-align: center;
+}
+.stat-label { font-size: 12px; color: var(--primary); margin-bottom: 3px; }
+.stat-num { font-size: 16px; font-weight: 600; }
+
+.med-filter-bar {
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:12px;
+}
+.filter-btn {
+  padding:6px 10px;
+  border-radius:12px;
+  border:none;
+  font-size:12px;
+  background:var(--btn-gray);
+  color:var(--text-main);
+  cursor:pointer;
+}
+.filter-btn.active { background:var(--primary); color:#fff; }
+
+.med-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+.med-card {
+  background: var(--table-bg);
+  border-radius: 16px;
+  padding: 10px;
+  font-size: 13px;
+  position:relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  min-height:300px;
+}
+.med-card.star-card { border:2px solid var(--orange); }
+.med-tag {
+  font-size:11px;
+  padding:2px 6px;
+  border-radius:8px;
+  color:#fff;
+  display:inline-block;
+  margin-bottom:4px;
+}
+.tag-check { background:var(--primary); }
+.tag-medic { background:var(--green); }
+.tag-emerg { background:var(--orange); }
+.tag-other { background:var(--btn-gray); color:var(--text-main); }
+
+.med-img-wrap {
+  position:relative;
+  margin-bottom:6px;
+  width: 100%;
+  aspect-ratio: 1;
+}
+.med-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+}
+.img-del-btn {
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  background:var(--danger);
+  color:#fff;
+  border:none;
+  font-size:14px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.med-info-line { line-height:1.4; margin:3px 0; }
+.desc-small { font-size: 12px; color: var(--text-main); opacity: 0.8; text-align:center; margin-bottom:4px; }
+
+.preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.95);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 15px;
+}
+.preview-modal.show { display: flex !important; }
+.preview-img {
+  max-width: 100%;
+  max-height: 85vh;
+  border-radius: 12px;
+  object-fit: contain;
+}
+.preview-btn {
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  width:50px;
+  height:50px;
+  border-radius:50%;
+  border:none;
+  background:rgba(255,255,255,0.3);
+  color:#fff;
+  font-size:20px;
+  z-index:10;
+}
+.prev-left { left:20px; }
+.prev-right { right:20px; }
+.preview-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  color: #fff;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 100;
+}
+
+.edit-modal {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+  padding:15px;
+}
+.edit-modal.show { display:flex; }
+.edit-box {
+  width:100%;
+  max-width:480px;
+  background:var(--card-bg);
+  border-radius:24px;
+  padding:20px;
+}
+.edit-imgs {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+  margin:10px 0;
+}
+.edit-img-item {
+  position:relative;
+  aspect-ratio:1;
+}
+.edit-img {
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:8px;
+}
+.edit-img-del {
+  position:absolute;
+  top:2px;
+  right:2px;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:var(--danger);
+  color:#fff;
+  border:none;
+  font-size:12px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+
+.loading-text {
+  text-align:center;
+  color:var(--primary);
+  padding:10px;
+  font-size:14px;
+}
+.sync-badge{
+  text-align:center;
+  font-size:12px;
+  color:var(--success);
+  margin-bottom:8px;
+}
+</style>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+</head>
+
+<body>
+
+<div class="inlock-wrap">
+  <div class="inlock-box">
+    <div class="inlock-title">🔐 寵物健康紀錄 解鎖</div>
+    <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
+    <div class="inlock-tip" id="inTip"></div>
+    <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
+  </div>
+</div>
+
+<div class="main-content">
+<div class="wrapper">
+  <h1 class="main-title">🐾 寵物健康全紀錄</h1>
+  <div class="sync-badge" id="syncBadge">☁️ 雲端同步連線中...</div>
+  <button class="theme-switch" onclick="toggleDarkMode()">🌓 切換深色模式</button>
+
+  <div class="cat-selector">
+    <select class="cat-select" id="catSelect" onchange="switchCat()"></select>
+    <button class="cat-add-btn" onclick="addNewCat()">+ 新增貓咪</button>
+  </div>
+
+  <div class="tab-wrap">
+    <button class="tab-btn active" data-tab="water">飲水紀錄</button>
+    <button class="tab-btn" data-tab="weight">體重紀錄</button>
+    <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
+    <button class="tab-btn" data-tab="medical">醫療病歷</button>
+  </div>
+
+  <!-- 飲水 -->
+  <div class="tab-content active" id="tab-water">
+    <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
+    <div class="ui-card">
+      <input class="form-input" type="date" id="selectDate">
+      <input class="form-input" type="time" id="selectTime">
+      <div class="quick-btn-group">
+        <button class="btn-quick" onclick="quickAdd(25)">+25ml</button>
+        <button class="btn-quick" onclick="quickAdd(50)">+50ml</button>
+        <button class="btn-quick" onclick="quickAdd(75)">+75ml</button>
+      </div>
+      <input class="form-input" type="number" id="waterML" placeholder="手動輸入水量 ml" inputmode="numeric" min="1">
+      <button class="btn-primary" onclick="addRecord()">✅ 新增飲水紀錄</button>
+    </div>
+
+    <div class="ui-card">
+      <div class="today-total-box" id="totalShow">今日總計：0 ml</div>
+      <div id="warnTip"></div>
+      <table class="record-table">
+        <thead>
+          <tr><th>時間</th><th>飲水量</th><th>操作</th></tr>
+        </thead>
+        <tbody id="recordBody"></tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn-clear-day" onclick="clearDayRecord()">🗑️ 清空今日</button>
+        <button class="btn-export" onclick="exportCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="triggerImport()">📥 匯入CSV</button>
+      </div>
+      <input type="file" id="importFile" accept=".csv" onchange="importCSV(event)">
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; color:var(--primary); margin-bottom:12px; font-weight:500;">📊 長期數據統計</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
+        <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
+        <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
+        <div class="stat-item"><div class="stat-label">本月最高單筆</div><div class="stat-num" id="monthMax">0 ml</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 體重 -->
+  <div class="tab-content" id="tab-weight">
+    <div class="info-banner">⚖️ 體重趨勢追蹤｜自動計算增減</div>
+    <div class="ui-card">
+      <input class="form-input" type="date" id="weightDate">
+      <input class="form-input" type="number" step="0.01" id="weightVal" placeholder="輸入體重 kg">
+      <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
+      <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
+    </div>
+
+    <div class="ui-card">
+      <div class="today-total-box" id="weightLatest">最新體重：0 kg</div>
+      <table class="record-table">
+        <thead><tr><th>日期</th><th>體重</th><th>備註</th><th>刪除</th></tr></thead>
+        <tbody id="weightBody"></tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportWeightCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="importWeightCSV()">📥 匯入CSV</button>
+      </div>
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計</div>
+      <div class="stat-grid">
+        <div class="stat-item"><div class="stat-label">最高體重</div><div class="stat-num" id="wMax">0 kg</div></div>
+        <div class="stat-item"><div class="stat-label">最低體重</div><div class="stat-num" id="wMin">0 kg</div></div>
+        <div class="stat-item"><div class="stat-label">30日平均</div><div class="stat-num" id="wAvg">0 kg</div></div>
+        <div class="stat-item"><div class="stat-label">最近變化</div><div class="stat-num" id="wDiff">0 kg</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 體外驅蟲 -->
+  <div class="tab-content" id="tab-deworm">
+    <div class="info-banner">🪲 體外驅蟲紀錄｜提醒下次使用時間</div>
+    <div class="ui-card">
+      <input class="form-input" type="date" id="dewormDate">
+      <input class="form-input" id="dewormDrug" placeholder="藥品名稱">
+      <input class="form-input" type="date" id="dewormNext" placeholder="預計下次使用日期">
+      <button class="btn-primary" onclick="addDeworm()">✅ 新增驅蟲紀錄</button>
+    </div>
+
+    <div class="ui-card">
+      <table class="record-table">
+        <thead><tr><th>使用日期</th><th>藥品</th><th>下次日期</th><th>刪除</th></tr></thead>
+        <tbody id="dewormBody"></tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportParaCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="importParaCSV()">📥 匯入CSV</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 醫療 -->
+  <div class="tab-content" id="tab-medical">
+    <div class="info-banner">🏥 完整病歷管理｜檢驗/用藥/回診/報告 + <span style="color:#34a873">手機行事曆雙重提醒</span> + PDF匯出</div>
+
+    <div class="ui-card">
+      <input class="form-input" placeholder="🔍 關鍵字搜尋病歷" id="medSearch" oninput="renderMedList()">
+      <div class="med-filter-bar">
+        <button class="filter-btn active" data-filter="all" onclick="setMedFilter('all',this)">全部</button>
+        <button class="filter-btn" data-filter="檢驗報告" onclick="setMedFilter('檢驗報告',this)">檢驗</button>
+        <button class="filter-btn" data-filter="用藥單" onclick="setMedFilter('用藥單',this)">用藥</button>
+        <button class="filter-btn" data-filter="就診紀錄" onclick="setMedFilter('就診紀錄',this)">就診</button>
+        <button class="filter-btn" data-filter="術後追蹤" onclick="setMedFilter('術後追蹤',this)">術後</button>
+        <button class="filter-btn" data-filter="star" onclick="setMedFilter('star',this)">⭐星標</button>
+      </div>
+      <div style="display:flex;gap:8px;margin:6px 0;">
+        <button class="filter-btn" onclick="sortMedNew()">最新優先</button>
+        <button class="filter-btn" onclick="sortMedOld()">舊日期優先</button>
+      </div>
+    </div>
+
+    <div class="ui-card">
+      <select class="form-input" id="medType">
+        <option value="檢驗報告">檢驗報告</option>
+        <option value="就診紀錄">就診紀錄</option>
+        <option value="用藥單">用藥單</option>
+        <option value="術後追蹤">術後追蹤</option>
+        <option value="其他報告">其他報告</option>
+      </select>
+      <input class="form-input" type="date" id="medDate" placeholder="就診日期">
+      <div class="desc-small">▼ 下次回診預約日期</div>
+      <input class="form-input" type="date" id="medReview" placeholder="填寫後可匯入手機行事曆">
+      <textarea class="form-input form-textarea" id="medNote" placeholder="備註：症狀、檢驗數值、用藥名稱、醫師囑咐..."></textarea>
+      <button class="btn-primary" onclick="triggerMedUpload()">📎 上傳PDF/圖片報告</button>
+      <input type="file" id="medFile" accept=".pdf,image/*" multiple onchange="handleMedFile(event)">
+    </div>
+
+    <div class="ui-card">
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportMedData()">📤 備份病歷JSON</button>
+        <button class="btn-import" onclick="triggerMedImport()">📥 還原病歷</button>
+      </div>
+      <input type="file" id="medImportFile" accept=".json" onchange="importMedData(event)">
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; color:var(--primary); margin-bottom:12px; font-weight:500;">📁 所有儲存病歷</div>
+      <div class="med-list" id="medList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="preview-modal" id="previewModal">
+  <button class="preview-close" onclick="closePreviewModal()">×</button>
+  <button class="preview-btn prev-left" onclick="prevMedImg()">←</button>
+  <img class="preview-img" id="previewImg">
+  <button class="preview-btn prev-right" onclick="nextMedImg()">→</button>
+</div>
+
+<div class="edit-modal" id="editModal">
+  <div class="edit-box">
+    <h4 style="text-align:center;margin-bottom:10px;color:var(--primary)">編輯病歷資料</h4>
+    <select class="form-input" id="editMedType"></select>
+    <input class="form-input" type="date" id="editMedDate" placeholder="就診日期">
+    <div class="desc-small">下次回診預約日期</div>
+    <input class="form-input" type="date" id="editReview" placeholder="行事曆提醒用">
+    <textarea class="form-input form-textarea" id="editNote"></textarea>
+    <div class="desc-small">已上傳附件（點×刪除）</div>
+    <div class="edit-imgs" id="editImgs"></div>
+    <button class="btn-primary" onclick="triggerEditMedUpload()">📎 追加新PDF/圖片</button>
+    <input type="file" id="editMedFile" accept=".pdf,image/*" multiple onchange="handleEditMedFile(event)">
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn-import" onclick="closeEditModal()">取消</button>
+      <button class="btn-primary" onclick="saveEditMed()">儲存修改</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// 防護
+document.oncontextmenu = () => false;
+document.addEventListener('keydown',e=>{
+  if(e.keyCode===123) return false;
+  if(e.ctrlKey&&e.keyCode===85)return false;
+  if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)return false;
+  if(e.ctrlKey&&e.keyCode===83)return false;
+});
+
+// 密碼
+const validPws = ["0963612120", "0952867812", "ha821208"];
+function checkInPwd(){
+  const val = document.getElementById("inPwd").value.trim();
+  const tip = document.getElementById("inTip");
+  if(validPws.includes(val)){
+    document.querySelector(".inlock-wrap").style.display="none";
+    document.querySelector(".main-content").style.display="block";
+    tip.innerText = "";
+    initCatSystem();
+  }else{
+    tip.innerText = "❌ 密碼錯誤";
+    document.getElementById("inPwd").value = "";
   }
-  setTimeout(()=>alert(`已選取 ${files.length} 個檔案`),300);
+}
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter") checkInPwd();
+});
+
+// Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
+  authDomain: "naibo-health.firebaseapp.com",
+  projectId: "naibo-health",
+  storageBucket: "naibo-health.firebasestorage.app",
+  messagingSenderId: "1008746304734",
+  appId: "1:1008746304734:web:33b87646673ee83b975e4f"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 多貓核心
+let currentCat = "default";
+let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
+let currentCatName = "波波";
+
+// 監聽控制
+let waterUnsubscribe = null;
+let weightUnsubscribe = null;
+let dewormUnsubscribe = null;
+let medUnsubscribe = null;
+
+function initCatSystem(){
+  renderCatSelect();
+  switchCat();
+  setNow();
+}
+function renderCatSelect(){
+  const sel = document.getElementById("catSelect");
+  sel.innerHTML = catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+}
+function addNewCat(){
+  const name = prompt("輸入新貓咪名稱：");
+  if(!name)return;
+  const id = "cat_"+Date.now();
+  catList.push({id,name});
+  localStorage.setItem("petCats",JSON.stringify(catList));
+  renderCatSelect();
+  document.getElementById("catSelect").value = id;
+  switchCat();
 }
 
-// 修復：真正儲存病歷（包含圖片/PDF）
-async function addMedical(){
-  const type = document.getElementById("medType").value;
-  const date = document.getElementById("medDate").value;
-  const review = document.getElementById("medReview").value;
-  const note = document.getElementById("medNote").value;
-  if(!date){alert("請選擇日期");return;}
-  
-  await medCol.add({
-    type,date,review,note,
-    imgs:medFiles,
-    star:false,
-    stamp:Date.now()
+// 關閉舊監聽 + 切換貓 + 重新監聽
+function switchCat(){
+  // 先取消舊的監聽
+  if(waterUnsubscribe) waterUnsubscribe();
+  if(weightUnsubscribe) weightUnsubscribe();
+  if(dewormUnsubscribe) dewormUnsubscribe();
+  if(medUnsubscribe) medUnsubscribe();
+
+  // 切換當前貓
+  currentCat = document.getElementById("catSelect").value;
+  const catObj = catList.find(c=>c.id === currentCat);
+  currentCatName = catObj ? catObj.name : "貓咪";
+
+  // 清空畫面
+  recordData = [];
+  weightData = [];
+  dewormData = [];
+  medData = [];
+  renderPage();
+  renderWeight();
+  renderDeworm();
+  renderMedList();
+
+  // 重新監聽
+  listenAllData();
+}
+
+// 切換分頁
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.onclick = function(){
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    this.classList.add('active');
+    const t = this.dataset.tab;
+    if(t==="water")document.getElementById("tab-water").classList.add("active");
+    if(t==="weight")document.getElementById("tab-weight").classList.add("active");
+    if(t==="deworm")document.getElementById("tab-deworm").classList.add("active");
+    if(t==="medical")document.getElementById("tab-medical").classList.add("active");
+  }
+});
+
+let waterCol, medCol, weightCol, dewormCol;
+let recordData = [], medData = [], weightData = [], dewormData = [];
+let darkMode = false;
+let medFilter = "all", medSortMode = "new";
+let currentPreviewIndex=0, currentPreviewList=[];
+let currentEditDocId="", editImgsTemp=[];
+const { jsPDF } = window.jspdf;
+const pdfLib = window.pdfjsLib;
+pdfLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js";
+
+// 正確監聽 + 取消舊監聽
+function listenAllData(){
+  waterCol = db.collection(`catWater_${currentCat}`);
+  weightCol = db.collection(`catWeight_${currentCat}`);
+  dewormCol = db.collection(`catDeworm_${currentCat}`);
+  medCol = db.collection(`catMed_${currentCat}`);
+
+  waterUnsubscribe = waterCol.onSnapshot(snap=>{
+    recordData=[]; snap.forEach(d=>recordData.push(d.data()));
+    renderPage();
+    document.getElementById("syncBadge").innerText="☁️ 已同步";
   });
-  
-  document.getElementById("medNote").value="";
-  document.getElementById("medReview").value="";
-  medFiles = [];
-  alert("✅ 病歷儲存完成（圖片/PDF 已存入）");
+  weightUnsubscribe = weightCol.onSnapshot(snap=>{
+    weightData=[]; snap.forEach(d=>weightData.push(d.data()));
+    renderWeight();
+  });
+  dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
+    dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
+    renderDeworm();
+  });
+  medUnsubscribe = medCol.onSnapshot(snap=>{
+    medData=[]; snap.forEach(d=>{let x=d.data();x.docId=d.id;medData.push(x);});
+    renderMedList();
+  });
 }
 
-function setMedFilter(f,el){
-  medFilter = f;
-  document.querySelectorAll(".filter-btn").forEach(b=>b.classList.remove("active"));
-  el.classList.add("active");
+const setNow = () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('selectDate').value = today;
+  document.getElementById('weightDate').value = today;
+  document.getElementById('dewormDate').value = today;
+  document.getElementById('medDate').value = today;
+};
+function toggleDarkMode(){
+  darkMode=!darkMode;
+  document.body.classList.toggle("dark-mode");
+}
+
+// ---------------- 飲水 ----------------
+function quickAdd(v){document.getElementById("waterML").value=v;addRecord();}
+async function addRecord(){
+  const d=document.getElementById("selectDate").value;
+  const t=document.getElementById("selectTime").value;
+  const ml=parseInt(document.getElementById("waterML").value);
+  if(!d||!t||isNaN(ml)||ml<1)return alert("輸入完整");
+  await waterCol.add({date:d,time:t,ml,stamp:Date.now()});
+  document.getElementById("waterML").value="";
+}
+async function delOne(stamp){
+  const snap=await waterCol.where("stamp","==",stamp).get();
+  snap.forEach(d=>d.ref.delete());
+}
+async function clearDayRecord(){
+  const d=document.getElementById("selectDate").value;
+  if(!confirm("清空?"))return;
+  const snap=await waterCol.where("date","==",d).get();
+  const b=db.batch(); snap.forEach(d=>b.delete(d.ref)); await b.commit();
+}
+function exportCSV(){
+  if(!recordData.length)return alert("無資料");
+  let csv="\uFEFF日期,時間,水量\n";
+  recordData.forEach(x=>csv+=`${x.date},${x.time},${x.ml}\n`);
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv]));
+  a.download="飲水紀錄.csv";
+  a.click();
+}
+function triggerImport(){document.getElementById("importFile").click();}
+async function importCSV(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    const lines=ev.target.result.split("\n");
+    for(let i=1;i<lines.length;i++){
+      const [d,t,ml]=lines[i].split(",");
+      if(d&&t&&ml)await waterCol.add({date:d,time:t,ml:parseInt(ml),stamp:Date.now()+i});
+    }
+    alert("匯入完成");
+  };
+  r.readAsText(f);
+}
+function getDayDiff(a,b){return Math.floor((new Date(a)-new Date(b))/86400000)}
+function calcStat(){
+  const today=new Date().toISOString().split('T')[0];
+  const w=recordData.filter(x=>getDayDiff(today,x.date)<7);
+  const wTotal=w.reduce((s,x)=>s+x.ml,0);
+  const m=recordData.filter(x=>x.date.startsWith(today.slice(0,7)));
+  const mMax=m.length?Math.max(...m.map(x=>x.ml)):0;
+  document.getElementById("weekAvg").innerText=Math.round(wTotal/Math.max(w.length,1))+" ml";
+  document.getElementById("weekTotal").innerText=wTotal+" ml";
+  document.getElementById("monthAvg").innerText=Math.round(m.reduce((s,x)=>s+x.ml,0)/Math.max(m.length,1))+" ml";
+  document.getElementById("monthMax").innerText=mMax+" ml";
+}
+function renderPage(){
+  const d=document.getElementById("selectDate").value;
+  const list=recordData.filter(x=>x.date===d).sort((a,b)=>a.time>b.time?-1:1);
+  const total=list.reduce((s,x)=>s+x.ml,0);
+  let cls="text-low",tip="";
+  if(total>=150&&total<=210){cls="text-normal";tip="<div class='warn-high'>✅ 達標</div>"}
+  else if(total>210){cls="text-high";tip="<div class='warn-high'>⚠️ 過量</div>"}
+  else if(total>0){tip="<div class='warn-low'>⚠️ 不足</div>"}
+  document.getElementById("totalShow").innerHTML=`今日：<span class="${cls}">${total}</span> ml`;
+  document.getElementById("warnTip").innerHTML=tip;
+  document.getElementById("recordBody").innerHTML=list.map(x=>`
+  <tr><td>${x.time}</td><td>${x.ml}ml</td><td><button class='btn-delete' onclick='delOne(${x.stamp})'>刪</button></td></tr>`).join("");
+  calcStat();
+}
+document.getElementById("selectDate").addEventListener("change",renderPage);
+
+// ---------------- 體重 ----------------
+async function addWeight(){
+  const d=document.getElementById("weightDate").value;
+  const v=parseFloat(document.getElementById("weightVal").value);
+  const n=document.getElementById("weightNote").value;
+  if(!d||isNaN(v))return alert("輸入完整");
+  await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
+  document.getElementById("weightVal").value="";
+  document.getElementById("weightNote").value="";
+}
+async function delWeight(stamp){
+  const s=await weightCol.where("stamp","==",stamp).get();
+  s.forEach(x=>x.ref.delete());
+}
+function renderWeight(){
+  const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("weightBody").innerHTML=list.map(x=>`
+  <tr>
+    <td>${x.date}</td>
+    <td>${parseFloat(x.weight).toFixed(2)}</td>
+    <td>${x.note||"-"}</td>
+    <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
+  </tr>`).join("");
+
+  if(list.length){
+    document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
+    const vals=list.map(x=>parseFloat(x.weight));
+    const max=Math.max(...vals).toFixed(2);
+    const min=Math.min(...vals).toFixed(2);
+    const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
+    const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
+    document.getElementById("wMax").innerText=max+" kg";
+    document.getElementById("wMin").innerText=min+" kg";
+    document.getElementById("wAvg").innerText=avg+" kg";
+    document.getElementById("wDiff").innerText=diff+" kg";
+  }
+}
+
+// ---------------- 體外驅蟲 ----------------
+async function addDeworm(){
+  const d=document.getElementById("dewormDate").value;
+  const drug=document.getElementById("dewormDrug").value.trim();
+  const next=document.getElementById("dewormNext").value;
+  if(!d||!drug)return alert("輸入完整");
+  await dewormCol.add({date:d,drug,nextDate:next,stamp:Date.now()});
+  document.getElementById("dewormDrug").value="";
+  document.getElementById("dewormNext").value="";
+}
+async function delDeworm(stamp){
+  const s=await dewormCol.where("stamp","==",stamp).get();
+  s.forEach(x=>x.ref.delete());
+}
+function renderDeworm(){
+  const list=[...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("dewormBody").innerHTML=list.map(x=>`
+  <tr>
+    <td>${x.date}</td>
+    <td>${x.drug}</td>
+    <td>${x.nextDate||"-"}</td>
+    <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td>
+  </tr>`).join("");
+}
+
+// ==============================================
+// 體重 CSV 匯出 / 匯入
+// ==============================================
+function exportWeightCSV() {
+  if (!Array.isArray(weightData) || weightData.length === 0) {
+    alert("目前沒有體重紀錄可匯出");
+    return;
+  }
+  let csv = "\uFEFF日期,體重(kg),備註\n";
+  weightData.forEach(item => {
+    const d = (item.date || "").trim();
+    const w = (item.weight || "").trim();
+    const n = (item.note || "").replace(/"/g, '""').trim();
+    csv += `"${d}","${w}","${n}"\n`;
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `${currentCatName}_體重紀錄.csv`;
+  a.click();
+}
+
+function importWeightCSV() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
+    let count = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
+      const date = parts[0];
+      const weight = parts[1];
+      const note = parts[2] || "";
+      if (!date || !weight) continue;
+      await weightCol.add({ date, weight, note, stamp: Date.now() + i });
+      count++;
+    }
+    alert(`體重匯入完成：${count} 筆`);
+  };
+  input.click();
+}
+
+// ==============================================
+// 體外驅蟲 CSV 匯出 / 匯入
+// ==============================================
+function exportParaCSV() {
+  if (!Array.isArray(dewormData) || dewormData.length === 0) {
+    alert("目前沒有體外驅蟲紀錄可匯出");
+    return;
+  }
+  let csv = "\uFEFF日期,藥品/品牌,下次到期日,備註\n";
+  dewormData.forEach(item => {
+    const d = (item.date || "").trim();
+    const drug = (item.drug || "").replace(/"/g, '""').trim();
+    const next = (item.nextDate || "").trim();
+    csv += `"${d}","${drug}","${next}",""\n`;
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `${currentCatName}_體外驅蟲.csv`;
+  a.click();
+}
+
+function importParaCSV() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
+    let count = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
+      const date = parts[0];
+      const drug = parts[1];
+      const nextDate = parts[2] || "";
+      if (!date || !drug) continue;
+      await dewormCol.add({ date, drug, nextDate, stamp: Date.now() + i });
+      count++;
+    }
+    alert(`驅蟲匯入完成：${count} 筆`);
+  };
+  input.click();
+}
+
+// ---------------- 病歷 + PDF 不亂碼 ----------------
+function addCalendarRemind(title,dateStr,desc){
+  if(!dateStr)return alert("請填下次日期");
+  const rev=new Date(dateStr);
+  const early=new Date(rev); early.setDate(rev.getDate()-3);
+  const fmt=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,0)+String(d.getDate()).padStart(2,0);
+  const ics=`BEGIN:VCALENDAR
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:${fmt(early)}
+DTEND;VALUE=DATE:${fmt(early)}
+SUMMARY:🐱 回診提醒
+DESCRIPTION:${desc}
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:${fmt(rev)}
+DTEND;VALUE=DATE:${fmt(rev)}
+SUMMARY:🏥 回診當日
+END:VEVENT
+END:VCALENDAR`;
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
+  a.download="回診.ics";
+  a.click();
+  alert("匯入成功");
+}
+
+function exportMedToPDF(item) {
+  const doc = new jsPDF();
+  doc.addFont('https://cdn.jsdelivr.net/npm/noto-sans-tc@1.0.0/fonts/NotoSansTC-Regular.otf', 'NotoSansTC', 'normal');
+  doc.setFont('NotoSansTC');
+
+  const catName = currentCatName || "貓咪";
+  let y = 15;
+  const lh = 9;
+
+  doc.text(`🐾 ${catName} 醫療病歷`, 14, y); y += lh + 2;
+  doc.text(`類別：${item.type || ''}`, 14, y); y += lh;
+  doc.text(`日期：${item.date || ''}`, 14, y); y += lh;
+  doc.text(`回診：${item.review || '無'}`, 14, y); y += lh + 2;
+  doc.text(`備註：`, 14, y); y += lh;
+
+  const note = item.note || '無備註';
+  const lines = doc.splitTextToSize(note, 175);
+  lines.forEach(line => {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.text(line, 14, y);
+    y += lh;
+  });
+
+  if (item.imgs && item.imgs.length) {
+    item.imgs.forEach((img, i) => {
+      if (i > 0) doc.addPage();
+      try {
+        doc.addImage(img, 'JPEG', 10, 20, 190, 230);
+      } catch (e) {}
+    });
+  }
+
+  doc.save(`${catName}_病歷_${item.date || ''}.pdf`);
+}
+
+function setMedFilter(v,b){
+  medFilter=v;
+  document.querySelectorAll(".filter-btn").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
   renderMedList();
 }
 function sortMedNew(){medSortMode="new";renderMedList();}
 function sortMedOld(){medSortMode="old";renderMedList();}
+async function compressImg(file){
+  return new Promise(r=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement("canvas");
+      let w=img.width,h=img.height;
+      if(w>1200){h=h*(1200/w);w=1200;}
+      c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      r(c.toDataURL("image/jpeg",0.7));
+    };
+    img.src=URL.createObjectURL(file);
+  });
+}
+async function pdfToImgs(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfLib.getDocument(buf).promise;
+  const imgs=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const p=await pdf.getPage(i);
+    const v=p.getViewport({scale:1.2});
+    const c=document.createElement("canvas");
+    c.width=v.width;c.height=v.height;
+    await p.render({canvasContext:c.getContext("2d"),viewport:v}).promise;
+    imgs.push(c.toDataURL("image/jpeg",0.8));
+  }
+  return imgs;
+}
+function triggerMedUpload(){document.getElementById("medFile").click();}
+async function handleMedFile(e){
+  const files=Array.from(e.target.files);
+  if(!files.length)return;
+  const type=document.getElementById("medType").value;
+  const date=document.getElementById("medDate").value;
+  const review=document.getElementById("medReview").value;
+  const note=document.getElementById("medNote").value;
+  let imgs=[];
+  for(const f of files){
+    if(f.type==="application/pdf")imgs.push(...await pdfToImgs(f));
+    else imgs.push(await compressImg(f));
+  }
+  await medCol.add({id:Date.now(),type,date,review,note,imgs,star:false});
+  alert("新增完成");
+  document.getElementById("medNote").value="";
+}
+function getTypeClass(t){
+  if(t==="檢驗報告")return"tag-check";
+  if(t==="用藥單")return"tag-medic";
+  if(t==="就診紀錄")return"tag-emerg";
+  return"tag-other";
+}
+async function delMedImg(docId,i){
+  const item=medData.find(x=>x.docId===docId);
+  if(!item)return;
+  item.imgs.splice(i,1);
+  await medCol.doc(docId).update({imgs:item.imgs});
+}
 
-// 修復：匯出 PDF 按鈕參數正確化
 function renderMedList(){
-  const kw = document.getElementById("medSearch").value.toLowerCase();
-  let list = [...medData];
-  if(medFilter==="star") list = list.filter(x=>x.star);
-  else if(medFilter!=="all") list = list.filter(x=>x.type===medFilter);
-  if(kw) list = list.filter(x=>
-    (x.note||"").toLowerCase().includes(kw)||
-    (x.type||"").toLowerCase().includes(kw)||
-    (x.date||"").includes(kw)
-  );
-  if(medSortMode==="new") list.sort((a,b)=>b.stamp - a.stamp);
-  else list.sort((a,b)=>a.stamp - b.stamp);
-
-  const box = document.getElementById("medList");
-  box.innerHTML = list.map((it,idx)=>`
-  <div class="med-card ${it.star?'star-card':''}">
-    <div class="med-tag ${it.type==='檢驗報告'?'tag-check':it.type==='用藥單'?'tag-medic':it.type==='就診紀錄'?'tag-emerg':'tag-other'}">${it.type}</div>
-    <div>📅 ${it.date}</div>
-    <div style="white-space:pre-line;overflow:hidden;max-height:120px;">${it.note||''}</div>
-    <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-top:6px;">
-      <button class="btn-star" onclick="toggleStar('${it.docId}')">${it.star?'取消星標':'⭐星標'}</button>
-      <button class="btn-edit" onclick="openEditModal('${it.docId}')">編輯</button>
-      <button class="btn-delete" onclick="delMed('${it.docId}')">刪除</button>
-      <button class="btn-calendar" onclick="addCalendar('${it.date}','${it.review||''}')">📅</button>
-      <button class="btn-pdf" onclick="exportMedToPDF('${it.docId}')">匯出PDF</button>
+  let list=[...medData];
+  const key=document.getElementById("medSearch").value.toLowerCase();
+  if(medFilter==="star")list=list.filter(x=>x.star);
+  else if(medFilter!=="all")list=list.filter(x=>x.type===medFilter);
+  if(key)list=list.filter(x=>x.note?.toLowerCase().includes(key)||x.type.includes(key));
+  list.sort(medSortMode==="new"?(a,b)=>b.id-a.id:(a,b)=>new Date(a.date)-new Date(b.date));
+  const wrap=document.getElementById("medList");
+  if(!list.length){wrap.innerHTML="<div style='grid-column:1/-1;text-align:center'>無資料</div>";return;}
+  
+  wrap.innerHTML=list.map((item,idx)=>`
+  <div class='med-card ${item.star?"star-card":""}' onclick='openMedPreview(${idx})'>
+    ${item.imgs?.length?`
+    <div class='med-img-wrap'>
+      <img src='${item.imgs[0]}' class='med-img'>
+      <button class='img-del-btn' onclick='event.stopPropagation();delMedImg("${item.docId}",0)'>×</button>
+    </div>`:"<div style='padding:20px;text-align:center'>無圖片</div>"}
+    <span class='med-tag ${getTypeClass(item.type)}'>${item.type}</span>
+    <div class='med-info-line'>📅 ${item.date||""}</div>
+    <div class='med-info-line'>📝 ${item.note || '無備註'}</div>
+    <div class='med-info-line'>🏥 ${item.review||""} ${item.review?`<button class='btn-calendar' onclick='event.stopPropagation();addCalendarRemind(\"\",\"${item.review}\",\"\")'>📅</button>`:""}</div>
+    <div style='margin-top:6px;display:flex;gap:4px'>
+      <button class='btn-edit' onclick='event.stopPropagation();openEditMed("${item.docId}")'>編</button>
+      <button class='btn-delete' onclick='event.stopPropagation();delMed("${item.docId}")'>刪</button>
+      <button class='btn-star' onclick='event.stopPropagation();toggleStar("${item.docId}",${item.star})'>${item.star?"⭐":"☆"}</button>
+      <button class='btn-pdf' onclick='event.stopPropagation();exportMedToPDF(medData.find(x=>x.docId==="${item.docId}"))'>PDF</button>
     </div>
   </div>`).join("");
 }
 
-async function toggleStar(id){
-  const doc = medCol.doc(id);
-  const d = await doc.get();
-  await doc.update({star:!d.data().star});
+async function toggleStar(docId,val){await medCol.doc(docId).update({star:!val});}
+async function delMed(docId){if(confirm("刪除?"))await medCol.doc(docId).delete();}
+
+function openMedPreview(idx){
+  const realItem = medData[idx];
+  if (!realItem || !realItem.imgs || realItem.imgs.length === 0) {
+    alert("此病歷沒有圖片可以預覽");
+    return;
+  }
+  currentPreviewList = realItem.imgs;
+  currentPreviewIndex = 0;
+  document.getElementById("previewImg").src = currentPreviewList[0];
+  document.getElementById("previewModal").classList.add("show");
 }
-async function delMed(id){
-  if(!confirm("確定刪除病歷？")) return;
-  await medCol.doc(id).delete();
+function closePreviewModal(){
+  document.getElementById("previewModal").classList.remove("show");
+}
+function prevMedImg(){
+  if (currentPreviewIndex > 0) {
+    currentPreviewIndex--;
+    document.getElementById("previewImg").src = currentPreviewList[currentPreviewIndex];
+  }
+}
+function nextMedImg(){
+  if (currentPreviewIndex < currentPreviewList.length - 1) {
+    currentPreviewIndex++;
+    document.getElementById("previewImg").src = currentPreviewList[currentPreviewIndex];
+  }
 }
 
-function openEditModal(id){
-  const item = medData.find(x=>x.docId===id);
+function renderEditImgs(){
+  document.getElementById("editImgs").innerHTML=editImgsTemp.map((src,i)=>`
+  <div class='edit-img-item'>
+    <img src='${src}' class='edit-img'>
+    <button class='edit-img-del' onclick='editImgsTemp.splice(${i},1);renderEditImgs()'>×</button>
+  </div>`).join("");
+}
+function triggerEditMedUpload(){document.getElementById("editMedFile").click();}
+async function handleEditMedFile(e){
+  const files=Array.from(e.target.files);
+  let imgs=[];
+  for(const f of files){
+    if(f.type==="application/pdf")imgs.push(...await pdfToImgs(f));
+    else imgs.push(await compressImg(f));
+  }
+  editImgsTemp=[...editImgsTemp,...imgs];
+  renderEditImgs();
+}
+function openEditMed(docId){
+  const item=medData.find(x=>x.docId===docId);
   if(!item)return;
-  currentEditDocId = id;
-  editImgsTemp = [...(item.imgs||[])];
-  document.getElementById("editMedType").innerHTML = `
-  <option value="檢驗報告">檢驗報告</option>
-  <option value="就診紀錄">就診紀錄</option>
-  <option value="用藥單">用藥單</option>
-  <option value="術後追蹤">術後追蹤</option>
-  <option value="其他報告">其他報告</option>`;
-  document.getElementById("editMedType").value = item.type;
-  document.getElementById("editMedDate").value = item.date;
-  document.getElementById("editReview").value = item.review||"";
-  document.getElementById("editNote").value = item.note||"";
+  currentEditDocId=docId;
+  editImgsTemp=[...(item.imgs||[])];
+  document.getElementById("editMedType").innerHTML=document.getElementById("medType").innerHTML;
+  document.getElementById("editMedType").value=item.type;
+  document.getElementById("editMedDate").value=item.date||"";
+  document.getElementById("editReview").value=item.review||"";
+  document.getElementById("editNote").value=item.note||"";
   renderEditImgs();
   document.getElementById("editModal").classList.add("show");
 }
-function closeEditModal(){
-  document.getElementById("editModal").classList.remove("show");
-  editImgsTemp=[];
-}
-function renderEditImgs(){
-  const box = document.getElementById("editImgs");
-  box.innerHTML = editImgsTemp.map((src,i)=>`
-  <div class="edit-img-item">
-    <img src="${src}" class="edit-img">
-    <button class="edit-img-del" onclick="removeEditImg(${i})">×</button>
-  </div>`).join("");
-}
-function removeEditImg(i){
-  editImgsTemp.splice(i,1);
-  renderEditImgs();
-}
-function triggerEditMedUpload(){
-  document.getElementById("editMedFile").value="";
-  document.getElementById("editMedFile").click();
-}
-function handleEditMedFile(e){
-  const fs = e.target.files;
-  for(let i=0;i<fs.length;i++){
-    const r = new FileReader();
-    r.onload=ev=>editImgsTemp.push(ev.target.result);
-    r.readAsDataURL(fs[i]);
-  }
-  setTimeout(renderEditImgs,300);
-}
+function closeEditModal(){document.getElementById("editModal").classList.remove("show");}
 async function saveEditMed(){
-  const t = document.getElementById("editMedType").value;
-  const d = document.getElementById("editMedDate").value;
-  const r = document.getElementById("editReview").value;
-  const n = document.getElementById("editNote").value;
   await medCol.doc(currentEditDocId).update({
-    type:t,date:d,review:r,note:n,imgs:editImgsTemp
+    type:document.getElementById("editMedType").value,
+    date:document.getElementById("editMedDate").value,
+    review:document.getElementById("editReview").value,
+    note:document.getElementById("editNote").value,
+    imgs:editImgsTemp
   });
   closeEditModal();
+  alert("儲存完成");
 }
-
-function addCalendar(sDate,review){
-  if(!review)return alert("請先設定回診日期");
-  const start = review.replace(/-/g,"");
-  const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(currentCatName+" 回診")}&dates=${start}/${start}&details=${encodeURIComponent("寵物回診")}`;
-  window.open(url,"_blank");
-}
-
-// 修復：PDF 匯出函式（穩定版 + 圖片正常匯入）
-function exportMedToPDF(docId){
-  const item = medData.find(x => x.docId === docId);
-  if(!item) {
-    alert("找不到病歷資料");
-    return;
-  }
-
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  // 中文字體正常顯示
-  doc.setFont("Microsoft JhengHei");
-  doc.setFontSize(16);
-  doc.text(`🐾 ${currentCatName} 醫療病歷`, 14, 20);
-  doc.setFontSize(14);
-  doc.text(`類別：${item.type}`, 14, 30);
-  doc.text(`日期：${item.date}`, 14, 40);
-  doc.text(`回診：${item.review || '無'}`, 14, 50);
-  doc.text(`備註：`, 14, 60);
-
-  // 自動換行備註
-  const lines = doc.splitTextToSize(item.note || '無', 180);
-  let y = 70;
-  lines.forEach(line=>{
-    if(y > 280){
-      doc.addPage();
-      y = 20;
-    }
-    doc.text(line, 14, y);
-    y += 10;
-  });
-
-  // 匯入圖片（修復版）
-  if(item.imgs && item.imgs.length > 0){
-    item.imgs.forEach((img, i) => {
-      if(i > 0) doc.addPage();
-      try {
-        doc.addImage(img, "JPEG", 10, 20, 190, 240);
-      } catch(e) {
-        console.log("圖片匯入失敗", e);
-      }
-    });
-  }
-
-  // 下載
-  doc.save(`${currentCatName}_病歷_${item.date}.pdf`);
-}
-
-function exportMedData(){
-  const data = JSON.stringify(medData);
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([data],{type:"application/json"}));
-  a.download = `${currentCatName}_病歷備份.json`;
+async function exportMedData(){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(medData)],{type:"application/json"}));
+  a.download="病歷備份.json";
   a.click();
 }
-function triggerMedImport(){
-  document.getElementById("medImportFile").value="";
-  document.getElementById("medImportFile").click();
-}
+function triggerMedImport(){document.getElementById("medImportFile").click();}
 async function importMedData(e){
-  const f = e.target.files[0];
-  if(!f)return;
-  const t = await f.text();
-  const arr = JSON.parse(t);
-  for(const x of arr){
-    await medCol.add({
-      type:x.type,date:x.date,review:x.review,note:x.note,
-      imgs:x.imgs||[],star:x.star||false,stamp:Date.now()
-    });
-  }
-  alert("還原完成");
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    const data=JSON.parse(ev.target.result);
+    for(const item of data){delete item.docId;await medCol.add(item);}
+    alert("匯入完成");
+  };
+  r.readAsText(f);
 }
+</script>
+</body>
+</html>
