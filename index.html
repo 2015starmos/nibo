@@ -368,6 +368,9 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   padding: 10px;
   font-size: 13px;
   position:relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .med-card.star-card { border:2px solid var(--orange); }
 .med-tag {
@@ -386,9 +389,12 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 .med-img-wrap {
   position:relative;
   margin-bottom:6px;
+  width: 100%;
+  aspect-ratio: 1;
 }
 .med-img {
   width: 100%;
+  height: 100%;
   border-radius: 10px;
   object-fit: cover;
   cursor: pointer;
@@ -422,7 +428,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   display: none;
   align-items: center;
   justify-content: center;
-  z-index: 999;
+  z-index: 9999;
   padding: 15px;
 }
 .preview-modal.show { display: flex; }
@@ -446,6 +452,21 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 }
 .prev-left { left:10px; }
 .prev-right { right:10px; }
+/* 预览关闭按钮 */
+.preview-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 100;
+}
 
 .edit-modal {
   position:fixed;
@@ -454,7 +475,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:1000;
+  z-index:10000;
   padding:15px;
 }
 .edit-modal.show { display:flex; }
@@ -514,7 +535,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
@@ -673,8 +694,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
       <div class="desc-small">▼ 下次回診預約日期</div>
       <input class="form-input" type="date" id="medReview" placeholder="填寫後可匯入手機行事曆">
       <textarea class="form-input form-textarea" id="medNote" placeholder="備註：症狀、檢驗數值、用藥名稱、醫師囑咐..."></textarea>
-      <button class="btn-primary" onclick="saveMedicalRecord()">✅ 儲存病歷文字</button>
-      <button class="btn-primary" onclick="triggerMedUpload()" style="margin-top:8px;">📎 上傳PDF/圖片</button>
+      <button class="btn-primary" onclick="triggerMedUpload()">📎 上傳PDF/圖片報告</button>
       <input type="file" id="medFile" accept=".pdf,image/*" multiple onchange="handleMedFile(event)">
     </div>
 
@@ -695,6 +715,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 
 <!-- 預覽 -->
 <div class="preview-modal" id="previewModal">
+  <button class="preview-close" onclick="closePreviewModal()">×</button>
   <button class="preview-btn prev-left" onclick="prevMedImg()">←</button>
   <img class="preview-img" id="previewImg">
   <button class="preview-btn prev-right" onclick="nextMedImg()">→</button>
@@ -986,31 +1007,6 @@ function renderDeworm(){
 }
 
 // ---------------- 病歷 ----------------
-// 單獨儲存病歷（文字也能存）
-async function saveMedicalRecord() {
-  const type = document.getElementById("medType").value;
-  const date = document.getElementById("medDate").value;
-  const review = document.getElementById("medReview").value;
-  const note = document.getElementById("medNote").value;
-
-  if (!date) {
-    alert("請填寫就診日期");
-    return;
-  }
-
-  await medCol.add({
-    id: Date.now(),
-    type: type,
-    date: date,
-    review: review,
-    note: note,
-    imgs: [],
-    star: false
-  });
-  alert("病歷儲存成功！");
-  document.getElementById("medNote").value = "";
-}
-
 function addCalendarRemind(title,dateStr,desc){
   if(!dateStr)return alert("請填下次日期");
   const rev=new Date(dateStr);
@@ -1104,7 +1100,7 @@ async function handleMedFile(e){
     else imgs.push(await compressImg(f));
   }
   await medCol.add({id:Date.now(),type,date,review,note,imgs,star:false});
-  alert("上傳完成");
+  alert("新增完成");
   document.getElementById("medNote").value="";
 }
 function getTypeClass(t){
@@ -1137,6 +1133,7 @@ function renderMedList(){
     </div>`:"<div style='padding:20px;text-align:center'>無圖片</div>"}
     <span class='med-tag ${getTypeClass(item.type)}'>${item.type}</span>
     <div class='med-info-line'>📅 ${item.date||""}</div>
+    <div class='med-info-line'>📝 ${item.note ? item.note.substring(0,15)+'...' : '無備註'}</div>
     <div class='med-info-line'>🏥 ${item.review||""} ${item.review?`<button class='btn-calendar' onclick='addCalendarRemind(\"\",\"${item.review}\",\"\")'>📅</button>`:""}</div>
     <div style='margin-top:6px;display:flex;gap:4px'>
       <button class='btn-edit' onclick='openEditMed("${item.docId}")'>編</button>
@@ -1156,9 +1153,11 @@ function openMedPreview(i){
   document.getElementById("previewImg").src=item.imgs[0];
   document.getElementById("previewModal").classList.add("show");
 }
+function closePreviewModal(){
+  document.getElementById("previewModal").classList.remove("show");
+}
 function prevMedImg(){if(currentPreviewIndex>0)document.getElementById("previewImg").src=currentPreviewList[--currentPreviewIndex];}
 function nextMedImg(){if(currentPreviewIndex<currentPreviewList.length-1)document.getElementById("previewImg").src=currentPreviewList[++currentPreviewIndex];}
-document.getElementById("previewModal").onclick=e=>{if(e.target===document.getElementById("previewModal"))document.getElementById("previewModal").classList.remove("show");}
 
 function renderEditImgs(){
   document.getElementById("editImgs").innerHTML=editImgsTemp.map((src,i)=>`
