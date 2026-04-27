@@ -7,7 +7,6 @@
 <title>小貓醫療紀錄系統</title>
 
 <style>
-/* 內嵌密碼鎖 不彈窗 */
 .inlock-wrap{position:fixed;inset:0;background:linear-gradient(160deg, #f6f9fe, #eaf2f9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
 .inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
@@ -539,7 +538,6 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
 
 <body>
 
-<!-- 密碼鎖畫面 -->
 <div class="inlock-wrap">
   <div class="inlock-box">
     <div class="inlock-title">🔐 寵物健康紀錄 解鎖</div>
@@ -549,14 +547,12 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   </div>
 </div>
 
-<!-- 主要內容（預設隱藏） -->
 <div class="main-content">
 <div class="wrapper">
   <h1 class="main-title">🐾 寵物健康全紀錄</h1>
   <div class="sync-badge" id="syncBadge">☁️ 雲端同步連線中...</div>
   <button class="theme-switch" onclick="toggleDarkMode()">🌓 切換深色模式</button>
 
-  <!-- 貓咪切換 -->
   <div class="cat-selector">
     <select class="cat-select" id="catSelect" onchange="switchCat()"></select>
     <button class="cat-add-btn" onclick="addNewCat()">+ 新增貓咪</button>
@@ -607,7 +603,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
         <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
-        <div class="stat-item"><div class="stat-num" id="monthMax">0 ml</div></div>
+        <div class="stat-item"><div class="stat-label">本月最高單筆</div><div class="stat-num" id="monthMax">0 ml</div></div>
       </div>
     </div>
   </div>
@@ -628,6 +624,10 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
         <thead><tr><th>日期</th><th>體重</th><th>備註</th><th>刪除</th></tr></thead>
         <tbody id="weightBody"></tbody>
       </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportWeightCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="importWeightCSV()">📥 匯入CSV</button>
+      </div>
     </div>
 
     <div class="ui-card">
@@ -656,6 +656,10 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
         <thead><tr><th>使用日期</th><th>藥品</th><th>下次日期</th><th>刪除</th></tr></thead>
         <tbody id="dewormBody"></tbody>
       </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportParaCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="importParaCSV()">📥 匯入CSV</button>
+      </div>
     </div>
   </div>
 
@@ -710,7 +714,6 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   </div>
 </div>
 
-<!-- 預覽 -->
 <div class="preview-modal" id="previewModal">
   <button class="preview-close" onclick="closePreviewModal()">×</button>
   <button class="preview-btn prev-left" onclick="prevMedImg()">←</button>
@@ -718,7 +721,6 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
   <button class="preview-btn prev-right" onclick="nextMedImg()">→</button>
 </div>
 
-<!-- 編輯 -->
 <div class="edit-modal" id="editModal">
   <div class="edit-box">
     <h4 style="text-align:center;margin-bottom:10px;color:var(--primary)">編輯病歷資料</h4>
@@ -783,6 +785,7 @@ const db = firebase.firestore();
 // 多貓核心
 let currentCat = "default";
 let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
+let currentCatName = "波波";
 
 function initCatSystem(){
   renderCatSelect();
@@ -805,6 +808,8 @@ function addNewCat(){
 }
 function switchCat(){
   currentCat = document.getElementById("catSelect").value;
+  const catObj = catList.find(c=>c.id === currentCat);
+  currentCatName = catObj ? catObj.name : "貓咪";
   listenAllData();
 }
 
@@ -946,7 +951,7 @@ async function addWeight(){
   const v=parseFloat(document.getElementById("weightVal").value);
   const n=document.getElementById("weightNote").value;
   if(!d||isNaN(v))return alert("輸入完整");
-  await weightCol.add({date:d,val:v,note:n,stamp:Date.now()});
+  await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
   document.getElementById("weightVal").value="";
   document.getElementById("weightNote").value="";
 }
@@ -959,18 +964,18 @@ function renderWeight(){
   document.getElementById("weightBody").innerHTML=list.map(x=>`
   <tr>
     <td>${x.date}</td>
-    <td>${x.val.toFixed(2)}</td>
+    <td>${parseFloat(x.weight).toFixed(2)}</td>
     <td>${x.note||"-"}</td>
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 
   if(list.length){
-    document.getElementById("weightLatest").innerText=`最新：${list[0].val.toFixed(2)} kg`;
-    const vals=list.map(x=>x.val);
+    document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
+    const vals=list.map(x=>parseFloat(x.weight));
     const max=Math.max(...vals).toFixed(2);
     const min=Math.min(...vals).toFixed(2);
     const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
-    const diff=list.length>=2?(list[0].val-list[1].val).toFixed(2):0;
+    const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
     document.getElementById("wMax").innerText=max+" kg";
     document.getElementById("wMin").innerText=min+" kg";
     document.getElementById("wAvg").innerText=avg+" kg";
@@ -984,7 +989,7 @@ async function addDeworm(){
   const drug=document.getElementById("dewormDrug").value.trim();
   const next=document.getElementById("dewormNext").value;
   if(!d||!drug)return alert("輸入完整");
-  await dewormCol.add({date:d,drug,next,stamp:Date.now()});
+  await dewormCol.add({date:d,drug,nextDate:next,stamp:Date.now()});
   document.getElementById("dewormDrug").value="";
   document.getElementById("dewormNext").value="";
 }
@@ -998,12 +1003,102 @@ function renderDeworm(){
   <tr>
     <td>${x.date}</td>
     <td>${x.drug}</td>
-    <td>${x.next||"-"}</td>
+    <td>${x.nextDate||"-"}</td>
     <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 }
 
-// ---------------- 病歷 ----------------
+// ==============================================
+// 體重 CSV 匯出 / 匯入
+// ==============================================
+function exportWeightCSV() {
+  if (!Array.isArray(weightData) || weightData.length === 0) {
+    alert("目前沒有體重紀錄可匯出");
+    return;
+  }
+  let csv = "\uFEFF日期,體重(kg),備註\n";
+  weightData.forEach(item => {
+    const d = (item.date || "").trim();
+    const w = (item.weight || "").trim();
+    const n = (item.note || "").replace(/"/g, '""').trim();
+    csv += `"${d}","${w}","${n}"\n`;
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `${currentCatName}_體重紀錄.csv`;
+  a.click();
+}
+
+function importWeightCSV() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
+    let count = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
+      const date = parts[0];
+      const weight = parts[1];
+      const note = parts[2] || "";
+      if (!date || !weight) continue;
+      await weightCol.add({ date, weight, note, stamp: Date.now() + i });
+      count++;
+    }
+    alert(`體重匯入完成：${count} 筆`);
+  };
+  input.click();
+}
+
+// ==============================================
+// 體外驅蟲 CSV 匯出 / 匯入
+// ==============================================
+function exportParaCSV() {
+  if (!Array.isArray(dewormData) || dewormData.length === 0) {
+    alert("目前沒有體外驅蟲紀錄可匯出");
+    return;
+  }
+  let csv = "\uFEFF日期,藥品/品牌,下次到期日,備註\n";
+  dewormData.forEach(item => {
+    const d = (item.date || "").trim();
+    const drug = (item.drug || "").replace(/"/g, '""').trim();
+    const next = (item.nextDate || "").trim();
+    csv += `"${d}","${drug}","${next}",""\n`;
+  });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `${currentCatName}_體外驅蟲.csv`;
+  a.click();
+}
+
+function importParaCSV() {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
+    let count = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
+      const date = parts[0];
+      const drug = parts[1];
+      const nextDate = parts[2] || "";
+      if (!date || !drug) continue;
+      await dewormCol.add({ date, drug, nextDate, stamp: Date.now() + i });
+      count++;
+    }
+    alert(`驅蟲匯入完成：${count} 筆`);
+  };
+  input.click();
+}
+
+// ---------------- 病歷 + PDF 不亂碼 ----------------
 function addCalendarRemind(title,dateStr,desc){
   if(!dateStr)return alert("請填下次日期");
   const rev=new Date(dateStr);
@@ -1031,53 +1126,39 @@ END:VCALENDAR`;
   alert("匯入成功");
 }
 
-// ✅ 最終修復：PDF 100% 不亂碼 + 備註完整輸出 + 日期完整輸出
 function exportMedToPDF(item) {
   const doc = new jsPDF();
+  doc.addFont('https://cdn.jsdelivr.net/npm/noto-sans-tc@1.0.0/fonts/NotoSansTC-Regular.otf', 'NotoSansTC', 'normal');
+  doc.setFont('NotoSansTC');
 
-  const type = item.type || '';
-  const date = item.date || '';
-  const review = item.review || '無';
+  const catName = currentCatName || "貓咪";
+  let y = 15;
+  const lh = 9;
+
+  doc.text(`🐾 ${catName} 醫療病歷`, 14, y); y += lh + 2;
+  doc.text(`類別：${item.type || ''}`, 14, y); y += lh;
+  doc.text(`日期：${item.date || ''}`, 14, y); y += lh;
+  doc.text(`回診：${item.review || '無'}`, 14, y); y += lh + 2;
+  doc.text(`備註：`, 14, y); y += lh;
+
   const note = item.note || '無備註';
-
-  let yPos = 15;
-  const lineHeight = 10;
-
-  const textLines = [
-    '寵物病歷紀錄',
-    '-------------------',
-    '類別：' + type,
-    '日期：' + date,
-    '下次回診：' + review,
-    '-------------------',
-    '備註：'
-  ];
-
-  textLines.forEach(line => {
-    doc.text(line, 14, yPos);
-    yPos += lineHeight;
+  const lines = doc.splitTextToSize(note, 175);
+  lines.forEach(line => {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.text(line, 14, y);
+    y += lh;
   });
 
-  const noteLines = doc.splitTextToSize(note, 180);
-  noteLines.forEach(line => {
-    doc.text(line, 14, yPos);
-    yPos += lineHeight;
-  });
-
-  yPos += 5;
-
-  if (item.imgs && item.imgs.length > 0) {
-    item.imgs.forEach((imgData, idx) => {
-      if (idx > 0) doc.addPage();
-      const imgW = 190;
-      const imgH = imgW * 1.4;
+  if (item.imgs && item.imgs.length) {
+    item.imgs.forEach((img, i) => {
+      if (i > 0) doc.addPage();
       try {
-        doc.addImage(imgData, 'JPEG', 10, yPos, imgW, imgH);
+        doc.addImage(img, 'JPEG', 10, 20, 190, 230);
       } catch (e) {}
     });
   }
 
-  doc.save('病歷紀錄_' + date + '.pdf');
+  doc.save(`${catName}_病歷_${item.date || ''}.pdf`);
 }
 
 function setMedFilter(v,b){
@@ -1179,7 +1260,6 @@ function renderMedList(){
 async function toggleStar(docId,val){await medCol.doc(docId).update({star:!val});}
 async function delMed(docId){if(confirm("刪除?"))await medCol.doc(docId).delete();}
 
-// 🔥 修復：多圖預覽 100% 正常
 function openMedPreview(idx){
   const realItem = medData[idx];
   if (!realItem || !realItem.imgs || realItem.imgs.length === 0) {
