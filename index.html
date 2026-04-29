@@ -9,818 +9,646 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: "Microsoft JhengHei", "Noto Sans TC", sans-serif;
-            font-size: 14px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            font-size:14px;
         }
         body {
             background: #f5f5f5;
-            color: #333;
-            padding: 10px;
+            padding:10px;
         }
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            overflow: hidden;
+            max-width:1100px;
+            margin:0 auto;
+            background:white;
+            border:1px solid #ddd;
+            border-radius:5px;
+            overflow:hidden;
         }
         .header {
-            background: #003366;
-            color: #fff;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background:#003366;
+            color:white;
+            padding:12px 20px;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
         }
         .header h1 {
-            font-size: 18px;
-            font-weight: 600;
+            font-size:18px;
         }
         .btn {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-weight: 500;
+            padding:6px 12px;
+            border:none;
+            border-radius:3px;
+            cursor:pointer;
         }
-        .btn-primary { background: #0066cc; color: #fff; }
-        .btn-success { background: #28a745; color: #fff; }
-        .btn-warning { background: #ffc107; color: #333; }
-        .btn-danger { background: #dc3545; color: #fff; }
-        .btn-sm { padding: 4px 8px; font-size: 12px; }
+        .btn-primary { background:#0066cc; color:white; }
+        .btn-success { background:#28a745; color:white; }
+        .btn-warning { background:#ffc107; color:#333; }
+        .btn-danger { background:#dc3545; color:white; }
+        .btn-sm { padding:4px 8px; font-size:12px; }
 
         .tabs {
-            display: flex;
-            background: #e9ecef;
-            border-bottom: 1px solid #ddd;
+            display:flex;
+            background:#e9ecef;
         }
         .tab-item {
-            padding: 10px 20px;
-            cursor: pointer;
-            border-right: 1px solid #ddd;
-            font-weight: 500;
+            padding:10px 20px;
+            cursor:pointer;
+            border-right:1px solid #ddd;
         }
         .tab-item.active {
-            background: #fff;
-            border-top: 2px solid #0066cc;
-            border-bottom: 1px solid #fff;
-            margin-bottom: -1px;
+            background:white;
+            border-top:2px solid #0066cc;
         }
         .search-bar {
-            padding: 10px 20px;
-            background: #f8f9fa;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
+            padding:10px 20px;
+            background:#f8f9fa;
+            border-bottom:1px solid #ddd;
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
         }
         .search-bar input, .search-bar select {
-            padding: 6px 8px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            width: 200px;
-        }
-        .search-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            padding:6px;
+            border:1px solid #ddd;
+            width:180px;
         }
         .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
+            width:100%;
+            border-collapse:collapse;
+            margin:10px 0;
         }
         .data-table th, .data-table td {
-            border: 1px solid #ddd;
-            padding: 8px 10px;
-            text-align: left;
+            border:1px solid #ddd;
+            padding:8px;
+            text-align:left;
         }
         .data-table th {
-            background: #e9ecef;
-            font-weight: 600;
-        }
-        .data-table tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-        .status-normal {
-            background: #d4edda;
-            color: #155724;
-            padding: 2px 4px;
-            border-radius: 2px;
-            font-size: 12px;
-        }
-        .status-warning {
-            background: #fff3cd;
-            color: #856404;
-            padding: 2px 4px;
-            border-radius: 2px;
-            font-size: 12px;
-        }
-        .status-danger {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 2px 4px;
-            border-radius: 2px;
-            font-size: 12px;
+            background:#e9ecef;
         }
         .form-section {
-            padding: 20px;
-            display: none;
+            padding:20px;
+            display:none;
         }
         .form-section.active {
-            display: block;
+            display:block;
         }
         .form-grid {
-            display: grid;
+            display:grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
+            gap:15px;
+            margin-bottom:20px;
         }
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .form-group label {
-            font-weight: 500;
-            font-size: 13px;
+            display:flex;
+            flex-direction:column;
+            gap:5px;
         }
         .form-group input, .form-group select, .form-group textarea {
-            padding: 8px 10px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            font-size: 14px;
-        }
-        .form-group textarea {
-            min-height: 80px;
-            resize: vertical;
+            padding:8px;
+            border:1px solid #ddd;
+            border-radius:3px;
         }
         .full-width {
             grid-column: span 3;
         }
         .upload-area {
-            border: 2px dashed #ccc;
-            border-radius: 6px;
-            padding: 20px;
-            text-align: center;
-            margin: 10px 0;
-            cursor: pointer;
+            border:2px dashed #ccc;
+            padding:20px;
+            text-align:center;
+            cursor:pointer;
+            margin:10px 0;
         }
-        .upload-area:hover { border-color: #0066cc; }
         .file-preview {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin: 15px 0;
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+            margin:10px 0;
         }
         .preview-item {
-            width: 120px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
+            width:120px;
+            border:1px solid #ddd;
+            position:relative;
         }
         .preview-item img {
-            width: 100%;
-            height: 100px;
-            object-fit: cover;
-            display: block;
+            width:100%;
+            height:100px;
+            object-fit:cover;
         }
         .delete-file {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: rgba(220,53,69,0.8);
-            color: #fff;
-            border: none;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            font-size: 12px;
-            cursor: pointer;
-        }
-        .file-info {
-            padding: 5px;
-            font-size: 12px;
-            background: #f8f9fa;
-            text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            position:absolute;
+            top:5px;
+            right:5px;
+            background:red;
+            color:white;
+            border:none;
+            border-radius:50%;
+            width:20px;
+            height:20px;
+            cursor:pointer;
         }
         .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            display:none;
+            position:fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background:rgba(0,0,0,0.5);
+            justify-content:center;
+            align-items:center;
+            z-index:999;
         }
         .modal-content {
-            background: white;
-            padding: 20px;
-            border-radius: 6px;
-            width: 500px;
-            max-width: 90%;
+            background:white;
+            padding:20px;
+            width:500px;
+            border-radius:5px;
         }
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
+        .loading {
+            text-align:center;
+            padding:10px;
+            color:#0066cc;
         }
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: #666;
-        }
-        .loading { text-align: center; padding: 10px; color: #0066cc; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🐾 寵物醫療病歷管理系統</h1>
-        </div>
 
-        <div class="tabs">
-            <div class="tab-item active" onclick="openTab('pet-list')">寵物資料列表</div>
-            <div class="tab-item" onclick="openTab('medical-record')">病歷紀錄</div>
-            <div class="tab-item" onclick="openTab('hospital-query')">就醫院所查詢</div>
-            <div class="tab-item" onclick="openTab('system-setting')">系統設定</div>
-        </div>
-
-        <div class="search-bar">
-            <div class="search-group">
-                <select id="search-type">
-                    <option value="name">寵物姓名</option>
-                    <option value="chip">晶片號碼</option>
-                    <option value="hospital">就醫院所</option>
-                </select>
-                <input type="text" id="search-input" placeholder="請輸入搜尋內容">
-                <button class="btn btn-primary" onclick="searchData()">搜尋</button>
-            </div>
-            <div class="search-group" id="hospital-filter" style="display: none;">
-                <select id="filter-hospital">
-                    <option value="">所有院所</option>
-                </select>
-                <select id="filter-date-range">
-                    <option value="">所有時間</option>
-                    <option value="7">近7天</option>
-                    <option value="30">近30天</option>
-                    <option value="90">近3個月</option>
-                    <option value="180">近6個月</option>
-                </select>
-                <button class="btn btn-warning btn-sm" onclick="filterHospitalData()">篩選</button>
-            </div>
-        </div>
-
-        <!-- 寵物列表 -->
-        <div id="pet-list" class="form-section active">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                <h2>寵物資料管理</h2>
-                <button class="btn btn-primary" onclick="openPetModal()">➕ 新增寵物</button>
-            </div>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>寵物姓名</th>
-                        <th>飼主姓名</th>
-                        <th>飼主電話</th>
-                        <th>晶片號碼</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="pet-table-body">
-                    <tr><td colspan="5" class="loading">載入中...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 病歷紀錄 -->
-        <div id="medical-record" class="form-section">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                <h2>病歷紀錄管理</h2>
-                <button class="btn btn-success" onclick="clearMedicalForm()">清空表單</button>
-            </div>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>寵物姓名 *</label>
-                    <select id="mr-patient" required></select>
-                </div>
-                <div class="form-group">
-                    <label>就醫院所 *</label>
-                    <select id="mr-hospital" required></select>
-                </div>
-                <div class="form-group">
-                    <label>就診日期 *</label>
-                    <input type="date" id="mr-date" required>
-                </div>
-                <div class="form-group">
-                    <label>主治醫師</label>
-                    <input type="text" id="mr-doctor">
-                </div>
-                <div class="form-group full-width">
-                    <label>就診原因 *</label>
-                    <textarea id="mr-reason"></textarea>
-                </div>
-                <div class="form-group full-width">
-                    <label>症狀與診斷</label>
-                    <textarea id="mr-diagnosis"></textarea>
-                </div>
-                <div class="form-group full-width">
-                    <label>處方藥物</label>
-                    <textarea id="mr-medicine"></textarea>
-                </div>
-            </div>
-            <div class="form-group full-width">
-                <label>附件上傳（照片/PDF）</label>
-                <div class="upload-area" onclick="document.getElementById('file-upload').click()">
-                    <p>點擊或拖曳上傳</p>
-                    <input type="file" id="file-upload" multiple accept="image/*,.pdf" style="display:none">
-                </div>
-                <div id="file-preview" class="file-preview"></div>
-            </div>
-            <button class="btn btn-success" onclick="saveMedicalRecord()">儲存病歷</button>
-            <h3 style="margin:20px 0 10px 0;">歷史病歷</h3>
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>日期</th><th>院所</th><th>原因</th><th>診斷</th><th>附件</th><th>醫師</th>
-                    </tr>
-                </thead>
-                <tbody id="medical-history-body">
-                    <tr><td colspan="6" class="loading">載入中...</td></tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 院所管理 -->
-        <div id="hospital-query" class="form-section">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
-                <h2>就醫院所管理</h2>
-                <button class="btn btn-primary" onclick="addNewHospital()">➕ 新增院所</button>
-            </div>
-            <table class="data-table">
-                <thead>
-                    <tr><th>院所名稱</th><th>地址</th><th>電話</th><th>專長</th><th>狀態</th><th>操作</th></tr>
-                </thead>
-                <tbody id="hospital-info-body"></tbody>
-            </table>
-        </div>
-
-        <!-- 系統設定 -->
-        <div id="system-setting" class="form-section">
-            <h2>系統設定</h2>
-            <p>版本：v1.0 Firebase 雲端版</p>
-            <hr style="margin:15px 0">
-            <div class="form-group">
-                <label>系統名稱</label>
-                <input type="text" id="sys-name" style="width:300px;padding:6px">
-            </div>
-            <div class="form-group" style="margin:10px 0">
-                <label>聯絡信箱</label>
-                <input type="email" id="sys-email" style="width:300px;padding:6px">
-            </div>
-            <div class="form-group" style="margin:10px 0">
-                <label>系統備註</label>
-                <textarea id="sys-note" style="width:300px;min-height:80px;padding:6px"></textarea>
-            </div>
-            <button class="btn btn-primary" onclick="saveSystemSetting()">儲存設定</button>
-        </div>
-
-        <!-- 寵物彈窗 -->
-        <div id="pet-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="pet-modal-title">新增寵物</h3>
-                    <button class="modal-close" onclick="closePetModal()">×</button>
-                </div>
-                <input type="hidden" id="edit-pet-id">
-                <div class="form-group"><label>寵物姓名</label><input id="pet-name" style="width:100%"></div>
-                <div class="form-group"><label>飼主姓名</label><input id="owner-name" style="width:100%"></div>
-                <div class="form-group"><label>飼主電話</label><input id="owner-phone" style="width:100%"></div>
-                <div class="form-group"><label>晶片號碼</label><input id="pet-chip" style="width:100%"></div>
-                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:15px">
-                    <button class="btn btn-danger" onclick="closePetModal()">取消</button>
-                    <button class="btn btn-success" onclick="savePet()">儲存</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 院所彈窗 -->
-        <div id="hospital-modal" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 id="hospital-modal-title">新增院所</h3>
-                    <button class="modal-close" onclick="closeHospitalModal()">×</button>
-                </div>
-                <input type="hidden" id="edit-hospital-id">
-                <div class="form-group"><label>院所名稱</label><input id="new-hospital-name" style="width:100%"></div>
-                <div class="form-group"><label>地址</label><input id="new-hospital-address" style="width:100%"></div>
-                <div class="form-group"><label>電話</label><input id="new-hospital-phone" style="width:100%"></div>
-                <div class="form-group"><label>專長</label><input id="new-hospital-specialty" style="width:100%"></div>
-                <div class="form-group">
-                    <label>狀態</label>
-                    <select id="new-hospital-status" style="width:100%">
-                        <option value="normal">合作中</option>
-                        <option value="pause">暫停</option>
-                        <option value="stop">終止</option>
-                    </select>
-                </div>
-                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:15px">
-                    <button class="btn btn-danger" onclick="closeHospitalModal()">取消</button>
-                    <button class="btn btn-success" onclick="saveHospital()">儲存</button>
-                </div>
-            </div>
-        </div>
+<div class="container">
+    <div class="header">
+        <h1>🐾 寵物醫療病歷管理系統</h1>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+    <div class="tabs">
+        <div class="tab-item active" onclick="goto('pet-list')">寵物資料</div>
+        <div class="tab-item" onclick="goto('medical-record')">病歷紀錄</div>
+        <div class="tab-item" onclick="goto('hospital-query')">院所管理</div>
+        <div class="tab-item" onclick="goto('system-setting')">系統設定</div>
+    </div>
 
-    <script>
-        // ========== 你的 Firebase 金鑰（已內建）==========
-        const firebaseConfig = {
-            apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
-            authDomain: "naibo-health.firebaseapp.com",
-            projectId: "naibo-health",
-            storageBucket: "naibo-health.firebasestorage.app",
-            messagingSenderId: "1008746304734",
-            appId: "1:1008746304734:web:33b87646673ee83b975e4f"
-        };
+    <div class="search-bar">
+        <select id="search-key">
+            <option value="name">寵物名</option>
+            <option value="chip">晶片號</option>
+            <option value="hospital">院所</option>
+        </select>
+        <input type="text" id="search-txt" placeholder="搜尋">
+        <button class="btn btn-primary" onclick="doSearch()">搜尋</button>
+    </div>
 
-        // 初始化 Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-
-        // 全域變數
-        let petList = [];
-        let medicalRecords = [];
-        let hospitalList = [];
-        let uploadedFiles = [];
-        let isPetEdit = false;
-        let isHospitalEdit = false;
-
-        // 頁面啟動
-        window.onload = async () => {
-            await loadAllData();
-            renderAll();
-        };
-
-        // 從 Firebase 讀取所有資料
-        async function loadAllData() {
-            try {
-                // 寵物
-                const petSnap = await db.collection('pets').get();
-                petList = petSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-                // 病歷
-                const medSnap = await db.collection('medicalRecords').orderBy('date','desc').get();
-                medicalRecords = medSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-                // 院所
-                const hospSnap = await db.collection('hospitals').get();
-                hospitalList = hospSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                if(hospitalList.length === 0) await initDefaultHospitals();
-            } catch (e) {
-                console.error("載入失敗", e);
-                alert("雲端載入失敗，請重整頁面");
-            }
-        }
-
-        // 初始化預設院所
-        async function initDefaultHospitals() {
-            const defaults = [
-                { name:"台北動物醫院", address:"台北市中正區忠孝東路123號", phone:"02-12345678", specialty:"小動物內科、皮膚科", status:"normal" },
-                { name:"台中寵物診所", address:"台中市西區台灣大道456號", phone:"04-87654321", specialty:"外科、牙科", status:"normal" },
-                { name:"高雄獸醫院", address:"高雄市新興區中山路789號", phone:"07-23456789", specialty:"急診、重症照護", status:"normal" },
-                { name:"台南動物專科", address:"台南市東區長榮街321號", phone:"06-98765432", specialty:"影像診斷、腫瘤科", status:"normal" }
-            ];
-            for(let h of defaults) await db.collection('hospitals').add(h);
-            const snap = await db.collection('hospitals').get();
-            hospitalList = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        }
-
-        // 切換分頁
-        function openTab(id) {
-            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
-            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById('hospital-filter').style.display = id === 'hospital-query' ? 'flex' : 'none';
-        }
-
-        // 寵物
-        function openPetModal(id=null) {
-            isPetEdit = !!id;
-            document.getElementById('pet-modal-title').textContent = isPetEdit ? '修改寵物' : '新增寵物';
-            document.getElementById('edit-pet-id').value = id || '';
-            if(id) {
-                const p = petList.find(x => x.id === id);
-                document.getElementById('pet-name').value = p.name;
-                document.getElementById('owner-name').value = p.ownerName;
-                document.getElementById('owner-phone').value = p.ownerPhone;
-                document.getElementById('pet-chip').value = p.chip || '';
-            } else {
-                document.getElementById('pet-name').value = '';
-                document.getElementById('owner-name').value = '';
-                document.getElementById('owner-phone').value = '';
-                document.getElementById('pet-chip').value = '';
-            }
-            document.getElementById('pet-modal').style.display = 'flex';
-        }
-        function closePetModal() { document.getElementById('pet-modal').style.display = 'none'; }
-
-        async function savePet() {
-            const name = document.getElementById('pet-name').value.trim();
-            const ownerName = document.getElementById('owner-name').value.trim();
-            const ownerPhone = document.getElementById('owner-phone').value.trim();
-            const chip = document.getElementById('pet-chip').value.trim();
-            const id = document.getElementById('edit-pet-id').value;
-            if(!name || !ownerName || !ownerPhone) { alert('必填欄位不可空白'); return; }
-
-            try {
-                if(isPetEdit) {
-                    await db.collection('pets').doc(id).update({ name, ownerName, ownerPhone, chip });
-                } else {
-                    await db.collection('pets').add({ name, ownerName, ownerPhone, chip });
-                }
-                await loadAllData(); renderAll(); closePetModal();
-                alert('✅ 儲存完成（雲端）');
-            } catch(e) { alert('儲存失敗'); }
-        }
-
-        async function deletePet(id) {
-            if(!confirm('確定刪除？')) return;
-            await db.collection('pets').doc(id).delete();
-            await loadAllData(); renderAll(); alert('✅ 已刪除');
-        }
-
-        // 院所
-        function addNewHospital() {
-            isHospitalEdit = false;
-            document.getElementById('hospital-modal-title').textContent = '新增院所';
-            document.getElementById('edit-hospital-id').value = '';
-            document.getElementById('new-hospital-name').value = '';
-            document.getElementById('new-hospital-address').value = '';
-            document.getElementById('new-hospital-phone').value = '';
-            document.getElementById('new-hospital-specialty').value = '';
-            document.getElementById('new-hospital-status').value = 'normal';
-            document.getElementById('hospital-modal').style.display = 'flex';
-        }
-
-        function editHospital(id) {
-            isHospitalEdit = true;
-            const h = hospitalList.find(x => x.id === id);
-            document.getElementById('hospital-modal-title').textContent = '修改院所';
-            document.getElementById('edit-hospital-id').value = id;
-            document.getElementById('new-hospital-name').value = h.name;
-            document.getElementById('new-hospital-address').value = h.address;
-            document.getElementById('new-hospital-phone').value = h.phone;
-            document.getElementById('new-hospital-specialty').value = h.specialty;
-            document.getElementById('new-hospital-status').value = h.status;
-            document.getElementById('hospital-modal').style.display = 'flex';
-        }
-        function closeHospitalModal() { document.getElementById('hospital-modal').style.display = 'none'; }
-
-        async function saveHospital() {
-            const id = document.getElementById('edit-hospital-id').value;
-            const name = document.getElementById('new-hospital-name').value.trim();
-            const address = document.getElementById('new-hospital-address').value.trim();
-            const phone = document.getElementById('new-hospital-phone').value.trim();
-            const specialty = document.getElementById('new-hospital-specialty').value.trim() || '未填寫';
-            const status = document.getElementById('new-hospital-status').value;
-            if(!name || !address || !phone) { alert('必填'); return; }
-
-            try {
-                if(isHospitalEdit) {
-                    await db.collection('hospitals').doc(id).update({ name, address, phone, specialty, status });
-                } else {
-                    await db.collection('hospitals').add({ name, address, phone, specialty, status });
-                }
-                await loadAllData(); renderAll(); closeHospitalModal();
-                alert('✅ 院所已儲存雲端');
-            } catch(e) { alert('失敗'); }
-        }
-
-        // 檔案上傳
-        document.getElementById('file-upload').addEventListener('change', e => {
-            uploadedFiles = [...uploadedFiles, ...e.target.files];
-            renderPreview();
-        });
-        function renderPreview() {
-            const area = document.getElementById('file-preview');
-            area.innerHTML = '';
-            uploadedFiles.forEach((f,i) => {
-                const div = document.createElement('div');
-                div.className = 'preview-item';
-                if(f.type.startsWith('image/')) {
-                    const url = URL.createObjectURL(f);
-                    div.innerHTML = `<img src="${url}"><button class="delete-file" onclick="delFile(${i})">×</button><div class="file-info">${f.name}</div>`;
-                } else {
-                    div.innerHTML = `<div style="height:100px;display:flex;align-items:center;justify-content:center;">📄</div><button class="delete-file" onclick="delFile(${i})">×</button><div class="file-info">${f.name}</div>`;
-                }
-                area.appendChild(div);
-            });
-        }
-        function delFile(i) { uploadedFiles.splice(i,1); renderPreview(); }
-
-        // 病歷
-        async function saveMedicalRecord() {
-            const petId = document.getElementById('mr-patient').value;
-            const hospitalId = document.getElementById('mr-hospital').value;
-            const date = document.getElementById('mr-date').value;
-            const doctor = document.getElementById('mr-doctor').value.trim();
-            const reason = document.getElementById('mr-reason').value.trim();
-            const diagnosis = document.getElementById('mr-diagnosis').value.trim();
-            const medicine = document.getElementById('mr-medicine').value.trim();
-            if(!petId || !hospitalId || !date || !reason) { alert('必填'); return; }
-
-            const pet = petList.find(p => p.id === petId);
-            const hospital = hospitalList.find(h => h.id === hospitalId);
-            const attachments = [];
-
-            for(const f of uploadedFiles) {
-                const ref = storage.ref(`attachments/${Date.now()}_${f.name}`);
-                await ref.put(f);
-                const url = await ref.getDownloadURL();
-                attachments.push({ name: f.name, url, type: f.type });
-            }
-
-            await db.collection('medicalRecords').add({
-                petId, petName:pet.name, hospitalId, hospitalName:hospital.name,
-                date, doctor, reason, diagnosis, medicine, attachments
-            });
-
-            await loadAllData(); renderAll(); clearMedicalForm();
-            alert(`✅ ${pet.name} 病歷已存雲端`);
-        }
-
-        function clearMedicalForm() {
-            document.getElementById('mr-patient').value = '';
-            document.getElementById('mr-hospital').value = '';
-            document.getElementById('mr-date').value = '';
-            document.getElementById('mr-doctor').value = '';
-            document.getElementById('mr-reason').value = '';
-            document.getElementById('mr-diagnosis').value = '';
-            document.getElementById('mr-medicine').value = '';
-            uploadedFiles = []; renderPreview();
-        }
-
-        // 系統設定
-        async function saveSystemSetting() {
-            const data = {
-                name: document.getElementById('sys-name').value,
-                email: document.getElementById('sys-email').value,
-                note: document.getElementById('sys-note').value
-            };
-            await db.collection('system').doc('config').set(data);
-            document.querySelector('.header h1').textContent = `🐾 ${data.name}`;
-            alert('✅ 系統設定存雲端');
-        }
-
-        async function loadSystemSetting() {
-            const doc = await db.collection('system').doc('config').get();
-            if(doc.exists()) {
-                const d = doc.data();
-                document.getElementById('sys-name').value = d.name || '';
-                document.getElementById('sys-email').value = d.email || '';
-                document.getElementById('sys-note').value = d.note || '';
-                document.querySelector('.header h1').textContent = `🐾 ${d.name || '寵物醫療管理系統'}`;
-            }
-        }
-
-        // 渲染畫面
-        function renderAll() {
-            renderPetTable();
-            renderHospitalTable();
-            renderMedicalHistory();
-            updateSelects();
-            loadSystemSetting();
-        }
-
-        function renderPetTable() {
-            const b = document.getElementById('pet-table-body');
-            b.innerHTML = '';
-            if(petList.length===0) { b.innerHTML = '<tr><td colspan=5 align=center>無資料</td></tr>'; return; }
-            petList.forEach(p => {
-                b.innerHTML += `
+    <!-- 寵物列表 -->
+    <div id="pet-list" class="form-section active">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+            <h2>寵物資料管理</h2>
+            <button class="btn btn-primary" onclick="addPet()">新增寵物</button>
+        </div>
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td>${p.name}</td><td>${p.ownerName}</td><td>${p.ownerPhone}</td><td>${p.chip||'-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning" onclick="openPetModal('${p.id}')">修改</button>
-                        <button class="btn btn-sm btn-danger" onclick="deletePet('${p.id}')">刪除</button>
-                    </td>
-                </tr>`;
-            });
-        }
+                    <th>寵物姓名</th>
+                    <th>飼主</th>
+                    <th>電話</th>
+                    <th>晶片</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="pet-list-body">
+                <tr><td colspan="5" class="loading">載入中...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-        function renderHospitalTable() {
-            const b = document.getElementById('hospital-info-body');
-            b.innerHTML = '';
-            hospitalList.forEach(h => {
-                const cls = h.status==='normal'?'status-normal':h.status==='pause'?'status-warning':'status-danger';
-                const txt = h.status==='normal'?'合作中':h.status==='pause'?'暫停合作':'終止合作';
-                b.innerHTML += `
+    <!-- 病歷 -->
+    <div id="medical-record" class="form-section">
+        <h2>病歷紀錄</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>寵物</label>
+                <select id="pet-select"></select>
+            </div>
+            <div class="form-group">
+                <label>院所</label>
+                <select id="hospital-select"></select>
+            </div>
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" id="record-date">
+            </div>
+            <div class="form-group full-width">
+                <label>就診原因</label>
+                <textarea id="record-reason"></textarea>
+            </div>
+            <div class="form-group full-width">
+                <label>診斷</label>
+                <textarea id="record-diagnosis"></textarea>
+            </div>
+            <div class="form-group full-width">
+                <label>藥物</label>
+                <textarea id="record-medicine"></textarea>
+            </div>
+        </div>
+        <div class="upload-area" onclick="document.getElementById('file-up').click()">
+            點擊上傳照片 / PDF
+            <input type="file" id="file-up" multiple accept="image/*,.pdf" style="display:none">
+        </div>
+        <div id="preview-area" class="file-preview"></div>
+        <button class="btn btn-success" onclick="saveRecord()">儲存病歷</button>
+
+        <h3 style="margin:20px 0 10px 0">歷史紀錄</h3>
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td>${h.name}</td><td>${h.address}</td><td>${h.phone}</td><td>${h.specialty}</td>
-                    <td><span class="${cls}">${txt}</span></td>
-                    <td><button class="btn btn-sm btn-warning" onclick="editHospital('${h.id}')">修改</button></td>
-                </tr>`;
-            });
-        }
+                    <th>日期</th>
+                    <th>院所</th>
+                    <th>原因</th>
+                    <th>診斷</th>
+                    <th>附件</th>
+                </tr>
+            </thead>
+            <tbody id="record-body">
+                <tr><td colspan="5" class="loading">載入中...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-        function renderMedicalHistory() {
-            const b = document.getElementById('medical-history-body');
-            b.innerHTML = '';
-            if(medicalRecords.length===0) { b.innerHTML = '<tr><td colspan=6 align=center>無病歷</td></tr>'; return; }
-            medicalRecords.forEach(r => {
-                const cnt = r.attachments?.length||0;
-                const files = JSON.stringify(r.attachments||[]).replace(/"/g,'&quot;');
-                b.innerHTML += `
+    <!-- 院所 -->
+    <div id="hospital-query" class="form-section">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+            <h2>院所管理</h2>
+            <button class="btn btn-primary" onclick="addHospital()">新增院所</button>
+        </div>
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td>${r.date}</td><td>${r.hospitalName}</td>
-                    <td>${r.reason.slice(0,20)}${r.reason.length>20?'...':''}</td>
-                    <td>${(r.diagnosis||'').slice(0,20)}...</td>
-                    <td><button class="btn btn-sm btn-primary" onclick="viewFiles(${files})">查看(${cnt})</button></td>
-                    <td>${r.doctor||'-'}</td>
-                </tr>`;
-            });
-        }
+                    <th>院所名稱</th>
+                    <th>地址</th>
+                    <th>電話</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="hospital-body"></tbody>
+        </table>
+    </div>
 
-        function updateSelects() {
-            const petSel = document.getElementById('mr-patient');
-            const hospSel = document.getElementById('mr-hospital');
-            const filterSel = document.getElementById('filter-hospital');
-            petSel.innerHTML = '<option value="">請選擇寵物</option>';
-            hospSel.innerHTML = '<option value="">請選擇院所</option>';
-            filterSel.innerHTML = '<option value="">所有院所</option>';
-            petList.forEach(p => petSel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-            hospitalList.forEach(h => {
-                hospSel.innerHTML += `<option value="${h.id}">${h.name}</option>`;
-                filterSel.innerHTML += `<option value="${h.id}">${h.name}</option>`;
-            });
-        }
+    <!-- 系統 -->
+    <div id="system-setting" class="form-section">
+        <h2>系統設定</h2><br>
+        <div class="form-group">
+            <label>系統名稱</label>
+            <input type="text" id="sys-name" style="width:300px">
+        </div>
+        <button class="btn btn-primary" onclick="saveSys()" style="margin-top:10px">儲存設定</button>
+    </div>
+</div>
 
-        function viewFiles(files) {
-            files.forEach(f => window.open(f.url,'_blank'));
-        }
+<!-- 寵物彈窗 -->
+<div id="pet-modal" class="modal">
+    <div class="modal-content">
+        <h3 id="pet-title">新增寵物</h3>
+        <input type="hidden" id="pet-id">
+        <div class="form-group">
+            <label>寵物姓名</label>
+            <input id="pet-name" style="width:100%;padding:8px;margin:5px 0">
+        </div>
+        <div class="form-group">
+            <label>飼主</label>
+            <input id="owner-name" style="width:100%;padding:8px;margin:5px 0">
+        </div>
+        <div class="form-group">
+            <label>電話</label>
+            <input id="owner-phone" style="width:100%;padding:8px;margin:5px 0">
+        </div>
+        <div class="form-group">
+            <label>晶片號碼</label>
+            <input id="pet-chip" style="width:100%;padding:8px;margin:5px 0">
+        </div>
+        <button class="btn btn-success" onclick="savePetData()">儲存</button>
+        <button class="btn btn-danger" onclick="closePet()" style="margin-left:5px">取消</button>
+    </div>
+</div>
 
-        // 搜尋
-        function searchData() {
-            const t = document.getElementById('search-type').value;
-            const k = document.getElementById('search-input').value.toLowerCase();
-            if(!k) { alert('請輸入關鍵字'); return; }
-            if(t==='name'||t==='chip') {
-                const list = petList.filter(p => t==='name'?p.name.toLowerCase().includes(k):(p.chip||'').includes(k));
-                const b = document.getElementById('pet-table-body');
-                b.innerHTML = '';
-                list.forEach(p => {
-                    b.innerHTML += `<tr><td>${p.name}</td><td>${p.ownerName}</td><td>${p.ownerPhone}</td><td>${p.chip||'-'}</td><td><button onclick="openPetModal('${p.id}')">修改</button></td></tr>`;
-                });
-                openTab('pet-list');
-            } else {
-                const list = medicalRecords.filter(r => r.hospitalName.toLowerCase().includes(k));
-                const b = document.getElementById('medical-history-body');
-                b.innerHTML = '';
-                list.forEach(r => {
-                    const c = r.attachments?.length||0;
-                    b.innerHTML += `<tr><td>${r.date}</td><td>${r.hospitalName}</td><td>${r.reason.slice(0,20)}...</td><td>${(r.diagnosis||'').slice(0,20)}...</td><td>查看(${c})</td><td>${r.doctor||'-'}</td></tr>`;
-                });
-                openTab('medical-record');
-            }
-        }
+<!-- 院所彈窗 -->
+<div id="hospital-modal" class="modal">
+    <div class="modal-content">
+        <h3 id="hos-title">新增院所</h3>
+        <input type="hidden" id="hos-id">
+        <div class="form-group">
+            <label>院所名稱</label>
+            <input id="hos-name" style="width:100%;padding:8px;margin:5px 0">
+        </div>
+        <div class="form-group">
+            <label>地址</label>
+            <input id="hos-address" style="width:100%;padding:8px;margin:5px 0">
+        </div>
+        <div class="form-group">
+            <label>電話</label>
+            <input id="hos-phone" style="width:100%;padding:8px;margin:5px 0">
+        </div>
+        <button class="btn btn-success" onclick="saveHospitalData()">儲存</button>
+        <button class="btn btn-danger" onclick="closeHospital()" style="margin-left:5px">取消</button>
+    </div>
+</div>
 
-        function filterHospitalData() {
-            const h = document.getElementById('filter-hospital').value;
-            const d = +document.getElementById('filter-date-range').value;
-            let list = medicalRecords;
-            if(h) list = list.filter(r => r.hospitalId === h);
-            if(d) {
-                const target = new Date();
-                target.setDate(target.getDate() - d);
-                list = list.filter(r => new Date(r.date) >= target);
-            }
-            const b = document.getElementById('medical-history-body');
-            b.innerHTML = '';
-            list.forEach(r => {
-                const c = r.attachments?.length||0;
-                b.innerHTML += `<tr><td>${r.date}</td><td>${r.hospitalName}</td><td>${r.reason.slice(0,20)}...</td><td>${(r.diagnosis||'').slice(0,20)}...</td><td>查看(${c})</td><td>${r.doctor||'-'}</td></tr>`;
-            });
-        }
-    </script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+
+<script>
+// ====================== 你的新 Firebase 金鑰 ======================
+const firebaseConfig = {
+  apiKey: "AIzaSyB2yEi76WZfALxNkInhG5oG_0LMlNqDgH0",
+  authDomain: "nibo-medical.firebaseapp.com",
+  projectId: "nibo-medical",
+  storageBucket: "nibo-medical.firebasestorage.app",
+  messagingSenderId: "832769973754",
+  appId: "1:832769973754:web:9e7782b36bfc89d02a5843"
+};
+
+// 初始化
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+let pets = [];
+let records = [];
+let hospitals = [];
+let files = [];
+
+// 啟動
+window.onload = async () => {
+  await loadAll();
+  renderAll();
+};
+
+// 讀取所有資料
+async function loadAll() {
+  try {
+    // 寵物
+    const petSnap = await db.collection('pets').get();
+    pets = petSnap.docs.map(d => ({ id:d.id, ...d.data() }));
+
+    // 病歷
+    const recSnap = await db.collection('records').orderBy('date','desc').get();
+    records = recSnap.docs.map(d => ({ id:d.id, ...d.data() }));
+
+    // 院所
+    const hosSnap = await db.collection('hospitals').get();
+    hospitals = hosSnap.docs.map(d => ({ id:d.id, ...d.data() }));
+
+    if (hospitals.length === 0) {
+      await initHospital();
+    }
+  } catch(e) {
+    console.error("錯誤",e);
+    alert("載入失敗：請確認 Firebase 規則已開放");
+  }
+}
+
+// 預設院所
+async function initHospital() {
+  const data = [
+    { name:"寵物醫院", address:"台北市", phone:"02-00000000" },
+    { name:"動物診所", address:"台中市", phone:"04-00000000" }
+  ];
+  for(let i=0;i<data.length;i++){
+    await db.collection('hospitals').add(data[i]);
+  }
+  const snap = await db.collection('hospitals').get();
+  hospitals = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+}
+
+// 切換頁面
+function goto(id) {
+  document.querySelectorAll('.form-section').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// 寵物
+function addPet(){
+  document.getElementById('pet-title').innerText = "新增寵物";
+  document.getElementById('pet-id').value = "";
+  document.getElementById('pet-name').value = "";
+  document.getElementById('owner-name').value = "";
+  document.getElementById('owner-phone').value = "";
+  document.getElementById('pet-chip').value = "";
+  document.getElementById('pet-modal').style.display = "flex";
+}
+function closePet(){
+  document.getElementById('pet-modal').style.display = "none";
+}
+async function savePetData(){
+  const id = document.getElementById('pet-id').value;
+  const data = {
+    name: document.getElementById('pet-name').value,
+    owner: document.getElementById('owner-name').value,
+    phone: document.getElementById('owner-phone').value,
+    chip: document.getElementById('pet-chip').value
+  };
+  if(id){
+    await db.collection('pets').doc(id).update(data);
+  }else{
+    await db.collection('pets').add(data);
+  }
+  await loadAll();
+  renderAll();
+  closePet();
+}
+
+// 院所
+function addHospital(){
+  document.getElementById('hos-title').innerText = "新增院所";
+  document.getElementById('hos-id').value = "";
+  document.getElementById('hos-name').value = "";
+  document.getElementById('hos-address').value = "";
+  document.getElementById('hos-phone').value = "";
+  document.getElementById('hospital-modal').style.display = "flex";
+}
+function closeHospital(){
+  document.getElementById('hospital-modal').style.display = "none";
+}
+async function saveHospitalData(){
+  const id = document.getElementById('hos-id').value;
+  const data = {
+    name: document.getElementById('hos-name').value,
+    address: document.getElementById('hos-address').value,
+    phone: document.getElementById('hos-phone').value
+  };
+  if(id){
+    await db.collection('hospitals').doc(id).update(data);
+  }else{
+    await db.collection('hospitals').add(data);
+  }
+  await loadAll();
+  renderAll();
+  closeHospital();
+}
+
+// 上傳
+document.getElementById('file-up').onchange = (e)=>{
+  files = [...files, ...e.target.files];
+  showPreview();
+};
+function showPreview(){
+  const area = document.getElementById('preview-area');
+  area.innerHTML = "";
+  files.forEach((f,i)=>{
+    const div = document.createElement('div');
+    div.className = "preview-item";
+    if(f.type.includes('image')){
+      const url = URL.createObjectURL(f);
+      div.innerHTML = `<img src="${url}"><button class="delete-file" onclick="delFile(${i})">×</button>`;
+    }else{
+      div.innerHTML = `<div style='height:100px;display:flex;align-items:center;justify-content:center'>📄</div><button class="delete-file" onclick="delFile(${i})">×</button>`;
+    }
+    area.appendChild(div);
+  });
+}
+function delFile(i){
+  files.splice(i,1);
+  showPreview();
+}
+
+// 儲存病歷
+async function saveRecord(){
+  const petId = document.getElementById('pet-select').value;
+  const hospitalId = document.getElementById('hospital-select').value;
+  const date = document.getElementById('record-date').value;
+  const reason = document.getElementById('record-reason').value;
+  const diagnosis = document.getElementById('record-diagnosis').value;
+  const medicine = document.getElementById('record-medicine').value;
+
+  if(!petId || !hospitalId || !date){ alert("必填"); return; }
+
+  const pet = pets.find(p=>p.id===petId);
+  const hospital = hospitals.find(h=>h.id===hospitalId);
+  const attachments = [];
+
+  for(let f of files){
+    const ref = storage.ref(`files/${Date.now()}_${f.name}`);
+    await ref.put(f);
+    const url = await ref.getDownloadURL();
+    attachments.push({name:f.name, url});
+  }
+
+  await db.collection('records').add({
+    petId, petName:pet.name,
+    hospitalId, hospitalName:hospital.name,
+    date, reason, diagnosis, medicine, attachments
+  });
+
+  await loadAll();
+  renderAll();
+  files = [];
+  showPreview();
+  alert("儲存完成！");
+}
+
+// 畫面更新
+function renderAll(){
+  renderPet();
+  renderHospital();
+  renderRecord();
+  fillSelect();
+}
+
+function renderPet(){
+  const b = document.getElementById('pet-list-body');
+  b.innerHTML = "";
+  pets.forEach(p=>{
+    b.innerHTML += `
+    <tr>
+      <td>${p.name}</td>
+      <td>${p.owner}</td>
+      <td>${p.phone}</td>
+      <td>${p.chip||'-'}</td>
+      <td>
+        <button class='btn btn-sm btn-warning' onclick='editPet("${p.id}")'>修改</button>
+      </td>
+    </tr>`;
+  });
+}
+function editPet(id){
+  const p = pets.find(x=>x.id===id);
+  document.getElementById('pet-title').innerText = "修改寵物";
+  document.getElementById('pet-id').value = id;
+  document.getElementById('pet-name').value = p.name;
+  document.getElementById('owner-name').value = p.owner;
+  document.getElementById('owner-phone').value = p.phone;
+  document.getElementById('pet-chip').value = p.chip||'';
+  document.getElementById('pet-modal').style.display = "flex";
+}
+
+function renderHospital(){
+  const b = document.getElementById('hospital-body');
+  b.innerHTML = "";
+  hospitals.forEach(h=>{
+    b.innerHTML += `
+    <tr>
+      <td>${h.name}</td>
+      <td>${h.address}</td>
+      <td>${h.phone}</td>
+      <td>
+        <button class='btn btn-sm btn-warning' onclick='editHos("${h.id}")'>修改</button>
+      </td>
+    </tr>`;
+  });
+}
+function editHos(id){
+  const h = hospitals.find(x=>x.id===id);
+  document.getElementById('hos-title').innerText = "修改院所";
+  document.getElementById('hos-id').value = id;
+  document.getElementById('hos-name').value = h.name;
+  document.getElementById('hos-address').value = h.address;
+  document.getElementById('hos-phone').value = h.phone;
+  document.getElementById('hospital-modal').style.display = "flex";
+}
+
+function renderRecord(){
+  const b = document.getElementById('record-body');
+  b.innerHTML = "";
+  records.forEach(r=>{
+    const cnt = r.attachments?.length||0;
+    b.innerHTML += `
+    <tr>
+      <td>${r.date}</td>
+      <td>${r.hospitalName}</td>
+      <td>${r.reason}</td>
+      <td>${r.diagnosis||'-'}</td>
+      <td>${cnt} 個</td>
+    </tr>`;
+  });
+}
+
+function fillSelect(){
+  const petSel = document.getElementById('pet-select');
+  const hosSel = document.getElementById('hospital-select');
+  petSel.innerHTML = `<option value=''>請選擇</option>`;
+  hosSel.innerHTML = `<option value=''>請選擇</option>`;
+  pets.forEach(p=>{
+    petSel.innerHTML += `<option value='${p.id}'>${p.name}</option>`;
+  });
+  hospitals.forEach(h=>{
+    hosSel.innerHTML += `<option value='${h.id}'>${h.name}</option>`;
+  });
+}
+
+function doSearch(){
+  const key = document.getElementById('search-key').value;
+  const txt = document.getElementById('search-txt').value.toLowerCase();
+  if(key==='name'){
+    const list = pets.filter(p=>p.name.toLowerCase().includes(txt));
+    const b = document.getElementById('pet-list-body');
+    b.innerHTML = "";
+    list.forEach(p=>{
+      b.innerHTML += `<tr><td>${p.name}</td><td>${p.owner}</td><td>${p.phone}</td><td>${p.chip||'-'}</td></tr>`;
+    });
+    goto('pet-list');
+  }
+}
+
+function saveSys(){
+  alert("設定儲存成功");
+}
+</script>
 </body>
 </html>
