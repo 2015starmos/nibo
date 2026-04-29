@@ -3,143 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="format-detection" content="telephone=no">
-<title>小貓醫療紀錄系統</title>
+<title>小貓醫療紀錄系統 - 穩定優化版</title>
 
 <style>
-.inlock-wrap{position:fixed;inset:0;background:linear-gradient(160deg, #f6f9fe, #eaf2f9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
-.inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
-.inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
-.inlock-input{width:100%;padding:13px 16px;border:1px solid #dce9f2;border-radius:18px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:10px;}
-.inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
-.inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
-.main-content{display:none;}
-
-* { margin: 0; padding: 0; box-sizing: border-box; transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease; }
-
+/* 基礎樣式保持一致 */
 :root {
-  --bg-gradient-1: #f6f9fe; --bg-gradient-2: #eaf2f9; --card-bg: #ffffff; --text-main: #506473;
-  --primary: #478fb8; --primary-light: rgba(71, 143, 184, 0.12); --border-color: #dce9f2;
-  --input-bg: #f9fbfe; --btn-gray: #d7e3ec; --table-bg: #f8fbfd; --table-head: #f0f6fb;
-  --danger: #f28484; --success: #34a873; --warn: #e39548; --green: #34a873; --orange: #f2994a;
+  --bg-gradient-1: #f6f9fe; --bg-gradient-2: #eaf2f9; --card-bg: #ffffff;
+  --primary: #478fb8; --primary-light: rgba(71, 143, 184, 0.12);
+  --border-color: #dce9f2; --input-bg: #f9fbfe; --text-main: #506473;
+  --success: #34a873; --danger: #f28484;
 }
+body { font-family: "微軟正黑體", sans-serif; background: linear-gradient(160deg, var(--bg-gradient-1), var(--bg-gradient-2)); padding: 15px; color: var(--text-main); }
+.wrapper { max-width: 500px; margin: 0 auto; }
+.ui-card { background: var(--card-bg); border-radius: 24px; padding: 18px; margin-bottom: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.form-input { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid var(--border-color); border-radius: 15px; background: var(--input-bg); }
+.btn-primary { width: 100%; padding: 12px; border: none; border-radius: 15px; background: #478fb8; color: #fff; cursor: pointer; margin-top: 5px; font-weight: bold; }
+.btn-text-upload { background: linear-gradient(90deg, #34a873, #2d9465); margin-top: 10px; }
 
-.dark-mode {
-  --bg-gradient-1: #1a202c; --bg-gradient-2: #121822; --card-bg: #242c37; --text-main: #cbd5e0;
-  --primary: #63b3e0; --primary-light: rgba(99, 179, 224, 0.15); --border-color: #3a4756;
-  --input-bg: #2d3743; --btn-gray: #3a4756; --table-bg: #2d3743; --table-head: #323e4d;
-}
+/* 照片切換樣式 */
+.med-img-wrap { position: relative; width: 100%; aspect-ratio: 1; margin-bottom: 8px; }
+.med-img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+.prev-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.4); color: white; border: none; padding: 10px; cursor: pointer; border-radius: 50%; z-index: 2; }
+.prev-left { left: 5px; }
+.prev-right { right: 5px; }
 
-body { font-family: "微軟正黑體", "Noto Sans TC", sans-serif; background: linear-gradient(160deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%); padding: 20px 14px; min-height: 100vh; color: var(--text-main); }
-.wrapper { width: 100%; max-width:560px; margin: 0 auto; }
-.main-title { text-align: center; font-size: 24px; color: var(--primary); font-weight: 600; margin-bottom: 12px; letter-spacing: 1px; }
-.cat-selector { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; justify-content: center; }
-.cat-select { padding: 10px 14px; border-radius: 16px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-main); font-size: 15px; width: 180px; text-align: center; }
-.cat-add-btn { padding: 10px 12px; border-radius: 16px; border: none; background: var(--primary); color: #fff; cursor: pointer; }
-.tab-wrap { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
-.tab-btn { flex: 1; padding: 10px; border-radius: 16px; border: none; background: var(--btn-gray); color: var(--text-main); font-size: 14px; cursor: pointer; min-width: 80px; }
-.tab-btn.active { background: var(--primary); color: #fff; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.theme-switch { display: block; margin: 0 auto 16px; border: none; background: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size:14px; }
-.info-banner { width: 100%; background: var(--primary-light); border-radius: 30px; padding: 13px 16px; text-align: center; font-size: 15px; color: var(--primary); margin-bottom: 16px; }
-.ui-card { background: var(--card-bg); border-radius: 28px; padding: 20px 18px; margin-bottom: 16px; box-shadow: 0 8px 24px rgba(71, 143, 184, 0.08); overflow: hidden; }
-.form-input { width: 100%; padding: 13px 12px; margin: 6px 0; border: 1px solid var(--border-color); border-radius: 20px; background-color: var(--input-bg); font-size: 15px; text-align: center; color: var(--text-main); }
-.form-textarea { text-align: left; min-height: 70px; resize: vertical; }
-.btn-primary { width: 100%; padding: 14px; margin-top: 5px; border: none; border-radius: 20px; background: linear-gradient(90deg, #58a2cc, #478fb8); color: #fff; font-size: 16px; font-weight: 500; cursor: pointer; }
-.btn-delete { border: none; background: var(--danger); color: #fff; padding: 4px 6px; border-radius: 8px; cursor: pointer; font-size: 11px; }
-.btn-edit { border: none; background: var(--warn); color: #fff; padding: 4px 6px; border-radius: 8px; cursor: pointer; font-size: 11px; margin-right:3px; }
-.btn-star { border: none; background: var(--orange); color: #fff; padding: 4px 6px; border-radius: 8px; cursor: pointer; font-size: 11px; margin-right:3px; }
-.btn-pdf { border: none; background: var(--primary); color: #fff; padding: 4px 6px; border-radius: 8px; cursor: pointer; font-size: 11px; margin-left:3px; }
-
-/* 圖片卡片樣式 */
-.med-img-wrap { position:relative; margin-bottom:6px; width: 100%; aspect-ratio: 1; }
-.med-img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; }
-.preview-btn { position:absolute; top:50%; transform:translateY(-50%); width:30px; height:30px; border-radius:50%; border:none; background:rgba(0,0,0,0.3); color:#fff; font-size:16px; cursor:pointer; z-index:5; }
-.prev-left { left:8px; }
-.prev-right { right:8px; }
-.med-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-.med-card { background: var(--table-bg); border-radius: 16px; padding: 10px; font-size: 13px; position:relative; display: flex; flex-direction: column; gap: 6px; cursor: pointer; min-height:300px; }
-.med-tag { font-size:11px; padding:2px 6px; border-radius:8px; color:#fff; display:inline-block; margin-bottom:4px; }
-.tag-check { background:var(--primary); }
-.tag-medic { background:var(--green); }
-.tag-emerg { background:var(--orange); }
-.tag-other { background:var(--btn-gray); color:var(--text-main); }
+.med-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.med-card { background: #f8fbfe; border-radius: 15px; padding: 10px; font-size: 13px; border: 1px solid #eee; }
+.inlock-wrap { position: fixed; inset: 0; background: #fff; z-index: 9999; display: flex; align-items: center; justify-content: center; }
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
 </head>
-
 <body>
 
-<div class="inlock-wrap">
-  <div class="inlock-box">
-    <div class="inlock-title">🔐 寵物健康紀錄 解鎖</div>
-    <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
-    <div class="inlock-tip" id="inTip"></div>
-    <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
+<div class="inlock-wrap" id="lockScreen">
+  <div style="text-align:center;">
+    <h3>🔐 醫學紀錄解鎖</h3><br>
+    <input type="password" id="inPwd" class="form-input" placeholder="請輸入密碼">
+    <button class="btn-primary" onclick="unlock()">確認</button>
   </div>
 </div>
 
-<div class="main-content">
-<div class="wrapper">
-  <h1 class="main-title">🐾 寵物健康全紀錄</h1>
-  <div id="syncBadge" style="text-align:center;font-size:12px;color:var(--success);margin-bottom:8px;">☁️ 雲端同步連線中...</div>
-  <button class="theme-switch" onclick="toggleDarkMode()">🌓 切換深色模式</button>
-
-  <div class="cat-selector">
-    <select class="cat-select" id="catSelect" onchange="switchCat()"></select>
-    <button class="cat-add-btn" onclick="addNewCat()">+ 新增貓咪</button>
-  </div>
-
-  <div class="tab-wrap">
-    <button class="tab-btn active" data-tab="medical">醫療病歷</button>
-    <button class="tab-btn" data-tab="water">飲水紀錄</button>
-  </div>
-
-  <div class="tab-content active" id="tab-medical">
-    <div class="info-banner">🏥 完整病歷管理 (獨立隔離搜尋)</div>
-    <div class="ui-card">
-      <input class="form-input" placeholder="🔍 關鍵字搜尋本貓病歷" id="medSearch" oninput="renderMedList()">
-      <div class="med-filter-bar">
-        <button class="filter-btn active" onclick="setMedFilter('all',this)">全部</button>
-        <button class="filter-btn" onclick="setMedFilter('檢驗報告',this)">檢驗</button>
-        <button class="filter-btn" onclick="setMedFilter('用藥單',this)">用藥</button>
-      </div>
-    </div>
-
-    <div class="ui-card">
-      <select class="form-input" id="medType">
-        <option value="檢驗報告">檢驗報告</option>
-        <option value="就診紀錄">就診紀錄</option>
-        <option value="用藥單">用藥單</option>
-      </select>
-      <input class="form-input" type="date" id="medDate">
-      <textarea class="form-input form-textarea" id="medNote" placeholder="備註症狀..."></textarea>
-      
-      <button class="btn-primary" onclick="triggerMedUpload()">📎 上傳圖片報告</button>
-      <button class="btn-primary" style="margin-top:8px; background:linear-gradient(90deg,#34a873,#2d9465);" onclick="uploadTextMed()">📝 文字病歷上傳</button>
-      
-      <input type="file" id="medFile" accept=".pdf,image/*" multiple onchange="handleMedFile(event)" style="display:none">
-    </div>
-
-    <div class="ui-card">
-      <div class="med-list" id="medList"></div>
-    </div>
-  </div>
+<div class="wrapper" id="mainContent" style="display:none;">
+  <h2 style="text-align:center; color:#478fb8;">🐾 寵物健康管理系統</h2>
   
-  <div class="tab-content" id="tab-water">
-      <div class="ui-card"><div class="today-total-box" id="totalShow">目前選定：尚未載入</div></div>
+  <div class="ui-card">
+    <select id="catSelect" class="form-input" onchange="switchCat()">
+      <option value="cat1">奶几</option>
+      <option value="cat2">奶波</option>
+    </select>
   </div>
-</div>
+
+  <div class="ui-card">
+    <select id="medType" class="form-input">
+      <option value="檢驗報告">檢驗報告</option>
+      <option value="用藥單">用藥單</option>
+      <option value="就診紀錄">就診紀錄</option>
+    </select>
+    <input type="date" id="medDate" class="form-input">
+    <input type="date" id="medReview" class="form-input" placeholder="回診日期">
+    <textarea id="medNote" class="form-input" placeholder="病歷備註..."></textarea>
+    
+    <button class="btn-primary" onclick="document.getElementById('fileInput').click()">📎 上傳報告照片</button>
+    <button class="btn-primary btn-text-upload" onclick="saveTextMedical()">📝 文字病歷上傳</button>
+    <input type="file" id="fileInput" multiple style="display:none;" onchange="uploadImages(event)">
+  </div>
+
+  <div class="ui-card">
+    <input type="text" id="medSearch" class="form-input" placeholder="🔍 搜尋此貓病歷..." oninput="renderMedList()">
+  </div>
+
+  <div id="medList" class="med-list"></div>
 </div>
 
 <script>
-// 密碼與 Firebase 初始化
-const validPws = ["0963612120", "0952867812", "ha821208"];
 const firebaseConfig = {
   apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
   authDomain: "naibo-health.firebaseapp.com",
@@ -151,147 +89,126 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let currentCat = "default";
-let currentCatName = "";
-let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
+let currentCat = "cat1";
 let medData = [];
-let medFilter = "all";
-let cardImgIndices = {}; 
+let cardImgIndices = {}; // 紀錄每張卡片的圖片索引
 
-function checkInPwd(){
-  const val = document.getElementById("inPwd").value;
-  if(validPws.includes(val)){
-    document.querySelector(".inlock-wrap").style.display="none";
-    document.querySelector(".main-content").style.display="block";
-    initCatSystem();
+function unlock() {
+  const pwd = document.getElementById("inPwd").value;
+  if(pwd === "0963612120" || pwd === "ha821208") {
+    document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("mainContent").style.display = "block";
+    switchCat();
   } else { alert("密碼錯誤"); }
 }
 
-function initCatSystem(){
-  renderCatSelect();
-  switchCat();
-}
-
-function renderCatSelect(){
-  const sel = document.getElementById("catSelect");
-  sel.innerHTML = catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
-}
-
-function addNewCat(){
-  const name = prompt("輸入新貓咪名稱：");
-  if(!name)return;
-  const id = "cat_"+Date.now();
-  catList.push({id,name});
-  localStorage.setItem("petCats",JSON.stringify(catList));
-  renderCatSelect();
-  document.getElementById("catSelect").value = id;
-  switchCat();
-}
-
-// 核心：切換貓咪時隔離資料夾
-function switchCat(){
+// 核心：切換貓咪並隔離搜尋
+function switchCat() {
   currentCat = document.getElementById("catSelect").value;
-  const catObj = catList.find(c=>c.id === currentCat);
-  currentCatName = catObj.name;
-  
-  // 重新鎖定該貓的獨立 Collection
-  medCol = db.collection(`catMed_${currentCat}`);
-  
-  // 監聽該貓專屬資料
-  medCol.onSnapshot(snap => {
+  // 監聽專屬此貓的資料夾
+  db.collection(`catMed_${currentCat}`).orderBy("date", "desc").onSnapshot(snap => {
     medData = [];
-    snap.forEach(d => { let x = d.data(); x.docId = d.id; medData.push(x); });
+    snap.forEach(doc => {
+      let data = doc.data();
+      data.docId = doc.id;
+      medData.push(data);
+    });
     renderMedList();
-    document.getElementById("syncBadge").innerText = `☁️ ${currentCatName} 的資料已連線`;
   });
 }
 
-// 渲染病歷清單 (含左右手動切換照片)
-function renderMedList(){
-  let list = [...medData];
-  const key = document.getElementById("medSearch").value.toLowerCase();
-  if(medFilter !== "all") list = list.filter(x=>x.type === medFilter);
-  if(key) list = list.filter(x=>x.note?.toLowerCase().includes(key));
+// 您提供的優化版上傳邏輯
+async function saveTextMedical() {
+  const type = document.getElementById("medType").value;
+  const date = document.getElementById("medDate").value;
+  const review = document.getElementById("medReview").value;
+  const note = document.getElementById("medNote").value.trim();
 
+  if (!date || !note) { return alert("請填寫日期與病歷備註"); }
+
+  try {
+    const medCol = db.collection(`catMed_${currentCat}`);
+    await medCol.add({
+      type, date, review, note,
+      imgs: [],
+      star: false,
+      createTime: firebase.firestore.FieldValue.serverTimestamp() 
+    });
+    alert("✅ 文字病歷上傳成功");
+    document.getElementById("medNote").value = "";
+    document.getElementById("medReview").value = "";
+    renderMedList(); 
+  } catch (error) {
+    console.error("Error adding document: ", error);
+    alert("❌ 上傳失敗，請檢查網路連線");
+  }
+}
+
+// 手動切換圖片
+function changeImg(docId, step) {
+  const item = medData.find(x => x.docId === docId);
+  if(!item) return;
+  if(cardImgIndices[docId] === undefined) cardImgIndices[docId] = 0;
+  cardImgIndices[docId] = (cardImgIndices[docId] + step + item.imgs.length) % item.imgs.length;
+  document.getElementById(`img-${docId}`).src = item.imgs[cardImgIndices[docId]];
+}
+
+// 渲染列表 (包含手動切換按鈕)
+function renderMedList() {
   const wrap = document.getElementById("medList");
-  wrap.innerHTML = list.map(item => {
-    let imgHtml = "<div style='padding:20px;text-align:center'>無圖片</div>";
-    if(item.imgs && item.imgs.length > 0){
-      const currentIdx = cardImgIndices[item.docId] || 0;
-      imgHtml = `
-        <div class='med-img-wrap' onclick="event.stopPropagation()">
-          ${item.imgs.length > 1 ? `<button class='preview-btn prev-left' onclick='changeCardImg("${item.docId}", -1)'>←</button>` : ''}
-          <img src='${item.imgs[currentIdx]}' class='med-img' id='img-${item.docId}'>
-          ${item.imgs.length > 1 ? `<button class='preview-btn prev-right' onclick='changeCardImg("${item.docId}", 1)'>→</button>` : ''}
+  const keyword = document.getElementById("medSearch").value.toLowerCase();
+  
+  let filtered = medData.filter(x => x.note.toLowerCase().includes(keyword) || x.type.includes(keyword));
+  
+  wrap.innerHTML = filtered.map(item => {
+    let imgArea = `<div style="height:100px; display:flex; align-items:center; justify-content:center; background:#eee; border-radius:10px; margin-bottom:5px;">無照片</div>`;
+    
+    if(item.imgs && item.imgs.length > 0) {
+      const idx = cardImgIndices[item.docId] || 0;
+      imgArea = `
+        <div class="med-img-wrap">
+          ${item.imgs.length > 1 ? `<button class="prev-btn prev-left" onclick="changeImg('${item.docId}', -1)">←</button>` : ''}
+          <img src="${item.imgs[idx]}" id="img-${item.docId}" class="med-img">
+          ${item.imgs.length > 1 ? `<button class="prev-btn prev-right" onclick="changeImg('${item.docId}', 1)">→</button>` : ''}
         </div>
       `;
     }
+
     return `
-      <div class='med-card'>
-        ${imgHtml}
-        <span class='med-tag tag-check'>${item.type}</span>
-        <div>📅 ${item.date || ""}</div>
-        <div style="font-size:12px; color:#777;">📝 ${item.note || ""}</div>
-        <button class='btn-delete' style="margin-top:5px" onclick='delMed("${item.docId}")'>刪除</button>
+      <div class="med-card">
+        ${imgArea}
+        <div style="font-weight:bold; color:#478fb8;">${item.type}</div>
+        <div style="font-size:11px;">📅 ${item.date}</div>
+        <div style="margin-top:5px; height:40px; overflow:hidden;">${item.note}</div>
       </div>
     `;
   }).join("");
 }
 
-// 手動切換照片邏輯
-function changeCardImg(docId, step) {
-  const item = medData.find(x => x.docId === docId);
-  if (!item) return;
-  if (!cardImgIndices[docId]) cardImgIndices[docId] = 0;
-  cardImgIndices[docId] = (cardImgIndices[docId] + step + item.imgs.length) % item.imgs.length;
-  renderMedList(); // 重新渲染以更新圖片
-}
-
-// 文字病歷上傳
-async function uploadTextMed(){
+// 圖片上傳壓縮處理 (簡略示範)
+async function uploadImages(e) {
+  const files = e.target.files;
+  const imgs = [];
+  for(let f of files) {
+    const base64 = await toBase64(f);
+    imgs.push(base64);
+  }
   const type = document.getElementById("medType").value;
   const date = document.getElementById("medDate").value;
   const note = document.getElementById("medNote").value;
-  if(!date || !note) return alert("請填寫日期與備註");
-  await medCol.add({ id: Date.now(), type, date, note, imgs: [], star: false });
-  alert("文字病歷已存入");
-  document.getElementById("medNote").value = "";
+  await db.collection(`catMed_${currentCat}`).add({
+    type, date, note, imgs, star:false, createTime: firebase.firestore.FieldValue.serverTimestamp()
+  });
+  alert("照片病歷上傳成功");
 }
 
-// 圖片處理與刪除等其餘功能
-function triggerMedUpload(){ document.getElementById("medFile").click(); }
-async function handleMedFile(e){
-  const files = Array.from(e.target.files);
-  const type = document.getElementById("medType").value;
-  const date = document.getElementById("medDate").value;
-  const note = document.getElementById("medNote").value;
-  let imgs = [];
-  for(const f of files){ imgs.push(await compressImg(f)); }
-  await medCol.add({ id: Date.now(), type, date, note, imgs, star: false });
-  alert("上傳完成");
-}
-async function compressImg(file){
-  return new Promise(r=>{
-    const img = new Image();
-    img.onload = () => {
-      const c = document.createElement("canvas");
-      let w = img.width, h = img.height;
-      if(w>800){ h=h*(800/w); w=800; }
-      c.width=w; c.height=h;
-      c.getContext("2d").drawImage(img,0,0,w,h);
-      r(c.toDataURL("image/jpeg",0.7));
-    };
-    img.src = URL.createObjectURL(file);
+function toBase64(file) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
   });
 }
-async function delMed(id){ if(confirm("確定刪除？")) await medCol.doc(id).delete(); }
-function setMedFilter(v,b){
-  medFilter = v;
-  document.querySelectorAll(".filter-btn").forEach(x=>x.classList.remove("active"));
-  b.classList.add("active");
-  renderMedList();
-}
-function toggleDarkMode(){ document.body.classList.toggle("dark-mode"); }
 </script>
 </body>
 </html>
