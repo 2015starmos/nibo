@@ -211,7 +211,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        /* 彈窗樣式 */
         .modal {
             display: none;
             position: fixed;
@@ -244,16 +243,19 @@
             cursor: pointer;
             color: #666;
         }
+        .loading {
+            color: #0066cc;
+            padding: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 頂部標題（已刪除重複的系統設定按鈕） -->
         <div class="header">
             <h1>🐾 寵物醫療病歷管理系統</h1>
         </div>
 
-        <!-- 選單欄（只保留這裡的系統設定） -->
         <div class="tabs">
             <div class="tab-item active" onclick="openTab('pet-list')">寵物資料列表</div>
             <div class="tab-item" onclick="openTab('medical-record')">病歷紀錄</div>
@@ -261,7 +263,6 @@
             <div class="tab-item" onclick="openTab('system-setting')">系統設定</div>
         </div>
 
-        <!-- 搜尋欄 -->
         <div class="search-bar">
             <div class="search-group">
                 <select id="search-type">
@@ -291,13 +292,11 @@
             </div>
         </div>
 
-        <!-- 1. 寵物資料列表頁 -->
         <div id="pet-list" class="form-section active">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
                 <h2>寵物資料管理</h2>
                 <button class="btn btn-primary" onclick="openPetModal()">➕ 新增寵物</button>
             </div>
-
             <table class="data-table">
                 <thead>
                     <tr>
@@ -309,18 +308,16 @@
                     </tr>
                 </thead>
                 <tbody id="pet-table-body">
-                    <!-- 動態渲染 -->
+                    <tr><td colspan="5" style="text-align:center;">載入中...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- 2. 病歷紀錄頁 -->
         <div id="medical-record" class="form-section">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
                 <h2>病歷紀錄管理</h2>
                 <button class="btn btn-success" onclick="clearMedicalForm()">清空表單</button>
             </div>
-
             <div class="form-grid">
                 <div class="form-group">
                     <label>寵物姓名 *</label>
@@ -359,8 +356,6 @@
                     <textarea id="mr-medicine" placeholder="請輸入處方藥物及劑量"></textarea>
                 </div>
             </div>
-
-            <!-- 檔案上傳 -->
             <div class="form-group full-width">
                 <label>附件上傳（病歷照片/PDF等）</label>
                 <div class="upload-area" onclick="document.getElementById('file-upload').click()">
@@ -369,10 +364,7 @@
                 </div>
                 <div class="file-preview" id="file-preview"></div>
             </div>
-
             <button class="btn btn-success" onclick="saveMedicalRecord()">儲存病歷紀錄</button>
-
-            <!-- 歷史病歷 -->
             <h3 style="margin:20px 0 10px 0;">歷史病歷紀錄</h3>
             <table class="data-table">
                 <thead>
@@ -386,18 +378,16 @@
                     </tr>
                 </thead>
                 <tbody id="medical-history-body">
-                    <!-- 動態渲染 -->
+                    <tr><td colspan="6" style="text-align:center;">載入中...</td></tr>
                 </tbody>
             </table>
         </div>
 
-        <!-- 3. 就醫院所查詢頁 -->
         <div id="hospital-query" class="form-section">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
                 <h2>就醫院所管理</h2>
                 <button class="btn btn-primary" onclick="addNewHospital()">➕ 新增院所</button>
             </div>
-
             <h3 style="margin: 20px 0 10px 0; font-size: 16px;">院所基本資訊</h3>
             <table class="data-table">
                 <thead>
@@ -455,12 +445,10 @@
             </table>
         </div>
 
-        <!-- 4. 系統設定頁 -->
         <div id="system-setting" class="form-section">
             <h2>系統設定</h2>
-            <p>版本：v1.0 正式上線版</p>
+            <p>版本：v1.0 正式上線版 (Firebase)</p>
             <hr style="margin:15px 0;">
-            
             <h3 style="margin-bottom:10px;">基本設定</h3>
             <div class="form-group" style="margin-bottom:10px;">
                 <label>系統名稱</label>
@@ -477,7 +465,6 @@
             <button class="btn btn-primary" onclick="saveSystemSetting()">儲存設定</button>
         </div>
 
-        <!-- 新增/修改寵物彈窗 -->
         <div id="pet-modal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -508,7 +495,6 @@
             </div>
         </div>
 
-        <!-- 新增/修改院所彈窗 -->
         <div id="hospital-modal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -548,45 +534,69 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
+
     <script>
-        // ========== 全域變數 ==========
-        let petList = JSON.parse(localStorage.getItem('petList')) || [];
-        let medicalRecords = JSON.parse(localStorage.getItem('medicalRecords')) || [];
+        // Firebase 設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
+            authDomain: "naibo-health.firebaseapp.com",
+            projectId: "naibo-health",
+            storageBucket: "naibo-health.firebasestorage.app",
+            messagingSenderId: "1008746304734",
+            appId: "1:1008746304734:web:33b87646673ee83b975e4f"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // 全域變數
+        let petList = [];
+        let medicalRecords = [];
         let uploadedFiles = [];
         let isPetEdit = false;
         let isEditMode = false;
 
-        // ========== 頁面初始化 ==========
-        window.onload = function() {
+        // 初始化
+        window.onload = async function() {
+            await loadAllData();
             renderPetTable();
             renderMedicalHistory();
             updatePetSelect();
+            loadSystemSetting();
         };
 
-        // ========== 頁面切換 ==========
-        function openTab(tabId) {
-            // 切換tab樣式
-            document.querySelectorAll('.tab-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // 切換內容區
-            document.querySelectorAll('.form-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById(tabId).classList.add('active');
-            
-            // 院所頁顯示篩選欄
-            if (tabId === 'hospital-query') {
-                document.getElementById('hospital-filter').style.display = 'flex';
-            } else {
-                document.getElementById('hospital-filter').style.display = 'none';
+        // 從 Firebase 讀取所有資料
+        async function loadAllData() {
+            try {
+                // 讀取寵物資料
+                const petSnapshot = await db.collection('pets').get();
+                petList = petSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // 讀取病歷資料
+                const recordSnapshot = await db.collection('medicalRecords').orderBy('date', 'desc').get();
+                medicalRecords = recordSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            } catch (e) {
+                console.error("載入資料失敗：", e);
+                alert("載入資料失敗，請重整頁面");
             }
         }
 
+        // ========== 分頁切換 ==========
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-item').forEach(item => item.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.form-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('hospital-filter').style.display = tabId === 'hospital-query' ? 'flex' : 'none';
+        }
+
         // ========== 寵物管理 ==========
-        // 打開寵物彈窗
         function openPetModal(id = null) {
             isPetEdit = !!id;
             document.getElementById('pet-modal-title').textContent = isPetEdit ? '修改寵物資料' : '新增寵物資料';
@@ -595,8 +605,8 @@
             if (isPetEdit) {
                 const pet = petList.find(p => p.id === id);
                 document.getElementById('pet-name').value = pet.name;
-                document.getElementById('owner-name').value = pet.ownerName;
-                document.getElementById('owner-phone').value = pet.ownerPhone;
+                document.getElementById('owner-name').value =pet.ownerName;
+                document.getElementById('owner-phone').value =pet.ownerPhone;
                 document.getElementById('pet-chip').value = pet.chip || '';
             } else {
                 document.getElementById('pet-name').value = '';
@@ -607,13 +617,11 @@
             document.getElementById('pet-modal').style.display = 'flex';
         }
 
-        // 關閉寵物彈窗
         function closePetModal() {
             document.getElementById('pet-modal').style.display = 'none';
         }
 
-        // 儲存寵物資料
-        function savePet() {
+        async function savePet() {
             const name = document.getElementById('pet-name').value.trim();
             const ownerName = document.getElementById('owner-name').value.trim();
             const ownerPhone = document.getElementById('owner-phone').value.trim();
@@ -621,40 +629,36 @@
             const id = document.getElementById('edit-pet-id').value;
 
             if (!name || !ownerName || !ownerPhone) {
-                alert('請填寫必填欄位（寵物姓名、飼主姓名、飼主電話）！');
+                alert('請填寫必填欄位！');
                 return;
             }
 
-            if (isPetEdit) {
-                const idx = petList.findIndex(p => p.id == id);
-                petList[idx] = { ...petList[idx], name, ownerName, ownerPhone, chip };
-            } else {
-                petList.push({
-                    id: Date.now(),
-                    name,
-                    ownerName,
-                    ownerPhone,
-                    chip
-                });
-            }
+            const petData = { name, ownerName, ownerPhone, chip };
 
-            localStorage.setItem('petList', JSON.stringify(petList));
-            renderPetTable();
-            updatePetSelect();
-            closePetModal();
-            alert(isPetEdit ? '✅ 寵物資料已更新！' : '✅ 寵物資料已新增！');
+            try {
+                if (isPetEdit) {
+                    await db.collection('pets').doc(id).update(petData);
+                } else {
+                    await db.collection('pets').add(petData);
+                }
+                await loadAllData();
+                renderPetTable();
+                updatePetSelect();
+                closePetModal();
+                alert(isPetEdit ? '✅ 寵物資料已更新' : '✅ 寵物資料已新增');
+            } catch (e) {
+                console.error("儲存失敗：", e);
+                alert("儲存失敗，請重試");
+            }
         }
 
-        // 渲染寵物表格
         function renderPetTable(list = petList) {
             const tbody = document.getElementById('pet-table-body');
             tbody.innerHTML = '';
-            
             if (list.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">暂无寵物資料，請點擊「新增寵物」添加</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">暂无寵物資料</td></tr>';
                 return;
             }
-
             list.forEach(pet => {
                 tbody.innerHTML += `
                     <tr>
@@ -663,25 +667,27 @@
                         <td>${pet.ownerPhone}</td>
                         <td>${pet.chip || '-'}</td>
                         <td>
-                            <button class="btn btn-sm btn-warning" onclick="openPetModal(${pet.id})">修改</button>
-                            <button class="btn btn-sm btn-danger" onclick="deletePet(${pet.id})">刪除</button>
+                            <button class="btn btn-sm btn-warning" onclick="openPetModal('${pet.id}')">修改</button>
+                            <button class="btn btn-sm btn-danger" onclick="deletePet('${pet.id}')">刪除</button>
                         </td>
                     </tr>
                 `;
             });
         }
 
-        // 刪除寵物
-        function deletePet(id) {
-            if (!confirm('⚠️ 確定要刪除此寵物資料嗎？刪除後無法復原！')) return;
-            petList = petList.filter(p => p.id != id);
-            localStorage.setItem('petList', JSON.stringify(petList));
-            renderPetTable();
-            updatePetSelect();
-            alert('✅ 寵物資料已刪除！');
+        async function deletePet(id) {
+            if (!confirm('確定刪除？')) return;
+            try {
+                await db.collection('pets').doc(id).delete();
+                await loadAllData();
+                renderPetTable();
+                updatePetSelect();
+                alert('✅ 已刪除');
+            } catch (e) {
+                alert('刪除失敗');
+            }
         }
 
-        // 更新病歷頁的寵物下拉選單
         function updatePetSelect() {
             const select = document.getElementById('mr-patient');
             select.innerHTML = '<option value="">請選擇寵物</option>';
@@ -690,57 +696,48 @@
             });
         }
 
-        // ========== 病歷管理 ==========
-        // 檔案上傳預覽
+        // ========== 檔案上傳 ==========
         document.getElementById('file-upload').addEventListener('change', function(e) {
             const files = e.target.files;
             if (!files.length) return;
-
             uploadedFiles = [...uploadedFiles, ...files];
             renderFilePreview();
         });
 
-        // 渲染檔案預覽
         function renderFilePreview() {
             const previewArea = document.getElementById('file-preview');
             previewArea.innerHTML = '';
-
             uploadedFiles.forEach((file, index) => {
                 const previewItem = document.createElement('div');
                 previewItem.className = 'preview-item';
-                
                 if (file.type.startsWith('image/')) {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = e => {
                         previewItem.innerHTML = `
-                            <img src="${e.target.result}" alt="${file.name}">
+                            <img src="${e.target.result}">
                             <button class="delete-file" onclick="deleteFile(${index})">×</button>
                             <div class="file-info">${file.name}</div>
                         `;
                     };
                     reader.readAsDataURL(file);
-                } else if (file.type === 'application/pdf') {
+                } else {
                     previewItem.innerHTML = `
-                        <div style="width:100%;height:100px;background:#eee;display:flex;align-items:center;justify-content:center;">
-                            <span>📄 PDF檔案</span>
-                        </div>
+                        <div style="height:100px;display:flex;align-items:center;justify-content:center;">📄 PDF</div>
                         <button class="delete-file" onclick="deleteFile(${index})">×</button>
                         <div class="file-info">${file.name}</div>
                     `;
                 }
-
                 previewArea.appendChild(previewItem);
             });
         }
 
-        // 刪除上傳檔案
         function deleteFile(index) {
             uploadedFiles.splice(index, 1);
             renderFilePreview();
         }
 
-        // 儲存病歷紀錄
-        function saveMedicalRecord() {
+        // ========== 病歷儲存 ==========
+        async function saveMedicalRecord() {
             const petId = document.getElementById('mr-patient').value;
             const hospitalId = document.getElementById('mr-hospital').value;
             const date = document.getElementById('mr-date').value;
@@ -749,128 +746,73 @@
             const diagnosis = document.getElementById('mr-diagnosis').value.trim();
             const medicine = document.getElementById('mr-medicine').value.trim();
 
-            // 驗證必填欄位
             if (!petId || !hospitalId || !date || !reason) {
-                alert('請填寫必填欄位（寵物姓名、就醫院所、就診日期、就診原因）！');
+                alert('請填寫必填欄位！');
                 return;
             }
 
-            // 取得寵物和院所名稱
             const pet = petList.find(p => p.id == petId);
-            const hospitalOption = document.querySelector(`#mr-hospital option[value="${hospitalId}"]`);
-            const hospitalName = hospitalOption ? hospitalOption.text : '';
+            const hospitalName = document.querySelector(`#mr-hospital option[value="${hospitalId}"]`).text;
 
-            // 處理附件
+            // 上傳檔案到 Storage
             const attachments = [];
-            uploadedFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = function() {
-                    attachments.push({
-                        name: file.name,
-                        type: file.type,
-                        data: reader.result
-                    });
-                };
-            });
+            for (const file of uploadedFiles) {
+                const storageRef = storage.ref(`medical-attachments/${Date.now()}_${file.name}`);
+                await storageRef.put(file);
+                const url = await storageRef.getDownloadURL();
+                attachments.push({ name: file.name, url, type: file.type });
+            }
 
-            // 等待檔案讀取完成後儲存
-            setTimeout(() => {
-                const medicalRecord = {
-                    id: Date.now(),
-                    petId,
-                    petName: pet.name,
-                    hospitalId,
-                    hospitalName,
-                    date,
-                    doctor,
-                    reason,
-                    diagnosis,
-                    medicine,
-                    attachments
-                };
+            const recordData = {
+                petId, petName: pet.name, hospitalId, hospitalName,
+                date, doctor, reason, diagnosis, medicine, attachments
+            };
 
-                medicalRecords.push(medicalRecord);
-                localStorage.setItem('medicalRecords', JSON.stringify(medicalRecords));
-                
-                alert(`✅ 已儲存 ${pet.name} 的病歷紀錄！`);
+            try {
+                await db.collection('medicalRecords').add(recordData);
+                await loadAllData();
+                alert(`✅ 已儲存 ${pet.name} 病歷`);
                 clearMedicalForm();
                 renderMedicalHistory();
-            }, 100);
+            } catch (e) {
+                console.error(e);
+                alert("儲存失敗");
+            }
         }
 
-        // 渲染歷史病歷
         function renderMedicalHistory() {
             const tbody = document.getElementById('medical-history-body');
             tbody.innerHTML = '';
-
             if (medicalRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无病歷紀錄</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无病歷</td></tr>';
                 return;
             }
-
             medicalRecords.forEach(record => {
-                const attachmentsCount = record.attachments ? record.attachments.length : 0;
+                const count = record.attachments?.length || 0;
                 tbody.innerHTML += `
                     <tr>
                         <td>${record.date}</td>
                         <td>${record.hospitalName}</td>
-                        <td>${record.reason.substring(0,20)}${record.reason.length>20?'...':''}</td>
-                        <td>${record.diagnosis.substring(0,20)}${record.diagnosis.length>20?'...':''}</td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" onclick="viewAttachments(${record.id})">
-                                查看(${attachmentsCount})
-                            </button>
-                        </td>
+                        <td>${record.reason.slice(0,20)}${record.reason.length>20?'...':''}</td>
+                        <td>${record.diagnosis?.slice(0,20)||''}${(record.diagnosis?.length||0)>20?'...':''}</td>
+                        <td><button class="btn btn-sm btn-primary" onclick="viewFiles(${JSON.stringify(record.attachments||[]).replace(/"/g, '&quot;')})">查看(${count})</button></td>
                         <td>${record.doctor || '-'}</td>
                     </tr>
                 `;
             });
         }
 
-        // 查看附件
-        function viewAttachments(recordId) {
-            const record = medicalRecords.find(r => r.id === recordId);
-            if (!record || !record.attachments || record.attachments.length === 0) {
-                alert("此筆病歷沒有附件！");
-                return;
-            }
-
-            record.attachments.forEach((file) => {
-                if (file.type === 'application/pdf') {
-                    const choice = confirm(`附件 ${file.name} 是 PDF 檔案\n\n按「確定」= 打開 PDF\n按「取消」= 儲存為圖片格式`);
-                    if (choice) {
-                        // 打開PDF
-                        const link = document.createElement('a');
-                        link.href = file.data;
-                        link.target = '_blank';
-                        link.click();
-                    } else {
-                        // 下載為圖片格式
-                        downloadFile(file.data, file.name.replace('.pdf', '_儲存版.png'));
-                    }
-                } else {
-                    // 圖片直接下載/打開
-                    const link = document.createElement('a');
-                    link.href = file.data;
-                    link.download = file.name;
-                    link.target = '_blank';
-                    link.click();
-                }
+        function viewFiles(files) {
+            if (!files.length) { alert("無附件"); return; }
+            files.forEach(file => {
+                const a = document.createElement('a');
+                a.href = file.url;
+                a.download = file.name;
+                a.target = '_blank';
+                a.click();
             });
         }
 
-        // 下載檔案工具函數
-        function downloadFile(dataUrl, filename) {
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // 清空病歷表單
         function clearMedicalForm() {
             document.getElementById('mr-patient').value = '';
             document.getElementById('mr-hospital').value = '';
@@ -884,242 +826,167 @@
         }
 
         // ========== 院所管理 ==========
-        // 打開新增院所彈窗
         function addNewHospital() {
             isEditMode = false;
-            document.getElementById('hospital-modal-title').textContent = '新增醫院資訊';
-            document.getElementById('hospital-modal-submit').textContent = '儲存醫院';
+            document.getElementById('hospital-modal-title').textContent = '新增院所';
             document.getElementById('edit-hospital-id').value = '';
-            
-            // 清空表單
             document.getElementById('new-hospital-name').value = '';
             document.getElementById('new-hospital-address').value = '';
             document.getElementById('new-hospital-phone').value = '';
             document.getElementById('new-hospital-specialty').value = '';
             document.getElementById('new-hospital-status').value = 'normal';
-            
             document.getElementById('hospital-modal').style.display = 'flex';
         }
 
-        // 打開修改院所彈窗
-        function editHospital(hospitalId) {
+        function editHospital(id) {
             isEditMode = true;
-            document.getElementById('hospital-modal-title').textContent = '修改醫院資訊';
-            document.getElementById('hospital-modal-submit').textContent = '更新醫院';
-            document.getElementById('edit-hospital-id').value = hospitalId;
-            
-            // 填充現有資料
-            const hospitalRow = document.querySelector(`#hospital-info-body tr[data-id="${hospitalId}"]`);
-            if (hospitalRow) {
-                const cells = hospitalRow.cells;
-                document.getElementById('new-hospital-name').value = cells[0].textContent;
-                document.getElementById('new-hospital-address').value = cells[1].textContent;
-                document.getElementById('new-hospital-phone').value = cells[2].textContent;
-                document.getElementById('new-hospital-specialty').value = cells[3].textContent;
-                
-                const statusText = cells[4].textContent;
-                document.getElementById('new-hospital-status').value = 
-                    statusText.includes('合作中') ? 'normal' : 
-                    statusText.includes('暫停') ? 'pause' : 'stop';
-            }
-            
+            document.getElementById('hospital-modal-title').textContent = '修改院所';
+            document.getElementById('edit-hospital-id').value = id;
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            const cells = row.cells;
+            document.getElementById('new-hospital-name').value = cells[0].textContent;
+            document.getElementById('new-hospital-address').value = cells[1].textContent;
+            document.getElementById('new-hospital-phone').value = cells[2].textContent;
+            document.getElementById('new-hospital-specialty').value = cells[3].textContent;
+            const statusText = cells[4].textContent;
+            document.getElementById('new-hospital-status').value =
+                statusText.includes('合作中') ? 'normal' :
+                statusText.includes('暫停') ? 'pause' : 'stop';
             document.getElementById('hospital-modal').style.display = 'flex';
         }
 
-        // 關閉院所彈窗
         function closeHospitalModal() {
             document.getElementById('hospital-modal').style.display = 'none';
         }
 
-        // 儲存/更新院所
         function saveNewHospital() {
-            const hospitalId = document.getElementById('edit-hospital-id').value;
+            const id = document.getElementById('edit-hospital-id').value;
             const name = document.getElementById('new-hospital-name').value.trim();
             const address = document.getElementById('new-hospital-address').value.trim();
             const phone = document.getElementById('new-hospital-phone').value.trim();
             const specialty = document.getElementById('new-hospital-specialty').value.trim() || '未填寫';
             const status = document.getElementById('new-hospital-status').value;
-            const statusText = status === 'normal' ? '合作中' : status === 'pause' ? '暫停合作' : '終止合作';
-            const statusClass = status === 'normal' ? 'status-normal' : status === 'pause' ? 'status-warning' : 'status-danger';
+            const statusText = { normal:'合作中', pause:'暫停合作', stop:'終止合作' }[status];
+            const statusClass = { normal:'status-normal', pause:'status-warning', stop:'status-danger' }[status];
 
-            // 驗證必填欄位
-            if (!name || !address || !phone) {
-                alert('請填寫必填欄位（醫院名稱、地址、聯繫電話）！');
-                return;
-            }
+            if (!name || !address || !phone) { alert("必填欄位不可空白"); return; }
 
-            if (isEditMode && hospitalId) {
-                // 修改模式
-                const hospitalRow = document.querySelector(`#hospital-info-body tr[data-id="${hospitalId}"]`);
-                if (hospitalRow) {
-                    const cells = hospitalRow.cells;
-                    cells[0].textContent = name;
-                    cells[1].textContent = address;
-                    cells[2].textContent = phone;
-                    cells[3].textContent = specialty;
-                    cells[4].innerHTML = `<span class="${statusClass}">${statusText}</span>`;
-                }
-
-                // 更新下拉選單
-                const mrHospitalSelect = document.getElementById('mr-hospital');
-                const filterHospitalSelect = document.getElementById('filter-hospital');
-                for (let i = 0; i < mrHospitalSelect.options.length; i++) {
-                    if (mrHospitalSelect.options[i].value === hospitalId) {
-                        mrHospitalSelect.options[i].text = name;
-                        filterHospitalSelect.options[i].text = name;
-                        break;
-                    }
-                }
-
-                alert(`✅ 已更新醫院：${name}`);
+            if (isEditMode && id) {
+                const row = document.querySelector(`tr[data-id="${id}"]`);
+                row.cells[0].textContent = name;
+                row.cells[1].textContent = address;
+                row.cells[2].textContent = phone;
+                row.cells[3].textContent = specialty;
+                row.cells[4].innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+                
+                const opt = document.querySelector(`#mr-hospital option[value="${id}"]`);
+                if (opt) opt.text = name;
+                const fopt = document.querySelector(`#filter-hospital option[value="${id}"]`);
+                if (fopt) fopt.text = name;
             } else {
-                // 新增模式
-                const maxId = Array.from(document.getElementById('mr-hospital').options).reduce((max, opt) => {
-                    return Math.max(max, parseInt(opt.value) || 0);
-                }, 0);
-                const newId = maxId + 1;
-
-                // 新增到下拉選單
-                const newOption = new Option(name, newId);
-                document.getElementById('mr-hospital').appendChild(newOption);
-                document.getElementById('filter-hospital').appendChild(newOption.cloneNode(true));
-
-                // 新增到表格
-                const hospitalTable = document.getElementById('hospital-info-body');
-                const newRow = `
+                const max = Math.max(...Array.from(document.querySelectorAll('#mr-hospital option')).map(o=>o.value?+o.value:0));
+                const newId = max + 1;
+                document.getElementById('mr-hospital').append(new Option(name, newId));
+                document.getElementById('filter-hospital').append(new Option(name, newId));
+                document.getElementById('hospital-info-body').innerHTML += `
                     <tr data-id="${newId}">
                         <td>${name}</td>
                         <td>${address}</td>
                         <td>${phone}</td>
                         <td>${specialty}</td>
                         <td><span class="${statusClass}">${statusText}</span></td>
-                        <td>
-                            <button class="btn btn-sm btn-warning" onclick="editHospital(${newId})">修改</button>
-                        </td>
+                        <td><button class="btn btn-sm btn-warning" onclick="editHospital(${newId})">修改</button></td>
                     </tr>
                 `;
-                hospitalTable.innerHTML += newRow;
-
-                alert(`✅ 已新增醫院：${name}`);
             }
-
             closeHospitalModal();
+            alert("✅ 已儲存院所資料");
         }
 
         // ========== 系統設定 ==========
-        function saveSystemSetting() {
-            const sysName = document.getElementById('sys-name').value.trim();
-            const sysEmail = document.getElementById('sys-email').value.trim();
-            const sysNote = document.getElementById('sys-note').value.trim();
-
-            // 儲存設定到localStorage
-            const systemSetting = {
-                name: sysName,
-                email: sysEmail,
-                note: sysNote
+        async function saveSystemSetting() {
+            const data = {
+                name: document.getElementById('sys-name').value.trim(),
+                email: document.getElementById('sys-email').value.trim(),
+                note: document.getElementById('sys-note').value.trim()
             };
-            localStorage.setItem('systemSetting', JSON.stringify(systemSetting));
-
-            // 更新頁面標題
-            document.querySelector('.header h1').textContent = `🐾 ${sysName || '寵物醫療病歷管理系統'}`;
-            
-            alert('✅ 系統設定已儲存！');
+            await db.collection('system').doc('settings').set(data);
+            document.querySelector('.header h1').textContent = `🐾 ${data.name || '寵物醫療病歷管理系統'}`;
+            alert("✅ 系統設定已儲存到 Firebase");
         }
 
-        // ========== 搜尋功能 ==========
-        function searchData() {
-            const searchType = document.getElementById('search-type').value;
-            const searchValue = document.getElementById('search-input').value.trim().toLowerCase();
-
-            if (!searchValue) {
-                alert('請輸入搜尋內容！');
-                return;
+        async function loadSystemSetting() {
+            const doc = await db.collection('system').doc('settings').get();
+            if (doc.exists) {
+                const d = doc.data();
+                document.getElementById('sys-name').value = d.name || '';
+                document.getElementById('sys-email').value = d.email || '';
+                document.getElementById('sys-note').value = d.note || '';
+                document.querySelector('.header h1').textContent = `🐾 ${d.name || '寵物醫療病歷管理系統'}`;
             }
+        }
 
-            // 根據不同類型搜尋
-            if (searchType === 'name') {
-                const filteredPets = petList.filter(p => p.name.toLowerCase().includes(searchValue));
-                renderPetTable(filteredPets);
+        // ========== 搜尋 ==========
+        function searchData() {
+            const type = document.getElementById('search-type').value;
+            const kw = document.getElementById('search-input').value.trim().toLowerCase();
+            if (!kw) { alert("請輸入關鍵字"); return; }
+
+            if (type === 'name' || type === 'chip') {
+                const list = petList.filter(p =>
+                    type === 'name' ? p.name.toLowerCase().includes(kw) :
+                    (p.chip || '').includes(kw)
+                );
+                renderPetTable(list);
                 openTab('pet-list');
-            } else if (searchType === 'chip') {
-                const filteredPets = petList.filter(p => (p.chip || '').includes(searchValue));
-                renderPetTable(filteredPets);
-                openTab('pet-list');
-            } else if (searchType === 'hospital') {
-                const filteredRecords = medicalRecords.filter(r => r.hospitalName.toLowerCase().includes(searchValue));
+            } else {
+                const list = medicalRecords.filter(r =>
+                    r.hospitalName.toLowerCase().includes(kw)
+                );
                 const tbody = document.getElementById('medical-history-body');
                 tbody.innerHTML = '';
-                
-                if (filteredRecords.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">未找到相關病歷</td></tr>';
-                } else {
-                    filteredRecords.forEach(record => {
-                        const attachmentsCount = record.attachments ? record.attachments.length : 0;
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>${record.date}</td>
-                                <td>${record.hospitalName}</td>
-                                <td>${record.reason.substring(0,20)}${record.reason.length>20?'...':''}</td>
-                                <td>${record.diagnosis.substring(0,20)}${record.diagnosis.length>20?'...':''}</td>
-                                <td>
-                                    <button class="btn btn-sm btn-primary" onclick="viewAttachments(${record.id})">
-                                        查看(${attachmentsCount})
-                                    </button>
-                                </td>
-                                <td>${record.doctor || '-'}</td>
-                            </tr>
-                        `;
-                    });
-                }
+                list.forEach(r => {
+                    const c = r.attachments?.length||0;
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${r.date}</td>
+                            <td>${r.hospitalName}</td>
+                            <td>${r.reason.slice(0,20)}...</td>
+                            <td>${(r.diagnosis||'').slice(0,20)}...</td>
+                            <td><button class="btn btn-sm btn-primary" onclick="viewFiles(${JSON.stringify(r.attachments||[]).replace(/"/g,'&quot;')})">查看(${c})</button></td>
+                            <td>${r.doctor||'-'}</td>
+                        </tr>
+                    `;
+                });
                 openTab('medical-record');
             }
         }
 
-        // 院所篩選
         function filterHospitalData() {
-            const hospitalId = document.getElementById('filter-hospital').value;
-            const dateRange = document.getElementById('filter-date-range').value;
-
-            let filteredRecords = medicalRecords;
-
-            // 篩選院所
-            if (hospitalId) {
-                filteredRecords = filteredRecords.filter(r => r.hospitalId == hospitalId);
+            const hId = document.getElementById('filter-hospital').value;
+            const days = +document.getElementById('filter-date-range').value;
+            let list = medicalRecords;
+            if (hId) list = list.filter(r => r.hospitalId == hId);
+            if (days) {
+                const target = new Date();
+                target.setDate(target.getDate() - days);
+                list = list.filter(r => new Date(r.date) >= target);
             }
-
-            // 篩選時間
-            if (dateRange) {
-                const days = parseInt(dateRange);
-                const today = new Date();
-                const targetDate = new Date(today.setDate(today.getDate() - days));
-                filteredRecords = filteredRecords.filter(r => new Date(r.date) >= targetDate);
-            }
-
-            // 渲染結果
             const tbody = document.getElementById('medical-history-body');
             tbody.innerHTML = '';
-            
-            if (filteredRecords.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">未找到符合條件的病歷</td></tr>';
-            } else {
-                filteredRecords.forEach(record => {
-                    const attachmentsCount = record.attachments ? record.attachments.length : 0;
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${record.date}</td>
-                            <td>${record.hospitalName}</td>
-                            <td>${record.reason.substring(0,20)}${record.reason.length>20?'...':''}</td>
-                            <td>${record.diagnosis.substring(0,20)}${record.diagnosis.length>20?'...':''}</td>
-                            <td>
-                                <button class="btn btn-sm btn-primary" onclick="viewAttachments(${record.id})">
-                                    查看(${attachmentsCount})
-                                </button>
-                            </td>
-                            <td>${record.doctor || '-'}</td>
-                        </tr>
-                    `;
-                });
-            }
+            list.forEach(r => {
+                const c = r.attachments?.length||0;
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${r.date}</td>
+                        <td>${r.hospitalName}</td>
+                        <td>${r.reason.slice(0,20)}...</td>
+                        <td>${(r.diagnosis||'').slice(0,20)}...</td>
+                        <td><button class="btn btn-sm btn-primary" onclick="viewFiles(${JSON.stringify(r.attachments||[]).replace(/"/g,'&quot;')})">查看(${c})</button></td>
+                        <td>${r.doctor||'-'}</td>
+                    </tr>
+                `;
+            });
         }
     </script>
 </body>
