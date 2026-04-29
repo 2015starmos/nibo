@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>專業貓咪醫療病歷系統</title>
+    <title>專業貓咪醫療病歷系統 - 離線版</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:"Noto Sans TC","PingFang TC",sans-serif}
         body{background:#F7F6F2;padding:20px;color:#333}
@@ -34,12 +34,10 @@
         .photo-preview img{width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid #eee}
         .history-item{padding:18px;border:1px solid #eee;border-radius:16px;margin-bottom:12px;background:#FDFCFB}
     </style>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+
 <div class="container">
     <div class="title">🐱 專業貓咪醫療病歷系統</div>
     <div class="tab">
@@ -83,8 +81,6 @@
         <textarea id="m_medicine" placeholder="用藥/處方"></textarea>
         <textarea id="m_note" placeholder="備註/術後追蹤"></textarea>
         <input id="m_next" type="date" placeholder="下次回診">
-        <input type="file" multiple accept="image/*,application/pdf" id="fileUpload">
-        <div class="photo-preview" id="preview"></div>
         <button class="btn btn-primary" onclick="saveMedical()">儲存病歷</button>
         <button class="btn btn-warning" onclick="exportPDF()">匯出病歷 PDF</button>
         <div class="section"><h3>📜 歷史病歷</h3><div id="medicalHistory"></div></div>
@@ -113,20 +109,18 @@
 </div>
 
 <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
-    authDomain: "naibo-health.firebaseapp.com",
-    projectId: "naibo-health",
-    storageBucket: "naibo-health.firebasestorage.app",
-    messagingSenderId: "1008746304734",
-    appId: "1:1008746304734:web:33b87646673ee83b975e4f"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const storage = firebase.storage();
-
 let currentCatId = "";
-let uploadedFiles = [];
+let cats = JSON.parse(localStorage.getItem("catSystem_cats")) || [];
+let medical = JSON.parse(localStorage.getItem("catSystem_medical")) || [];
+let vaccine = JSON.parse(localStorage.getItem("catSystem_vaccine")) || [];
+let worm = JSON.parse(localStorage.getItem("catSystem_worm")) || [];
+
+function saveAll() {
+    localStorage.setItem("catSystem_cats", JSON.stringify(cats));
+    localStorage.setItem("catSystem_medical", JSON.stringify(medical));
+    localStorage.setItem("catSystem_vaccine", JSON.stringify(vaccine));
+    localStorage.setItem("catSystem_worm", JSON.stringify(worm));
+}
 
 function openPage(id) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -138,55 +132,59 @@ function openPage(id) {
     if(id === 'vaccine') loadVaccineAndWorm();
 }
 
-async function saveProfile() {
+function saveProfile() {
     const name = document.getElementById('name').value.trim();
     if (!name) { alert('請輸入貓咪名字'); return; }
     const data = {
-        name: name, chip: document.getElementById('chip').value, breed: document.getElementById('breed').value,
-        color: document.getElementById('color').value, gender: document.getElementById('gender').value,
-        fix: document.getElementById('fix').value, birth: document.getElementById('birth').value,
-        owner: document.getElementById('owner').value, phone: document.getElementById('phone').value, createdAt: new Date()
+        id: currentCatId || Date.now().toString(),
+        name: name,
+        chip: document.getElementById('chip').value,
+        breed: document.getElementById('breed').value,
+        color: document.getElementById('color').value,
+        gender: document.getElementById('gender').value,
+        fix: document.getElementById('fix').value,
+        birth: document.getElementById('birth').value,
+        owner: document.getElementById('owner').value,
+        phone: document.getElementById('phone').value
     };
     if (currentCatId) {
-        await db.collection('cats').doc(currentCatId).update(data);
+        cats = cats.map(c => c.id === currentCatId ? data : c);
         alert('✅ 資料更新成功');
     } else {
-        const ref = await db.collection('cats').add(data);
-        currentCatId = ref.id;
+        cats.push(data);
+        currentCatId = data.id;
         alert('✅ 資料儲存成功');
     }
+    saveAll();
     openPage('list');
 }
 
-async function loadCatList() {
-    const snap = await db.collection('cats').orderBy('name').get();
+function loadCatList() {
     const el = document.getElementById('cat-list');
     el.innerHTML = '';
-    snap.forEach(doc => {
-        const d = doc.data();
+    cats.sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
         el.innerHTML += `
-        <div class="card" onclick="selectCat('${doc.id}')">
-            <h3>${d.name}</h3>
-            <p>晶片：${d.chip || '未填'}</p>
-            <p>品種：${d.breed || '未填'}</p>
-            <p>飼主：${d.owner || '未填'}</p>
+        <div class="card" onclick="selectCat('${c.id}')">
+            <h3>${c.name}</h3>
+            <p>晶片：${c.chip || '未填'}</p>
+            <p>品種：${c.breed || '未填'}</p>
+            <p>飼主：${c.owner || '未填'}</p>
         </div>`;
     });
 }
 
-async function selectCat(id) {
+function selectCat(id) {
     currentCatId = id;
-    const doc = await db.collection('cats').doc(id).get();
-    const d = doc.data();
-    document.getElementById('name').value = d.name || '';
-    document.getElementById('chip').value = d.chip || '';
-    document.getElementById('breed').value = d.breed || '';
-    document.getElementById('color').value = d.color || '';
-    document.getElementById('gender').value = d.gender || '';
-    document.getElementById('fix').value = d.fix || '';
-    document.getElementById('birth').value = d.birth || '';
-    document.getElementById('owner').value = d.owner || '';
-    document.getElementById('phone').value = d.phone || '';
+    const c = cats.find(x => x.id === id);
+    document.getElementById('name').value = c.name || '';
+    document.getElementById('chip').value = c.chip || '';
+    document.getElementById('breed').value = c.breed || '';
+    document.getElementById('color').value = c.color || '';
+    document.getElementById('gender').value = c.gender || '';
+    document.getElementById('fix').value = c.fix || '';
+    document.getElementById('birth').value = c.birth || '';
+    document.getElementById('owner').value = c.owner || '';
+    document.getElementById('phone').value = c.phone || '';
     openPage('profile');
 }
 
@@ -197,104 +195,85 @@ function searchCat() {
     });
 }
 
-document.getElementById('fileUpload').addEventListener('change', async e => {
-    if (!currentCatId) { alert('請先選擇貓咪'); return; }
-    const files = e.target.files;
-    for (let file of files) {
-        const ref = storage.ref(`medical/${currentCatId}/${Date.now()}-${file.name}`);
-        await ref.put(file);
-        const url = await ref.getDownloadURL();
-        uploadedFiles.push(url);
-    }
-    renderPreview();
-    alert('✅ 上傳完成');
-});
-
-function renderPreview() {
-    const p = document.getElementById('preview');
-    p.innerHTML = '';
-    uploadedFiles.forEach(u => {
-        p.innerHTML += `<img src="${u.includes('.pdf') ? 'https://i.imgur.com/8zUoR1H.png' : u}">`;
-    });
-}
-
-async function saveMedical() {
+function saveMedical() {
     if (!currentCatId) { alert('請先選擇貓咪'); return; }
     const data = {
-        catId: currentCatId, date: document.getElementById('m_date').value, weight: document.getElementById('m_weight').value,
-        temp: document.getElementById('m_temp').value, heart: document.getElementById('m_heart').value,
-        symptom: document.getElementById('m_symptom').value, diagnosis: document.getElementById('m_diag').value,
-        medicine: document.getElementById('m_medicine').value, note: document.getElementById('m_note').value,
-        nextVisit: document.getElementById('m_next').value, files: uploadedFiles, createdAt: new Date()
+        id: Date.now().toString(),
+        catId: currentCatId,
+        date: document.getElementById('m_date').value,
+        weight: document.getElementById('m_weight').value,
+        temp: document.getElementById('m_temp').value,
+        heart: document.getElementById('m_heart').value,
+        symptom: document.getElementById('m_symptom').value,
+        diagnosis: document.getElementById('m_diag').value,
+        medicine: document.getElementById('m_medicine').value,
+        note: document.getElementById('m_note').value,
+        nextVisit: document.getElementById('m_next').value
     };
-    await db.collection('medical').add(data);
+    medical.push(data);
+    saveAll();
     alert('✅ 病歷儲存成功');
-    uploadedFiles = [];
-    renderPreview();
     loadMedicalHistory();
 }
 
-async function loadMedicalHistory() {
+function loadMedicalHistory() {
     if (!currentCatId) return;
-    const snap = await db.collection('medical').where('catId','==',currentCatId).orderBy('date','desc').get();
     const el = document.getElementById('medicalHistory');
     el.innerHTML = '';
-    snap.forEach(doc => {
-        const d = doc.data();
+    const list = medical.filter(m => m.catId === currentCatId).sort((a,b) => b.date.localeCompare(a.date));
+    list.forEach(m => {
         el.innerHTML += `
         <div class="history-item">
-            <div>日期：${d.date || ''}</div>
-            <div>體重：${d.weight || ''} kg</div>
-            <div>症狀：${d.symptom || ''}</div>
+            <div>日期：${m.date || ''}</div>
+            <div>體重：${m.weight || ''} kg</div>
+            <div>症狀：${m.symptom || ''}</div>
         </div>`;
     });
 }
 
-async function saveVaccine() {
+function saveVaccine() {
     if (!currentCatId) { alert('請先選擇貓咪'); return; }
-    const data = {
-        catId: currentCatId, name: document.getElementById('v_name').value,
-        date: document.getElementById('v_date').value, next: document.getElementById('v_next').value
-    };
-    await db.collection('vaccine').add(data);
+    vaccine.push({
+        id: Date.now().toString(), catId: currentCatId,
+        name: document.getElementById('v_name').value,
+        date: document.getElementById('v_date').value,
+        next: document.getElementById('v_next').value
+    });
+    saveAll();
     alert('✅ 疫苗儲存成功');
     loadVaccineAndWorm();
 }
 
-async function saveWorm() {
+function saveWorm() {
     if (!currentCatId) { alert('請先選擇貓咪'); return; }
-    const data = {
-        catId: currentCatId, type: document.getElementById('w_type').value, date: document.getElementById('w_date').value
-    };
-    await db.collection('worm').add(data);
+    worm.push({
+        id: Date.now().toString(), catId: currentCatId,
+        type: document.getElementById('w_type').value,
+        date: document.getElementById('w_date').value
+    });
+    saveAll();
     alert('✅ 驅蟲儲存成功');
     loadVaccineAndWorm();
 }
 
-async function loadVaccineAndWorm() {
+function loadVaccineAndWorm() {
     if (!currentCatId) return;
-    const vSnap = await db.collection('vaccine').where('catId','==',currentCatId).orderBy('date','desc').get();
-    const wSnap = await db.collection('worm').where('catId','==',currentCatId).orderBy('date','desc').get();
-    const vEl = document.getElementById('vList');
-    const wEl = document.getElementById('wList');
-    vEl.innerHTML = ''; wEl.innerHTML = '';
-    vSnap.forEach(d => vEl.innerHTML += `<div class="history-item">${d.data().date}｜${d.data().name}</div>`);
-    wSnap.forEach(d => wEl.innerHTML += `<div class="history-item">${d.data().date}｜${d.data().type}</div>`);
+    const vList = vaccine.filter(v => v.catId === currentCatId).sort((a,b) => b.date.localeCompare(a.date));
+    const wList = worm.filter(w => w.catId === currentCatId).sort((a,b) => b.date.localeCompare(a.date));
+    document.getElementById('vList').innerHTML = vList.map(v => `<div class="history-item">${v.date}｜${v.name}</div>`).join('');
+    document.getElementById('wList').innerHTML = wList.map(w => `<div class="history-item">${w.date}｜${w.type}</div>`).join('');
 }
 
-async function exportPDF() {
+function exportPDF() {
     if (!currentCatId) { alert('請先選擇貓咪'); return; }
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    const cat = await db.collection('cats').doc(currentCatId).get();
-    const c = cat.data();
+    const c = cats.find(x => x.id === currentCatId);
     doc.text(`貓咪病歷 - ${c.name}`, 10,10);
     doc.text(`晶片：${c.chip}`,10,18);
     doc.text(`飼主：${c.owner}`,10,26);
-    const records = await db.collection('medical').where('catId','==',currentCatId).orderBy('date','desc').get();
     let y = 34;
-    records.forEach(r => {
-        const d = r.data();
+    medical.filter(m => m.catId === currentCatId).forEach(d => {
         if(y>270){doc.addPage();y=10}
         doc.text(`日期：${d.date}`,10,y); y+=7;
         doc.text(`症狀：${d.symptom}`,10,y); y+=7;
@@ -303,45 +282,35 @@ async function exportPDF() {
     doc.save(`貓咪病歷_${c.name}.pdf`);
 }
 
-async function exportBackup() {
-    const cats = await db.collection('cats').get();
-    const medical = await db.collection('medical').get();
-    const vaccine = await db.collection('vaccine').get();
-    const worm = await db.collection('worm').get();
-    const data = {
-        cats: cats.docs.map(d=>({id:d.id,...d.data()})),
-        medical: medical.docs.map(d=>({id:d.id,...d.data()})),
-        vaccine: vaccine.docs.map(d=>({id:d.id,...d.data()})),
-        worm: worm.docs.map(d=>({id:d.id,...d.data()}))
-    };
+function exportBackup() {
+    const data = { cats, medical, vaccine, worm };
     const blob = new Blob([JSON.stringify(data)],{type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `貓咪病歷系統備份_${new Date().getTime()}.json`;
+    a.download = `貓咪病歷備份_${new Date().getTime()}.json`;
     a.click();
 }
 
-async function restoreBackup(e) {
+function restoreBackup(e) {
     const file = e.target.files[0];
-    const data = JSON.parse(await file.text());
-    for(let i of data.cats) await db.collection('cats').doc(i.id).set(i);
-    for(let i of data.medical) await db.collection('medical').doc(i.id).set(i);
-    for(let i of data.vaccine) await db.collection('vaccine').doc(i.id).set(i);
-    for(let i of data.worm) await db.collection('worm').doc(i.id).set(i);
-    alert('✅ 還原成功');
-    loadCatList();
+    const reader = new FileReader();
+    reader.onload = e => {
+        const data = JSON.parse(e.target.result);
+        cats = data.cats || [];
+        medical = data.medical || [];
+        vaccine = data.vaccine || [];
+        worm = data.worm || [];
+        saveAll();
+        alert('✅ 還原成功');
+        loadCatList();
+    };
+    reader.readAsText(file);
 }
 
-async function clearAll() {
+function clearAll() {
     if(!confirm('⚠️ 確定清空所有資料？無法復原')) return;
-    const cats = await db.collection('cats').get();
-    const medical = await db.collection('medical').get();
-    const vaccine = await db.collection('vaccine').get();
-    const worm = await db.collection('worm').get();
-    cats.forEach(d=>d.ref.delete());
-    medical.forEach(d=>d.ref.delete());
-    vaccine.forEach(d=>d.ref.delete());
-    worm.forEach(d=>d.ref.delete());
+    cats = []; medical = []; vaccine = []; worm = [];
+    saveAll();
     alert('✅ 已清空所有資料');
     loadCatList();
 }
