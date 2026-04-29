@@ -5,158 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>專業貓咪醫療病歷系統</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Noto Sans TC", "PingFang TC", sans-serif;
-        }
-        body {
-            background: #F7F6F2;
-            padding: 20px;
-            color: #333;
-        }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-            padding: 40px;
-        }
-        .title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .tab {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        .tab-btn {
-            padding: 14px 24px;
-            border: none;
-            border-radius: 16px;
-            background: #F1F0EC;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .tab-btn.active {
-            background: #88A09E;
-            color: white;
-        }
-        .page { display: none; }
-        .page.active { display: block; animation: fade 0.3s; }
-        @keyframes fade { from { opacity:0; transform:translateY(5px) } to { opacity:1; transform:translateY(0) } }
-        .card {
-            background: white;
-            border: 1px solid #EAEAEA;
-            border-radius: 18px;
-            padding: 24px;
-            margin-bottom: 16px;
-            transition: 0.2s;
-            cursor: pointer;
-        }
-        .card:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.04);
-            border-color: #DADADA;
-        }
-        .search {
-            width: 100%;
-            padding: 16px 20px;
-            border: 1px solid #E2E2E2;
-            border-radius: 16px;
-            font-size: 15px;
-            margin-bottom: 20px;
-            outline: none;
-        }
-        .search:focus { border-color: #88A09E; }
-        input, textarea, select {
-            width: 100%;
-            padding: 16px;
-            border: 1px solid #E2E2E2;
-            border-radius: 14px;
-            font-size: 15px;
-            margin-bottom: 12px;
-            outline: none;
-            background: #FDFCFB;
-        }
-        input:focus, textarea:focus {
-            border-color: #88A09E;
-            box-shadow: 0 0 0 3px rgba(136,160,158,0.15);
-        }
-        .btn {
-            padding: 16px;
-            border-radius: 14px;
-            font-size: 15px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            transition: 0.2s;
-            margin: 4px 0;
-        }
-        .btn-primary { background: #88A09E; color:white; }
-        .btn-warning { background: #D9B382; color:white; }
-        .btn-danger { background: #D6A5A5; color:white; }
-        .btn-sm { padding:10px 14px; font-size:13px; margin:0 4px; }
-        .section {
-            margin-top: 36px;
-            padding-top: 26px;
-            border-top: 1px solid #F0F0F0;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        @media (max-width:600px) {
-            .grid { grid-template-columns: 1fr; }
-        }
-        .tip {
-            font-size:12px;
-            color:#999;
-            margin-top:-6px;
-            margin-bottom:8px;
-        }
-        .photo-preview {
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            margin:16px 0;
-        }
-        .photo-preview img {
-            width:90px;
-            height:90px;
-            object-fit:cover;
-            border-radius:12px;
-            border:1px solid #eee;
-        }
-        .history-item {
-            padding:18px;
-            border:1px solid #eee;
-            border-radius:16px;
-            margin-bottom:12px;
-            background:#FDFCFB;
-        }
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"Noto Sans TC","PingFang TC",sans-serif}
+        body{background:#F7F6F2;padding:20px;color:#333}
+        .container{max-width:1000px;margin:0 auto;background:white;border-radius:24px;box-shadow:0 10px 40px rgba(0,0,0,0.05);padding:40px}
+        .title{font-size:28px;font-weight:700;margin-bottom:30px;display:flex;align-items:center;gap:10px}
+        .tab{display:flex;gap:12px;margin-bottom:30px;flex-wrap:wrap}
+        .tab-btn{padding:14px 24px;border:none;border-radius:16px;background:#F1F0EC;font-size:15px;font-weight:500;cursor:pointer;transition:0.2s}
+        .tab-btn.active{background:#88A09E;color:white}
+        .page{display:none}
+        .page.active{display:block;animation:fade 0.3s}
+        @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+        .card{background:white;border:1px solid #EAEAEA;border-radius:18px;padding:24px;margin-bottom:16px;transition:0.2s;cursor:pointer}
+        .card:hover{box-shadow:0 6px 20px rgba(0,0,0,0.04);border-color:#DADADA}
+        .search{width:100%;padding:16px 20px;border:1px solid #E2E2E2;border-radius:16px;font-size:15px;margin-bottom:20px;outline:none}
+        .search:focus{border-color:#88A09E}
+        input,textarea,select{width:100%;padding:16px;border:1px solid #E2E2E2;border-radius:14px;font-size:15px;margin-bottom:12px;outline:none;background:#FDFCFB}
+        input:focus,textarea:focus{border-color:#88A09E;box-shadow:0 0 0 3px rgba(136,160,158,0.15)}
+        .btn{padding:16px;border-radius:14px;font-size:15px;font-weight:500;border:none;cursor:pointer;transition:0.2s;margin:4px 0}
+        .btn-primary{background:#88A09E;color:white}
+        .btn-warning{background:#D9B382;color:white}
+        .btn-danger{background:#D6A5A5;color:white}
+        .btn-sm{padding:10px 14px;font-size:13px;margin:0 4px}
+        .section{margin-top:36px;padding-top:26px;border-top:1px solid #F0F0F0}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+        @media(max-width:600px){.grid{grid-template-columns:1fr}}
+        .tip{font-size:12px;color:#999;margin-top:-6px;margin-bottom:8px}
+        .photo-preview{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}
+        .photo-preview img{width:90px;height:90px;object-fit:cover;border-radius:12px;border:1px solid #eee}
+        .history-item{padding:18px;border:1px solid #eee;border-radius:16px;margin-bottom:12px;background:#FDFCFB}
     </style>
-
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-
 <body>
 <div class="container">
     <div class="title">🐱 專業貓咪醫療病歷系統</div>
-
     <div class="tab">
         <button class="tab-btn active" onclick="openPage('list')">貓咪列表</button>
         <button class="tab-btn" onclick="openPage('profile')">基本資料</button>
@@ -165,29 +50,19 @@
         <button class="tab-btn" onclick="openPage('backup')">備份/還原</button>
     </div>
 
-    <!-- 列表 -->
     <div id="list" class="page active">
         <input class="search" placeholder="🔍 搜尋名字/晶片" oninput="searchCat()">
         <div id="cat-list"></div>
     </div>
 
-    <!-- 基本資料 -->
     <div id="profile" class="page">
         <input id="name" placeholder="貓咪名字">
         <input id="chip" placeholder="晶片號碼">
         <div class="grid">
             <input id="breed" placeholder="品種">
             <input id="color" placeholder="毛色">
-            <select id="gender">
-                <option value="">性別</option>
-                <option>公</option>
-                <option>母</option>
-            </select>
-            <select id="fix">
-                <option value="">結紮</option>
-                <option>已結紮</option>
-                <option>未結紮</option>
-            </select>
+            <select id="gender"><option value="">性別</option><option>公</option><option>母</option></select>
+            <select id="fix"><option value="">結紮</option><option>已結紮</option><option>未結紮</option></select>
         </div>
         <input id="birth" type="date">
         <div class="tip">請點擊選擇生日</div>
@@ -196,7 +71,6 @@
         <button class="btn btn-primary" onclick="saveProfile()">儲存基本資料</button>
     </div>
 
-    <!-- 病歷 -->
     <div id="medical" class="page">
         <div class="grid">
             <input id="m_date" type="date">
@@ -216,7 +90,6 @@
         <div class="section"><h3>📜 歷史病歷</h3><div id="medicalHistory"></div></div>
     </div>
 
-    <!-- 疫苗/驅蟲 -->
     <div id="vaccine" class="page">
         <input id="v_name" placeholder="疫苗名稱">
         <input id="v_date" type="date">
@@ -232,10 +105,9 @@
         </div>
     </div>
 
-    <!-- 備份 -->
     <div id="backup" class="page">
-        <button class="btn btn-primary" onclick="exportBackup()">匯出備份</button>
-        <input type="file" accept=".json" onchange="restoreBackup(event)">
+        <button class="btn btn-primary" onclick="exportBackup()">匯出備份 JSON</button>
+        <input type="file" accept=".json" onchange="restoreBackup(event)" style="margin:10px 0">
         <button class="btn btn-danger" onclick="clearAll()">清空所有資料</button>
     </div>
 </div>
@@ -256,7 +128,6 @@ const storage = firebase.storage();
 let currentCatId = "";
 let uploadedFiles = [];
 
-// 分頁
 function openPage(id) {
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -267,36 +138,26 @@ function openPage(id) {
     if(id === 'vaccine') loadVaccineAndWorm();
 }
 
-// 儲存基本資料
 async function saveProfile() {
     const name = document.getElementById('name').value.trim();
     if (!name) { alert('請輸入貓咪名字'); return; }
-
     const data = {
-        name: name,
-        chip: document.getElementById('chip').value,
-        breed: document.getElementById('breed').value,
-        color: document.getElementById('color').value,
-        gender: document.getElementById('gender').value,
-        fix: document.getElementById('fix').value,
-        birth: document.getElementById('birth').value,
-        owner: document.getElementById('owner').value,
-        phone: document.getElementById('phone').value,
-        createdAt: new Date()
+        name: name, chip: document.getElementById('chip').value, breed: document.getElementById('breed').value,
+        color: document.getElementById('color').value, gender: document.getElementById('gender').value,
+        fix: document.getElementById('fix').value, birth: document.getElementById('birth').value,
+        owner: document.getElementById('owner').value, phone: document.getElementById('phone').value, createdAt: new Date()
     };
-
     if (currentCatId) {
         await db.collection('cats').doc(currentCatId).update(data);
-        alert('✅ 基本資料更新成功');
+        alert('✅ 資料更新成功');
     } else {
         const ref = await db.collection('cats').add(data);
         currentCatId = ref.id;
-        alert('✅ 基本資料儲存成功');
+        alert('✅ 資料儲存成功');
     }
     openPage('list');
 }
 
-// 貓咪列表
 async function loadCatList() {
     const snap = await db.collection('cats').orderBy('name').get();
     const el = document.getElementById('cat-list');
@@ -313,7 +174,6 @@ async function loadCatList() {
     });
 }
 
-// 選擇貓咪
 async function selectCat(id) {
     currentCatId = id;
     const doc = await db.collection('cats').doc(id).get();
@@ -330,38 +190,50 @@ async function selectCat(id) {
     openPage('profile');
 }
 
-// 搜尋
 function searchCat() {
     const kw = document.querySelector('.search').value.toLowerCase();
     document.querySelectorAll('.card').forEach(card => {
-        const txt = card.innerText.toLowerCase();
-        card.style.display = txt.includes(kw) ? 'block' : 'none';
+        card.style.display = card.innerText.toLowerCase().includes(kw) ? 'block' : 'none';
     });
 }
 
-// 儲存病歷
+document.getElementById('fileUpload').addEventListener('change', async e => {
+    if (!currentCatId) { alert('請先選擇貓咪'); return; }
+    const files = e.target.files;
+    for (let file of files) {
+        const ref = storage.ref(`medical/${currentCatId}/${Date.now()}-${file.name}`);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        uploadedFiles.push(url);
+    }
+    renderPreview();
+    alert('✅ 上傳完成');
+});
+
+function renderPreview() {
+    const p = document.getElementById('preview');
+    p.innerHTML = '';
+    uploadedFiles.forEach(u => {
+        p.innerHTML += `<img src="${u.includes('.pdf') ? 'https://i.imgur.com/8zUoR1H.png' : u}">`;
+    });
+}
+
 async function saveMedical() {
     if (!currentCatId) { alert('請先選擇貓咪'); return; }
     const data = {
-        catId: currentCatId,
-        date: document.getElementById('m_date').value,
-        weight: document.getElementById('m_weight').value,
-        temp: document.getElementById('m_temp').value,
-        heart: document.getElementById('m_heart').value,
-        symptom: document.getElementById('m_symptom').value,
-        diagnosis: document.getElementById('m_diag').value,
-        medicine: document.getElementById('m_medicine').value,
-        note: document.getElementById('m_note').value,
-        nextVisit: document.getElementById('m_next').value,
-        files: uploadedFiles,
-        createdAt: new Date()
+        catId: currentCatId, date: document.getElementById('m_date').value, weight: document.getElementById('m_weight').value,
+        temp: document.getElementById('m_temp').value, heart: document.getElementById('m_heart').value,
+        symptom: document.getElementById('m_symptom').value, diagnosis: document.getElementById('m_diag').value,
+        medicine: document.getElementById('m_medicine').value, note: document.getElementById('m_note').value,
+        nextVisit: document.getElementById('m_next').value, files: uploadedFiles, createdAt: new Date()
     };
     await db.collection('medical').add(data);
     alert('✅ 病歷儲存成功');
+    uploadedFiles = [];
+    renderPreview();
     loadMedicalHistory();
 }
 
-// 歷史病歷
 async function loadMedicalHistory() {
     if (!currentCatId) return;
     const snap = await db.collection('medical').where('catId','==',currentCatId).orderBy('date','desc').get();
@@ -372,43 +244,107 @@ async function loadMedicalHistory() {
         el.innerHTML += `
         <div class="history-item">
             <div>日期：${d.date || ''}</div>
+            <div>體重：${d.weight || ''} kg</div>
             <div>症狀：${d.symptom || ''}</div>
         </div>`;
     });
 }
 
-// 疫苗
 async function saveVaccine() {
     if (!currentCatId) { alert('請先選擇貓咪'); return; }
     const data = {
-        catId: currentCatId,
-        name: document.getElementById('v_name').value,
-        date: document.getElementById('v_date').value,
-        next: document.getElementById('v_next').value
+        catId: currentCatId, name: document.getElementById('v_name').value,
+        date: document.getElementById('v_date').value, next: document.getElementById('v_next').value
     };
     await db.collection('vaccine').add(data);
     alert('✅ 疫苗儲存成功');
     loadVaccineAndWorm();
 }
 
-// 驅蟲
 async function saveWorm() {
     if (!currentCatId) { alert('請先選擇貓咪'); return; }
     const data = {
-        catId: currentCatId,
-        type: document.getElementById('w_type').value,
-        date: document.getElementById('w_date').value
+        catId: currentCatId, type: document.getElementById('w_type').value, date: document.getElementById('w_date').value
     };
     await db.collection('worm').add(data);
     alert('✅ 驅蟲儲存成功');
     loadVaccineAndWorm();
 }
 
-async function loadVaccineAndWorm(){}
-async function exportPDF(){}
-async function exportBackup(){}
-async function restoreBackup(e){}
-async function clearAll(){}
+async function loadVaccineAndWorm() {
+    if (!currentCatId) return;
+    const vSnap = await db.collection('vaccine').where('catId','==',currentCatId).orderBy('date','desc').get();
+    const wSnap = await db.collection('worm').where('catId','==',currentCatId).orderBy('date','desc').get();
+    const vEl = document.getElementById('vList');
+    const wEl = document.getElementById('wList');
+    vEl.innerHTML = ''; wEl.innerHTML = '';
+    vSnap.forEach(d => vEl.innerHTML += `<div class="history-item">${d.data().date}｜${d.data().name}</div>`);
+    wSnap.forEach(d => wEl.innerHTML += `<div class="history-item">${d.data().date}｜${d.data().type}</div>`);
+}
+
+async function exportPDF() {
+    if (!currentCatId) { alert('請先選擇貓咪'); return; }
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    const cat = await db.collection('cats').doc(currentCatId).get();
+    const c = cat.data();
+    doc.text(`貓咪病歷 - ${c.name}`, 10,10);
+    doc.text(`晶片：${c.chip}`,10,18);
+    doc.text(`飼主：${c.owner}`,10,26);
+    const records = await db.collection('medical').where('catId','==',currentCatId).orderBy('date','desc').get();
+    let y = 34;
+    records.forEach(r => {
+        const d = r.data();
+        if(y>270){doc.addPage();y=10}
+        doc.text(`日期：${d.date}`,10,y); y+=7;
+        doc.text(`症狀：${d.symptom}`,10,y); y+=7;
+        doc.text(`診斷：${d.diagnosis}`,10,y); y+=10;
+    });
+    doc.save(`貓咪病歷_${c.name}.pdf`);
+}
+
+async function exportBackup() {
+    const cats = await db.collection('cats').get();
+    const medical = await db.collection('medical').get();
+    const vaccine = await db.collection('vaccine').get();
+    const worm = await db.collection('worm').get();
+    const data = {
+        cats: cats.docs.map(d=>({id:d.id,...d.data()})),
+        medical: medical.docs.map(d=>({id:d.id,...d.data()})),
+        vaccine: vaccine.docs.map(d=>({id:d.id,...d.data()})),
+        worm: worm.docs.map(d=>({id:d.id,...d.data()}))
+    };
+    const blob = new Blob([JSON.stringify(data)],{type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `貓咪病歷系統備份_${new Date().getTime()}.json`;
+    a.click();
+}
+
+async function restoreBackup(e) {
+    const file = e.target.files[0];
+    const data = JSON.parse(await file.text());
+    for(let i of data.cats) await db.collection('cats').doc(i.id).set(i);
+    for(let i of data.medical) await db.collection('medical').doc(i.id).set(i);
+    for(let i of data.vaccine) await db.collection('vaccine').doc(i.id).set(i);
+    for(let i of data.worm) await db.collection('worm').doc(i.id).set(i);
+    alert('✅ 還原成功');
+    loadCatList();
+}
+
+async function clearAll() {
+    if(!confirm('⚠️ 確定清空所有資料？無法復原')) return;
+    const cats = await db.collection('cats').get();
+    const medical = await db.collection('medical').get();
+    const vaccine = await db.collection('vaccine').get();
+    const worm = await db.collection('worm').get();
+    cats.forEach(d=>d.ref.delete());
+    medical.forEach(d=>d.ref.delete());
+    vaccine.forEach(d=>d.ref.delete());
+    worm.forEach(d=>d.ref.delete());
+    alert('✅ 已清空所有資料');
+    loadCatList();
+}
 
 loadCatList();
 </script>
