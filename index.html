@@ -600,7 +600,7 @@ input#importFile, input#medFile, input#editMedFile { display: none; }
         <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
-        <div class="stat-item"><div class="stat-label">本月最高單筆</div><div class="stat-num" id="monthMax">0 ml</div></div>
+        <div class="stat-item"><div class="stat-item"><div class="stat-label">本月最高單筆</div><div class="stat-num" id="monthMax">0 ml</div></div>
       </div>
     </div>
   </div>
@@ -838,7 +838,7 @@ function switchCat(){
   listenAllData();
 }
 
-// 分頁切換 (已修復)
+// 分頁切換
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = function(){
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -920,7 +920,6 @@ async function clearDayRecord(){
   const snap=await waterCol.where("date","==",d).get();
   const b=db.batch(); snap.forEach(d=>b.delete(d.ref)); await b.commit();
 }
-// 飲水CSV：舊日期在前、新日期在後
 function exportCSV(){
   if(!recordData.length)return alert("無資料");
   let csv="\uFEFF日期,時間,水量\n";
@@ -957,7 +956,6 @@ function calcStat(){
   document.getElementById("monthAvg").innerText=Math.round(m.reduce((s,x)=>s+x.ml,0)/Math.max(m.length,1))+" ml";
   document.getElementById("monthMax").innerText=mMax+" ml";
 }
-// 頁面顯示：新的在上、舊的在下
 function renderPage(){
   const d=document.getElementById("selectDate").value;
   const list=recordData.filter(x=>x.date===d).sort((a,b)=>a.time>b.time?-1:1);
@@ -988,7 +986,6 @@ async function delWeight(stamp){
   const s=await weightCol.where("stamp","==",stamp).get();
   s.forEach(x=>x.ref.delete());
 }
-// 頁面顯示：新在上
 function renderWeight(){
   const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById("weightBody").innerHTML=list.map(x=>`
@@ -1013,7 +1010,6 @@ function renderWeight(){
   }
 }
 
-// 體重CSV：舊→新
 function exportWeightCSV() {
   if (!Array.isArray(weightData) || weightData.length === 0) {
     alert("目前沒有體重紀錄可匯出");
@@ -1071,7 +1067,6 @@ async function delDeworm(stamp){
   const s=await dewormCol.where("stamp","==",stamp).get();
   s.forEach(x=>x.ref.delete());
 }
-// 頁面顯示：新在上
 function renderDeworm(){
   const list=[...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById("dewormBody").innerHTML=list.map(x=>`
@@ -1083,7 +1078,6 @@ function renderDeworm(){
   </tr>`).join("");
 }
 
-// 驅蟲CSV：舊→新
 function exportParaCSV() {
   if (!Array.isArray(dewormData) || dewormData.length === 0) {
     alert("目前沒有體外驅蟲紀錄可匯出");
@@ -1105,3 +1099,300 @@ function exportParaCSV() {
 
 function importParaCSV() {
   const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv";
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
+    let count = 0;
+    for (let i = 1; i < lines.length; i++) {
+      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
+      const date = parts[0];
+      const drug = parts[1];
+      const nextDate = parts[2] || "";
+      if (!date || !drug) continue;
+      await dewormCol.add({ date, drug, nextDate, stamp: Date.now() + i });
+      count++;
+    }
+    alert(`驅蟲匯入完成：${count} 筆`);
+  };
+  input.click();
+}
+
+// ---------------- 病歷 ----------------
+function addCalendarRemind(title,dateStr,desc){
+  if(!dateStr)return alert("請填下次日期");
+  const rev=new Date(dateStr);
+  const early=new Date(rev); early.setDate(rev.getDate()-3);
+  const fmt=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,0)+String(d.getDate()).padStart(2,0);
+  const ics=`BEGIN:VCALENDAR
+VERSION:2.0
+CALSCALE:GREGORIAN
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:${fmt(early)}
+DTEND;VALUE=DATE:${fmt(early)}
+SUMMARY:🐱 回診提醒
+DESCRIPTION:${desc}
+END:VEVENT
+BEGIN:VEVENT
+DTSTART;VALUE=DATE:${fmt(rev)}
+DTEND;VALUE=DATE:${fmt(rev)}
+SUMMARY:🏥 回診當日
+END:VEVENT
+END:VCALENDAR`;
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([ics],{type:"text/calendar"}));
+  a.download="回診.ics";
+  a.click();
+  alert("匯入成功");
+}
+
+function exportMedToPDF(item) {
+  const doc = new jsPDF();
+  const catName = currentCatName || "貓咪";
+  let y = 15;
+  const lh = 9;
+
+  doc.text(`🐾 ${catName} 醫療病歷`, 14, y); y += lh + 2;
+  doc.text(`類別：${item.type || ''}`, 14, y); y += lh;
+  doc.text(`日期：${item.date || ''}`, 14, y); y += lh;
+  doc.text(`回診：${item.review || '無'}`, 14, y); y += lh + 2;
+  doc.text(`備註：`, 14, y); y += lh;
+
+  const note = item.note || '無備註';
+  const lines = doc.splitTextToSize(note, 175);
+  lines.forEach(line => {
+    if (y > 270) { doc.addPage(); y = 20; }
+    doc.text(line, 14, y);
+    y += lh;
+  });
+
+  if (item.imgs && item.imgs.length) {
+    item.imgs.forEach((img, i) => {
+      if (i > 0) doc.addPage();
+      try {
+        doc.addImage(img, 'JPEG', 10, 20, 190, 230);
+      } catch (e) {}
+    });
+  }
+  doc.save(`${catName}_病歷_${item.date || ''}.pdf`);
+}
+
+function setMedFilter(v,b){
+  medFilter=v;
+  document.querySelectorAll(".filter-btn").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  renderMedList();
+}
+function sortMedNew(){medSortMode="new";renderMedList();}
+function sortMedOld(){medSortMode="old";renderMedList();}
+async function compressImg(file){
+  return new Promise(r=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement("canvas");
+      let w=img.width,h=img.height;
+      if(w>1200){h=h*(1200/w);w=1200;}
+      c.width=w;c.height=h;
+      c.getContext("2d").drawImage(img,0,0,w,h);
+      r(c.toDataURL("image/jpeg",0.7));
+    };
+    img.src=URL.createObjectURL(file);
+  });
+}
+async function pdfToImgs(file){
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfLib.getDocument(buf).promise;
+  const imgs=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const p=await pdf.getPage(i);
+    const v=p.getViewport({scale:1.2});
+    const c=document.createElement("canvas");
+    c.width=v.width;c.height=v.height;
+    await p.render({canvasContext:c.getContext("2d"),viewport:v}).promise;
+    imgs.push(c.toDataURL("image/jpeg",0.8));
+  }
+  return imgs;
+}
+
+// 修復：純文字病歷
+async function saveTextMedical() {
+  const type = document.getElementById("medType").value;
+  const date = document.getElementById("medDate").value;
+  const review = document.getElementById("medReview").value;
+  const note = document.getElementById("medNote").value;
+
+  if (!date || !note) {
+    return alert("請填寫日期與文字敘述");
+  }
+
+  await medCol.add({
+    type, date, review, note, imgs:[], star:false
+  });
+  
+  alert("✅ 文字病歷儲存成功");
+  document.getElementById("medNote").value = "";
+}
+
+function triggerMedUpload(){document.getElementById("medFile").click();}
+async function handleMedFile(e){
+  const files=Array.from(e.target.files);
+  if(!files.length)return;
+  const type=document.getElementById("medType").value;
+  const date=document.getElementById("medDate").value;
+  const review=document.getElementById("medReview").value;
+  const note=document.getElementById("medNote").value;
+  let imgs=[];
+  for(const f of files){
+    if(f.type==="application/pdf")imgs.push(...await pdfToImgs(f));
+    else imgs.push(await compressImg(f));
+  }
+  await medCol.add({type,date,review,note,imgs,star:false});
+  alert("新增完成");
+  document.getElementById("medNote").value="";
+}
+function getTypeClass(t){
+  if(t==="檢驗報告")return"tag-check";
+  if(t==="用藥單")return"tag-medic";
+  if(t==="就診紀錄")return"tag-emerg";
+  return"tag-other";
+}
+async function delMedImg(docId,i){
+  const item=medData.find(x=>x.docId===docId);
+  if(!item)return;
+  item.imgs.splice(i,1);
+  await medCol.doc(docId).update({imgs:item.imgs});
+}
+
+// 修復：病歷列表 + 圖片預覽
+function renderMedList(){
+  let list=[...medData];
+  const key=document.getElementById("medSearch").value.toLowerCase();
+  if(medFilter==="star")list=list.filter(x=>x.star);
+  else if(medFilter!=="all")list=list.filter(x=>x.type===medFilter);
+  if(key)list=list.filter(x=>x.note?.toLowerCase().includes(key)||x.type.includes(key));
+  list.sort(medSortMode==="new"?(a,b)=> (b.date||b.id) - (a.date||a.id) : (a,b)=> new Date(a.date) - new Date(b.date));
+  
+  const wrap=document.getElementById("medList");
+  if(!list.length){wrap.innerHTML="<div style='grid-column:1/-1;text-align:center'>無資料</div>";return;}
+  
+  wrap.innerHTML=list.map((item,idx)=>`
+  <div class='med-card ${item.star?"star-card":""}' onclick='openMedPreview(${idx})'>
+    ${item.imgs?.length?`
+    <div class='med-img-wrap'>
+      <img src='${item.imgs[0]}' class='med-img'>
+      <button class='img-del-btn' onclick='event.stopPropagation();delMedImg("${item.docId}",0)'>×</button>
+    </div>`:"<div style='padding:20px;text-align:center'>無圖片</div>"}
+    <span class='med-tag ${getTypeClass(item.type)}'>${item.type}</span>
+    <div class='med-info-line'>📅 ${item.date||""}</div>
+    <div class='med-info-line'>📝 ${item.note || '無備註'}</div>
+    <div class='med-info-line'>🏥 ${item.review||""} ${item.review?`<button class='btn-calendar' onclick='event.stopPropagation();addCalendarRemind(\"\",\"${item.review}\",\"\")'>📅</button>`:""}</div>
+    <div style='margin-top:6px;display:flex;gap:4px'>
+      <button class='btn-edit' onclick='event.stopPropagation();openEditMed("${item.docId}")'>編</button>
+      <button class='btn-delete' onclick='event.stopPropagation();delMed("${item.docId}")'>刪</button>
+      <button class='btn-star' onclick='event.stopPropagation();toggleStar("${item.docId}",${item.star})'>${item.star?"⭐":"☆"}</button>
+      <button class='btn-pdf' onclick='event.stopPropagation();exportMedToPDF(medData.find(x=>x.docId==="${item.docId}"))'>PDF</button>
+    </div>
+  </div>`).join("");
+}
+
+async function toggleStar(docId,val){await medCol.doc(docId).update({star:!val});}
+async function delMed(docId){if(confirm("刪除?"))await medCol.doc(docId).delete();}
+
+// 修復：圖片預覽
+function openMedPreview(idx) {
+  const item = medData[idx];
+  if (!item) return;
+  
+  currentPreviewList = item.imgs || [];
+  currentPreviewIndex = 0;
+
+  if (currentPreviewList.length === 0) {
+    alert("此病歷沒有圖片可預覽");
+    return;
+  }
+
+  document.getElementById("previewImg").src = currentPreviewList[0];
+  document.getElementById("previewModal").classList.add("show");
+}
+function closePreviewModal() {
+  document.getElementById("previewModal").classList.remove("show");
+}
+function prevMedImg() {
+  if (currentPreviewIndex > 0) {
+    currentPreviewIndex--;
+    document.getElementById("previewImg").src = currentPreviewList[currentPreviewIndex];
+  }
+}
+function nextMedImg() {
+  if (currentPreviewIndex < currentPreviewList.length - 1) {
+    currentPreviewIndex++;
+    document.getElementById("previewImg").src = currentPreviewList[currentPreviewIndex];
+  }
+}
+
+function renderEditImgs(){
+  document.getElementById("editImgs").innerHTML=editImgsTemp.map((src,i)=>`
+  <div class='edit-img-item'>
+    <img src='${src}' class='edit-img'>
+    <button class='edit-img-del' onclick='editImgsTemp.splice(${i},1);renderEditImgs()'>×</button>
+  </div>`).join("");
+}
+function triggerEditMedUpload(){document.getElementById("editMedFile").click();}
+async function handleEditMedFile(e){
+  const files=Array.from(e.target.files);
+  let imgs=[];
+  for(const f of files){
+    if(f.type==="application/pdf")imgs.push(...await pdfToImgs(f));
+    else imgs.push(await compressImg(f));
+  }
+  editImgsTemp=[...editImgsTemp,...imgs];
+  renderEditImgs();
+}
+function openEditMed(docId){
+  const item=medData.find(x=>x.docId===docId);
+  if(!item)return;
+  currentEditDocId=docId;
+  editImgsTemp=[...(item.imgs||[])];
+  document.getElementById("editMedType").innerHTML=document.getElementById("medType").innerHTML;
+  document.getElementById("editMedType").value=item.type;
+  document.getElementById("editMedDate").value=item.date||"";
+  document.getElementById("editReview").value=item.review||"";
+  document.getElementById("editNote").value=item.note||"";
+  renderEditImgs();
+  document.getElementById("editModal").classList.add("show");
+}
+function closeEditModal(){document.getElementById("editModal").classList.remove("show");}
+async function saveEditMed(){
+  await medCol.doc(currentEditDocId).update({
+    type:document.getElementById("editMedType").value,
+    date:document.getElementById("editMedDate").value,
+    review:document.getElementById("editReview").value,
+    note:document.getElementById("editNote").value,
+    imgs:editImgsTemp
+  });
+  closeEditModal();
+  alert("儲存完成");
+}
+async function exportMedData(){
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(medData)],{type:"application/json"}));
+  a.download="病歷備份.json";
+  a.click();
+}
+function triggerMedImport(){document.getElementById("medImportFile").click();}
+async function importMedData(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    const data=JSON.parse(ev.target.result);
+    for(const item of data){delete item.docId;await medCol.add(item);}
+    alert("匯入完成");
+  };
+  r.readAsText(f);
+}
+</script>
+</body>
+</html>
