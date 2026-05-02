@@ -15,6 +15,22 @@
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
 
+/* 記憶密碼勾選框樣式 */
+.remember-box {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #506473;
+}
+.remember-box input {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -322,6 +338,13 @@ input#importFile { display: none; }
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
+    
+    <!-- 新增：記憶密碼選項 -->
+    <div class="remember-box">
+      <input type="checkbox" id="rememberMe">
+      <label for="rememberMe">記憶密碼 (4小時效期)</label>
+    </div>
+
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
   </div>
@@ -455,23 +478,57 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)return false;
 });
 
-// 密碼
+// 密碼與自動登出邏輯整合
 const validPws = ["0963612120", "0952867812", "ha821208"];
+const SESSION_EXPIRE_TIME = 4 * 60 * 60 * 1000; // 4小時（毫秒）
+
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
+  const isRemember = document.getElementById("rememberMe").checked;
+
   if(validPws.includes(val)){
-    document.querySelector(".inlock-wrap").style.display="none";
-    document.querySelector(".main-content").style.display="block";
-    tip.innerText = "";
-    initCatSystem();
+    if(isRemember) {
+      localStorage.setItem("naiboLoginStamp", Date.now());
+    }
+    unlockSystem();
   }else{
     tip.innerText = "❌ 密碼錯誤";
     document.getElementById("inPwd").value = "";
   }
 }
+
+function unlockSystem() {
+  document.querySelector(".inlock-wrap").style.display="none";
+  document.querySelector(".main-content").style.display="block";
+  document.getElementById("inTip").innerText = "";
+  initCatSystem();
+}
+
+// 自動檢查登入狀態
+(function autoSessionCheck() {
+  const stamp = localStorage.getItem("naiboLoginStamp");
+  if(stamp) {
+    const diff = Date.now() - parseInt(stamp);
+    if(diff < SESSION_EXPIRE_TIME) {
+      // 效期內，直接進入
+      window.addEventListener('load', () => {
+        unlockSystem();
+        // 設定定時器，若網頁開著，到期自動登出
+        setTimeout(() => {
+          localStorage.removeItem("naiboLoginStamp");
+          location.reload();
+        }, SESSION_EXPIRE_TIME - diff);
+      });
+    } else {
+      // 過期了，清除紀錄
+      localStorage.removeItem("naiboLoginStamp");
+    }
+  }
+})();
+
 document.addEventListener("keydown",e=>{
-  if(e.key==="Enter") checkInPwd();
+  if(e.key==="Enter" && document.querySelector(".inlock-wrap").style.display !== "none") checkInPwd();
 });
 
 // Firebase
@@ -518,17 +575,14 @@ function addNewCat(){
 
 // 關閉舊監聽 + 切換貓 + 重新監聽
 function switchCat(){
-  // 先取消舊的監聽
   if(waterUnsubscribe) waterUnsubscribe();
   if(weightUnsubscribe) weightUnsubscribe();
   if(dewormUnsubscribe) dewormUnsubscribe();
 
-  // 切換當前貓
   currentCat = document.getElementById("catSelect").value;
   const catObj = catList.find(c=>c.id === currentCat);
   currentCatName = catObj ? catObj.name : "貓咪";
 
-  // 清空畫面
   recordData = [];
   weightData = [];
   dewormData = [];
@@ -536,7 +590,6 @@ function switchCat(){
   renderWeight();
   renderDeworm();
 
-  // 重新監聽
   listenAllData();
 }
 
@@ -557,7 +610,6 @@ let waterCol, weightCol, dewormCol;
 let recordData = [], weightData = [], dewormData = [];
 let darkMode = false;
 
-// 正確監聽 + 取消舊監聽
 function listenAllData(){
   waterCol = db.collection(`catWater_${currentCat}`);
   weightCol = db.collection(`catWeight_${currentCat}`);
@@ -646,6 +698,7 @@ function calcStat(){
 }
 function renderPage(){
   const d=document.getElementById("selectDate").value;
+  if(!d) return;
   const list=recordData.filter(x=>x.date===d).sort((a,b)=>a.time>b.time?-1:1);
   const total=list.reduce((s,x)=>s+x.ml,0);
   let cls="text-low",tip="";
@@ -734,7 +787,7 @@ function exportWeightCSV() {
   let csv = "\uFEFF日期,體重(kg),備註\n";
   weightData.forEach(item => {
     const d = (item.date || "").trim();
-    const w = (item.weight || "").trim();
+    const w = (item.weight || 0);
     const n = (item.note || "").replace(/"/g, '""').trim();
     csv += `"${d}","${w}","${n}"\n`;
   });
