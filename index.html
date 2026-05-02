@@ -6,32 +6,11 @@
 <meta name="format-detection" content="telephone=no">
 <title>小貓醫療紀錄系統</title>
 
-<!-- 引入 Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
 .inlock-wrap{position:fixed;inset:0;background:linear-gradient(160deg, #f6f9fe, #eaf2f9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
 .inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
 .inlock-input{width:100%;padding:13px 16px;border:1px solid #dce9f2;border-radius:18px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:10px;}
-
-/* 記憶密碼勾選框樣式 */
-.remember-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 10px 0 15px 0;
-  font-size: 14px;
-  color: #506473;
-  cursor: pointer;
-}
-.remember-row input {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
 .inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
@@ -331,12 +310,6 @@ input#importFile { display: none; }
   color:var(--success);
   margin-bottom:8px;
 }
-/* 圖表容器容器 */
-.chart-container {
-  width: 100%;
-  height: 200px;
-  margin-top: 10px;
-}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -349,10 +322,6 @@ input#importFile { display: none; }
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
-    <!-- 記憶密碼勾選框 -->
-    <label class="remember-row">
-      <input type="checkbox" id="rememberMe"> 記住我 (4小時免密碼)
-    </label>
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
   </div>
@@ -378,13 +347,6 @@ input#importFile { display: none; }
   <!-- 飲水 -->
   <div class="tab-content active" id="tab-water">
     <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
-    <!-- 飲水圖表卡片 -->
-    <div class="ui-card">
-      <div style="font-size: 14px; color: var(--primary); margin-bottom: 5px;">📈 最近七日飲水趨勢</div>
-      <div class="chart-container">
-        <canvas id="waterChart"></canvas>
-      </div>
-    </div>
     <div class="ui-card">
       <input class="form-input" type="date" id="selectDate">
       <input class="form-input" type="time" id="selectTime">
@@ -428,13 +390,6 @@ input#importFile { display: none; }
   <!-- 體重 -->
   <div class="tab-content" id="tab-weight">
     <div class="info-banner">⚖️ 體重趨勢追蹤｜自動計算增減</div>
-    <!-- 體重圖表卡片 -->
-    <div class="ui-card">
-      <div style="font-size: 14px; color: var(--primary); margin-bottom: 5px;">📈 體重變化趨勢</div>
-      <div class="chart-container">
-        <canvas id="weightChart"></canvas>
-      </div>
-    </div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
       <input class="form-input" type="number" step="0.01" id="weightVal" placeholder="輸入體重 kg">
@@ -500,56 +455,23 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)return false;
 });
 
-// 密碼與 4 小時登入效期邏輯
+// 密碼
 const validPws = ["0963612120", "0952867812", "ha821208"];
-const SESSION_KEY = "naibo_auth_time";
-const EXPIRE_TIME = 4 * 60 * 60 * 1000; // 4 小時
-
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
-  const remember = document.getElementById("rememberMe").checked;
-
   if(validPws.includes(val)){
-    if(remember) localStorage.setItem(SESSION_KEY, Date.now());
-    unlockSystem();
+    document.querySelector(".inlock-wrap").style.display="none";
+    document.querySelector(".main-content").style.display="block";
+    tip.innerText = "";
+    initCatSystem();
   }else{
     tip.innerText = "❌ 密碼錯誤";
     document.getElementById("inPwd").value = "";
   }
 }
-
-function unlockSystem() {
-  document.querySelector(".inlock-wrap").style.display="none";
-  document.querySelector(".main-content").style.display="block";
-  initCatSystem();
-}
-
-// 自動檢查效期
-(function authCheck(){
-  const saved = localStorage.getItem(SESSION_KEY);
-  if(saved) {
-    const diff = Date.now() - parseInt(saved);
-    if(diff < EXPIRE_TIME) {
-      // 效期內，解鎖
-      window.addEventListener('load', () => {
-        unlockSystem();
-        // 設一個定時器，萬一視窗一直開著，4小時後自動重整登出
-        setTimeout(() => {
-          localStorage.removeItem(SESSION_KEY);
-          location.reload();
-        }, EXPIRE_TIME - diff);
-      });
-    } else {
-      localStorage.removeItem(SESSION_KEY);
-    }
-  }
-})();
-
 document.addEventListener("keydown",e=>{
-  if(e.key==="Enter") {
-    if(document.querySelector(".inlock-wrap").style.display !== 'none') checkInPwd();
-  }
+  if(e.key==="Enter") checkInPwd();
 });
 
 // Firebase
@@ -574,10 +496,6 @@ let waterUnsubscribe = null;
 let weightUnsubscribe = null;
 let dewormUnsubscribe = null;
 
-// 圖表實例
-let waterChartInstance = null;
-let weightChartInstance = null;
-
 function initCatSystem(){
   renderCatSelect();
   switchCat();
@@ -600,14 +518,17 @@ function addNewCat(){
 
 // 關閉舊監聽 + 切換貓 + 重新監聽
 function switchCat(){
+  // 先取消舊的監聽
   if(waterUnsubscribe) waterUnsubscribe();
   if(weightUnsubscribe) weightUnsubscribe();
   if(dewormUnsubscribe) dewormUnsubscribe();
 
+  // 切換當前貓
   currentCat = document.getElementById("catSelect").value;
   const catObj = catList.find(c=>c.id === currentCat);
   currentCatName = catObj ? catObj.name : "貓咪";
 
+  // 清空畫面
   recordData = [];
   weightData = [];
   dewormData = [];
@@ -615,6 +536,7 @@ function switchCat(){
   renderWeight();
   renderDeworm();
 
+  // 重新監聽
   listenAllData();
 }
 
@@ -644,13 +566,11 @@ function listenAllData(){
   waterUnsubscribe = waterCol.onSnapshot(snap=>{
     recordData=[]; snap.forEach(d=>recordData.push(d.data()));
     renderPage();
-    updateWaterChart();
     document.getElementById("syncBadge").innerText="☁️ 已同步";
   });
   weightUnsubscribe = weightCol.onSnapshot(snap=>{
     weightData=[]; snap.forEach(d=>weightData.push(d.data()));
     renderWeight();
-    updateWeightChart();
   });
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
@@ -667,61 +587,6 @@ const setNow = () => {
 function toggleDarkMode(){
   darkMode=!darkMode;
   document.body.classList.toggle("dark-mode");
-}
-
-// --- 圖表邏輯 ---
-function updateWaterChart() {
-  const ctx = document.getElementById('waterChart').getContext('2d');
-  const last7DaysData = {};
-  
-  // 統計每日總和
-  recordData.forEach(r => {
-    last7DaysData[r.date] = (last7DaysData[r.date] || 0) + r.ml;
-  });
-
-  const sortedDates = Object.keys(last7DaysData).sort().slice(-7);
-  const chartData = sortedDates.map(date => last7DaysData[date]);
-  const chartLabels = sortedDates.map(date => date.slice(5)); // 只取 MM-DD
-
-  if (waterChartInstance) waterChartInstance.destroy();
-  waterChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: chartLabels,
-      datasets: [{
-        label: '飲水量 (ml)',
-        data: chartData,
-        borderColor: '#478fb8',
-        backgroundColor: 'rgba(71,143,184,0.1)',
-        fill: true,
-        tension: 0.3
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
-  });
-}
-
-function updateWeightChart() {
-  const ctx = document.getElementById('weightChart').getContext('2d');
-  const sortedWeight = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-7);
-  
-  const chartLabels = sortedWeight.map(w => w.date.slice(5));
-  const chartData = sortedWeight.map(w => w.weight);
-
-  if (weightChartInstance) weightChartInstance.destroy();
-  weightChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: chartLabels,
-      datasets: [{
-        label: '體重 (kg)',
-        data: chartData,
-        borderColor: '#34a873',
-        tension: 0.1
-      }]
-    },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
 }
 
 // ---------------- 飲水 ----------------
