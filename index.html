@@ -307,8 +307,29 @@ const firebaseConfig={
   appId:"1:1008746304734:web:33b87646673ee83b975e4f"
 };
 firebase.initializeApp(firebaseConfig);
+
+// -------- 關鍵修復：關掉 useFetchStreams，強制網路狀態監聽 --------
 const db=firebase.firestore();
+db.settings({ useFetchStreams: false }); // 避免部分瀏覽器卡住[[__LINK_ICON]](https://github.com/firebase/firebase-js-sdk/issues/8903?f_link_type=f_linkinlinenote&flow_extra=eyJpbmxpbmVfZGlzcGxheV9wb3NpdGlvbiI6MCwiZG9jX3Bvc2l0aW9uIjowLCJkb2NfaWQiOiIxY2Y4ODA2Y2VhYTk2MTljLTBkNjdkN2MwODNhZWQ5YTkifQ%3D%3D "__LINK_ICON")
 const storage=firebase.storage();
+
+// 網路中斷自動重連偵測
+function waitForOnline(){
+  return new Promise(resolve=>{
+    if(navigator.onLine) return resolve();
+    window.addEventListener('online', function onOnline(){
+      window.removeEventListener('online',onOnline);
+      resolve();
+    });
+  });
+}
+async function ensureOnline(){
+  if(!navigator.onLine){
+    document.getElementById("syncBadge").innerText="⚠️ 網路斷線，等待連線...";
+    await waitForOnline();
+    document.getElementById("syncBadge").innerText="☁️ 網路恢復，重新連線中...";
+  }
+}
 
 let currentCat="default";
 let catList=JSON.parse(localStorage.getItem("petCats")||'[{"id":"default","name":"波波"}]');
@@ -353,7 +374,11 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
   }
 });
 let waterCol,weightCol,dewormCol,photoCol,doctorCol,reportCol;
-function listenAllData(){
+
+// -------- 關鍵修復：每個 onSnapshot 都加 onerror，出錯自動重啟 --------
+async function listenAllData(){
+  await ensureOnline();
+
   waterCol=db.collection(`catWater_${currentCat}`);
   weightCol=db.collection(`catWeight_${currentCat}`);
   dewormCol=db.collection(`catDeworm_${currentCat}`);
@@ -361,26 +386,57 @@ function listenAllData(){
   doctorCol=db.collection(`catDoctorMemo_${currentCat}`);
   reportCol=db.collection(`catMedicalReport_${currentCat}`);
 
-  waterUnsubscribe=waterCol.onSnapshot(s=>{
+  // 第一次強制從 server 抓一次，避免只讀快取
+  await waterCol.get({source:'server'}).catch(()=>{});
+  await weightCol.get({source:'server'}).catch(()=>{});
+
+  document.getElementById("syncBadge").innerText="☁️ 雲端同步連線中...";
+
+  waterUnsubscribe=waterCol.onSnapshot({includeMetadataChanges:true},s=>{
     recordData=[];s.forEach(d=>recordData.push(d.data()));renderPage();drawWaterChart();
     document.getElementById("syncBadge").innerText="☁️ 已同步";
+  },err=>{
+    console.error("water listener error:",err);
+    document.getElementById("syncBadge").innerText="❌ 飲水監聽中斷，重啟中...";
+    setTimeout(()=>listenAllData(),2000);
   });
-  weightUnsubscribe=weightCol.onSnapshot(s=>{
+
+  weightUnsubscribe=weightCol.onSnapshot({includeMetadataChanges:true},s=>{
     weightData=[];s.forEach(d=>weightData.push(d.data()));renderWeight();drawWeightChart();
+  },err=>{
+    console.error("weight listener error:",err);
+    setTimeout(()=>listenAllData(),2000);
   });
-  dewormUnsubscribe=dewormCol.onSnapshot(s=>{
+
+  dewormUnsubscribe=dewormCol.onSnapshot({includeMetadataChanges:true},s=>{
     dewormData=[];s.forEach(d=>dewormData.push(d.data()));renderDeworm();
+  },err=>{
+    console.error("deworm listener error:",err);
+    setTimeout(()=>listenAllData(),2000);
   });
-  photoUnsubscribe=photoCol.onSnapshot(s=>{
+
+  photoUnsubscribe=photoCol.onSnapshot({includeMetadataChanges:true},s=>{
     photoData=[];s.forEach(d=>photoData.push(d.data()));renderPhotoAlbum();
+  },err=>{
+    console.error("photo listener error:",err);
+    setTimeout(()=>listenAllData(),2000);
   });
-  doctorUnsubscribe=doctorCol.onSnapshot(s=>{
+
+  doctorUnsubscribe=doctorCol.onSnapshot({includeMetadataChanges:true},s=>{
     doctorData=[];s.forEach(d=>doctorData.push(d.data()));renderDoctorList();
+  },err=>{
+    console.error("doctor listener error:",err);
+    setTimeout(()=>listenAllData(),2000);
   });
-  reportUnsubscribe=reportCol.onSnapshot(s=>{
+
+  reportUnsubscribe=reportCol.onSnapshot({includeMetadataChanges:true},s=>{
     reportData=[];s.forEach(d=>reportData.push(d.data()));renderReportList();
+  },err=>{
+    console.error("report listener error:",err);
+    setTimeout(()=>listenAllData(),2000);
   });
 }
+
 const setNow=()=>{
   let t=new Date().toISOString().split("T")[0];
   document.getElementById("selectDate").value=t;
