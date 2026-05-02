@@ -322,6 +322,9 @@ input#importFile { display: none; }
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
+ <label style="display:block;text-align:left;margin:0 auto;width:fit-content;font-size:14px;color:var(--text-main);cursor:pointer;">
+  <input type="checkbox" id="savePwdCheck"> 記住密碼
+</label>
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
   </div>
@@ -455,24 +458,78 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)return false;
 });
 
-// 密碼
+// ===== 僅改寫登入模組：記住密碼 + 4小時自動登出 其餘代碼完全不動 =====
 const validPws = ["0963612120", "0952867812", "ha821208"];
+const LOGIN_EXPIRE_HOUR = 4; // 固定4小時自動登出
+
+// 頁面載入讀取記憶的密碼
+window.addEventListener('DOMContentLoaded', () => {
+  const savePwdCheck = document.getElementById('savePwdCheck');
+  const pwdInput = document.getElementById('inPwd');
+  // 讀取本地儲存
+  const savedPwd = localStorage.getItem('catSysSavedPwd');
+  const savedExpire = localStorage.getItem('catSysLoginExpire');
+
+  // 有記住密碼就回填
+  if(savedPwd){
+    pwdInput.value = savedPwd;
+    savePwdCheck.checked = true;
+  }
+
+  // 判斷登入時效是否過期
+  if(savedExpire){
+    const expireTime = parseInt(savedExpire, 10);
+    const now = Date.now();
+    // 已過期：清空登入狀態、強制回到鎖屏
+    if(now > expireTime){
+      localStorage.removeItem('catSysLoginExpire');
+      localStorage.removeItem('catSysSavedPwd');
+      document.querySelector(".inlock-wrap").style.display="flex";
+      document.querySelector(".main-content").style.display="none";
+    }
+  }
+});
+
+// 登入驗證
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
+  const savePwdCheck = document.getElementById('savePwdCheck');
+
   if(validPws.includes(val)){
+    // 登入成功
     document.querySelector(".inlock-wrap").style.display="none";
     document.querySelector(".main-content").style.display="block";
     tip.innerText = "";
     initCatSystem();
+
+    // 計算4小時到期時間
+    const expireStamp = Date.now() + LOGIN_EXPIRE_HOUR * 60 * 60 * 1000;
+    localStorage.setItem('catSysLoginExpire', expireStamp);
+
+    // 記住密碼與否
+    if(savePwdCheck.checked){
+      localStorage.setItem('catSysSavedPwd', val);
+    }else{
+      localStorage.removeItem('catSysSavedPwd');
+    }
   }else{
     tip.innerText = "❌ 密碼錯誤";
     document.getElementById("inPwd").value = "";
   }
 }
+
+// Enter 快捷登入
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter") checkInPwd();
 });
+
+// 主動登出函式（內部自動呼叫、也可後續按鈕綁定）
+function manualLogout(){
+  localStorage.removeItem('catSysLoginExpire');
+  document.querySelector(".inlock-wrap").style.display="flex";
+  document.querySelector(".main-content").style.display="none";
+}
 
 // Firebase
 const firebaseConfig = {
