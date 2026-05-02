@@ -11,25 +11,27 @@
 .inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
 .inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
 .inlock-input{width:100%;padding:13px 16px;border:1px solid #dce9f2;border-radius:18px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:10px;}
-.inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
-.inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
-.main-content{display:none;}
 
-/* 記憶密碼勾選框樣式 */
-.remember-box {
-  margin-bottom: 15px;
+/* 修正記憶密碼勾選框樣式 */
+.remember-row {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+  margin: 10px 0 15px 0;
   font-size: 14px;
   color: #506473;
-}
-.remember-box input {
-  width: 16px;
-  height: 16px;
   cursor: pointer;
 }
+.remember-row input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
+.inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
+.main-content{display:none;}
 
 * {
   margin: 0;
@@ -339,11 +341,10 @@ input#importFile { display: none; }
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
     
-    <!-- 新增：記憶密碼選項 -->
-    <div class="remember-box">
-      <input type="checkbox" id="rememberMe">
-      <label for="rememberMe">記憶密碼 (4小時效期)</label>
-    </div>
+    <!-- 確保勾選框正確呈現 -->
+    <label class="remember-row">
+      <input type="checkbox" id="rememberMe"> 記住我 (4小時免密碼)
+    </label>
 
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
@@ -478,51 +479,47 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)return false;
 });
 
-// 密碼與自動登出邏輯整合
+// 密碼與登入效期邏輯
 const validPws = ["0963612120", "0952867812", "ha821208"];
-const SESSION_EXPIRE_TIME = 4 * 60 * 60 * 1000; // 4小時（毫秒）
+const SESSION_KEY = "naibo_login_time";
+const EXPIRE_MS = 4 * 60 * 60 * 1000; // 4小時
 
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
-  const isRemember = document.getElementById("rememberMe").checked;
+  const remember = document.getElementById("rememberMe").checked;
 
   if(validPws.includes(val)){
-    if(isRemember) {
-      localStorage.setItem("naiboLoginStamp", Date.now());
+    if(remember){
+      localStorage.setItem(SESSION_KEY, Date.now());
     }
-    unlockSystem();
+    enterApp();
   }else{
     tip.innerText = "❌ 密碼錯誤";
     document.getElementById("inPwd").value = "";
   }
 }
 
-function unlockSystem() {
+function enterApp(){
   document.querySelector(".inlock-wrap").style.display="none";
   document.querySelector(".main-content").style.display="block";
-  document.getElementById("inTip").innerText = "";
   initCatSystem();
 }
 
-// 自動檢查登入狀態
-(function autoSessionCheck() {
-  const stamp = localStorage.getItem("naiboLoginStamp");
-  if(stamp) {
-    const diff = Date.now() - parseInt(stamp);
-    if(diff < SESSION_EXPIRE_TIME) {
-      // 效期內，直接進入
-      window.addEventListener('load', () => {
-        unlockSystem();
-        // 設定定時器，若網頁開著，到期自動登出
-        setTimeout(() => {
-          localStorage.removeItem("naiboLoginStamp");
-          location.reload();
-        }, SESSION_EXPIRE_TIME - diff);
-      });
+// 自動檢查效期
+(function initAuth(){
+  const savedTime = localStorage.getItem(SESSION_KEY);
+  if(savedTime){
+    const now = Date.now();
+    if(now - parseInt(savedTime) < EXPIRE_MS){
+      enterApp();
+      // 設定倒數自動登出
+      setTimeout(() => {
+        localStorage.removeItem(SESSION_KEY);
+        location.reload();
+      }, EXPIRE_MS - (now - parseInt(savedTime)));
     } else {
-      // 過期了，清除紀錄
-      localStorage.removeItem("naiboLoginStamp");
+      localStorage.removeItem(SESSION_KEY);
     }
   }
 })();
@@ -573,7 +570,6 @@ function addNewCat(){
   switchCat();
 }
 
-// 關閉舊監聽 + 切換貓 + 重新監聽
 function switchCat(){
   if(waterUnsubscribe) waterUnsubscribe();
   if(weightUnsubscribe) weightUnsubscribe();
@@ -698,7 +694,6 @@ function calcStat(){
 }
 function renderPage(){
   const d=document.getElementById("selectDate").value;
-  if(!d) return;
   const list=recordData.filter(x=>x.date===d).sort((a,b)=>a.time>b.time?-1:1);
   const total=list.reduce((s,x)=>s+x.ml,0);
   let cls="text-low",tip="";
@@ -776,20 +771,11 @@ function renderDeworm(){
   </tr>`).join("");
 }
 
-// ==============================================
-// 體重 CSV 匯出 / 匯入
-// ==============================================
 function exportWeightCSV() {
-  if (!Array.isArray(weightData) || weightData.length === 0) {
-    alert("目前沒有體重紀錄可匯出");
-    return;
-  }
+  if (!Array.isArray(weightData) || weightData.length === 0) return alert("無資料");
   let csv = "\uFEFF日期,體重(kg),備註\n";
   weightData.forEach(item => {
-    const d = (item.date || "").trim();
-    const w = (item.weight || 0);
-    const n = (item.note || "").replace(/"/g, '""').trim();
-    csv += `"${d}","${w}","${n}"\n`;
+    csv += `"${item.date}","${item.weight}","${(item.note||"")}"\n`;
   });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -799,69 +785,44 @@ function exportWeightCSV() {
 
 function importWeightCSV() {
   const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".csv";
+  input.type = "file"; input.accept = ".csv";
   input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]; if (!file) return;
     const text = await file.text();
     const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
-    let count = 0;
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      const date = parts[0];
-      const weight = parts[1];
-      const note = parts[2] || "";
-      if (!date || !weight) continue;
-      await weightCol.add({ date, weight, note, stamp: Date.now() + i });
-      count++;
+      if (parts[0] && parts[1]) await weightCol.add({ date: parts[0], weight: parts[1], note: parts[2] || "", stamp: Date.now() + i });
     }
-    alert(`體重匯入完成：${count} 筆`);
+    alert("完成");
   };
   input.click();
 }
 
-// ==============================================
-// 體外驅蟲 CSV 匯出 / 匯入
-// ==============================================
 function exportParaCSV() {
-  if (!Array.isArray(dewormData) || dewormData.length === 0) {
-    alert("目前沒有體外驅蟲紀錄可匯出");
-    return;
-  }
-  let csv = "\uFEFF日期,藥品/品牌,下次到期日,備註\n";
+  if (!Array.isArray(dewormData) || dewormData.length === 0) return alert("無資料");
+  let csv = "\uFEFF日期,藥品,下回日期\n";
   dewormData.forEach(item => {
-    const d = (item.date || "").trim();
-    const drug = (item.drug || "").replace(/"/g, '""').trim();
-    const next = (item.nextDate || "").trim();
-    csv += `"${d}","${drug}","${next}",""\n`;
+    csv += `"${item.date}","${item.drug}","${item.nextDate}"\n`;
   });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  a.download = `${currentCatName}_體外驅蟲.csv`;
+  a.href = URL.createObjectURL(new Blob([csv]));
+  a.download = `${currentCatName}_驅蟲紀錄.csv`;
   a.click();
 }
 
 function importParaCSV() {
   const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".csv";
+  input.type = "file"; input.accept = ".csv";
   input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const file = e.target.files[0]; if (!file) return;
     const text = await file.text();
     const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
-    let count = 0;
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      const date = parts[0];
-      const drug = parts[1];
-      const nextDate = parts[2] || "";
-      if (!date || !drug) continue;
-      await dewormCol.add({ date, drug, nextDate, stamp: Date.now() + i });
-      count++;
+      if (parts[0] && parts[1]) await dewormCol.add({ date: parts[0], drug: parts[1], nextDate: parts[2] || "", stamp: Date.now() + i });
     }
-    alert(`驅蟲匯入完成：${count} 筆`);
+    alert("完成");
   };
   input.click();
 }
