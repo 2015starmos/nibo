@@ -6,13 +6,16 @@
 <meta name="format-detection" content="telephone=no">
 <title>小貓醫療紀錄系統</title>
 
+<!-- 引入 Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 .inlock-wrap{position:fixed;inset:0;background:linear-gradient(160deg, #f6f9fe, #eaf2f9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
 .inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
 .inlock-input{width:100%;padding:13px 16px;border:1px solid #dce9f2;border-radius:18px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:10px;}
 
-/* 修正記憶密碼勾選框樣式 */
+/* 記憶密碼勾選框樣式 */
 .remember-row {
   display: flex;
   align-items: center;
@@ -328,6 +331,12 @@ input#importFile { display: none; }
   color:var(--success);
   margin-bottom:8px;
 }
+/* 圖表容器容器 */
+.chart-container {
+  width: 100%;
+  height: 200px;
+  margin-top: 10px;
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -340,12 +349,10 @@ input#importFile { display: none; }
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
-    
-    <!-- 確保勾選框正確呈現 -->
+    <!-- 記憶密碼勾選框 -->
     <label class="remember-row">
       <input type="checkbox" id="rememberMe"> 記住我 (4小時免密碼)
     </label>
-
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
   </div>
@@ -371,6 +378,13 @@ input#importFile { display: none; }
   <!-- 飲水 -->
   <div class="tab-content active" id="tab-water">
     <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
+    <!-- 飲水圖表卡片 -->
+    <div class="ui-card">
+      <div style="font-size: 14px; color: var(--primary); margin-bottom: 5px;">📈 最近七日飲水趨勢</div>
+      <div class="chart-container">
+        <canvas id="waterChart"></canvas>
+      </div>
+    </div>
     <div class="ui-card">
       <input class="form-input" type="date" id="selectDate">
       <input class="form-input" type="time" id="selectTime">
@@ -414,6 +428,13 @@ input#importFile { display: none; }
   <!-- 體重 -->
   <div class="tab-content" id="tab-weight">
     <div class="info-banner">⚖️ 體重趨勢追蹤｜自動計算增減</div>
+    <!-- 體重圖表卡片 -->
+    <div class="ui-card">
+      <div style="font-size: 14px; color: var(--primary); margin-bottom: 5px;">📈 體重變化趨勢</div>
+      <div class="chart-container">
+        <canvas id="weightChart"></canvas>
+      </div>
+    </div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
       <input class="form-input" type="number" step="0.01" id="weightVal" placeholder="輸入體重 kg">
@@ -479,10 +500,10 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)return false;
 });
 
-// 密碼與登入效期邏輯
+// 密碼與 4 小時登入效期邏輯
 const validPws = ["0963612120", "0952867812", "ha821208"];
-const SESSION_KEY = "naibo_login_time";
-const EXPIRE_MS = 4 * 60 * 60 * 1000; // 4小時
+const SESSION_KEY = "naibo_auth_time";
+const EXPIRE_TIME = 4 * 60 * 60 * 1000; // 4 小時
 
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
@@ -490,34 +511,35 @@ function checkInPwd(){
   const remember = document.getElementById("rememberMe").checked;
 
   if(validPws.includes(val)){
-    if(remember){
-      localStorage.setItem(SESSION_KEY, Date.now());
-    }
-    enterApp();
+    if(remember) localStorage.setItem(SESSION_KEY, Date.now());
+    unlockSystem();
   }else{
     tip.innerText = "❌ 密碼錯誤";
     document.getElementById("inPwd").value = "";
   }
 }
 
-function enterApp(){
+function unlockSystem() {
   document.querySelector(".inlock-wrap").style.display="none";
   document.querySelector(".main-content").style.display="block";
   initCatSystem();
 }
 
 // 自動檢查效期
-(function initAuth(){
-  const savedTime = localStorage.getItem(SESSION_KEY);
-  if(savedTime){
-    const now = Date.now();
-    if(now - parseInt(savedTime) < EXPIRE_MS){
-      enterApp();
-      // 設定倒數自動登出
-      setTimeout(() => {
-        localStorage.removeItem(SESSION_KEY);
-        location.reload();
-      }, EXPIRE_MS - (now - parseInt(savedTime)));
+(function authCheck(){
+  const saved = localStorage.getItem(SESSION_KEY);
+  if(saved) {
+    const diff = Date.now() - parseInt(saved);
+    if(diff < EXPIRE_TIME) {
+      // 效期內，解鎖
+      window.addEventListener('load', () => {
+        unlockSystem();
+        // 設一個定時器，萬一視窗一直開著，4小時後自動重整登出
+        setTimeout(() => {
+          localStorage.removeItem(SESSION_KEY);
+          location.reload();
+        }, EXPIRE_TIME - diff);
+      });
     } else {
       localStorage.removeItem(SESSION_KEY);
     }
@@ -525,7 +547,9 @@ function enterApp(){
 })();
 
 document.addEventListener("keydown",e=>{
-  if(e.key==="Enter" && document.querySelector(".inlock-wrap").style.display !== "none") checkInPwd();
+  if(e.key==="Enter") {
+    if(document.querySelector(".inlock-wrap").style.display !== 'none') checkInPwd();
+  }
 });
 
 // Firebase
@@ -550,6 +574,10 @@ let waterUnsubscribe = null;
 let weightUnsubscribe = null;
 let dewormUnsubscribe = null;
 
+// 圖表實例
+let waterChartInstance = null;
+let weightChartInstance = null;
+
 function initCatSystem(){
   renderCatSelect();
   switchCat();
@@ -570,6 +598,7 @@ function addNewCat(){
   switchCat();
 }
 
+// 關閉舊監聽 + 切換貓 + 重新監聽
 function switchCat(){
   if(waterUnsubscribe) waterUnsubscribe();
   if(weightUnsubscribe) weightUnsubscribe();
@@ -606,6 +635,7 @@ let waterCol, weightCol, dewormCol;
 let recordData = [], weightData = [], dewormData = [];
 let darkMode = false;
 
+// 正確監聽 + 取消舊監聽
 function listenAllData(){
   waterCol = db.collection(`catWater_${currentCat}`);
   weightCol = db.collection(`catWeight_${currentCat}`);
@@ -614,11 +644,13 @@ function listenAllData(){
   waterUnsubscribe = waterCol.onSnapshot(snap=>{
     recordData=[]; snap.forEach(d=>recordData.push(d.data()));
     renderPage();
+    updateWaterChart();
     document.getElementById("syncBadge").innerText="☁️ 已同步";
   });
   weightUnsubscribe = weightCol.onSnapshot(snap=>{
     weightData=[]; snap.forEach(d=>weightData.push(d.data()));
     renderWeight();
+    updateWeightChart();
   });
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
@@ -635,6 +667,61 @@ const setNow = () => {
 function toggleDarkMode(){
   darkMode=!darkMode;
   document.body.classList.toggle("dark-mode");
+}
+
+// --- 圖表邏輯 ---
+function updateWaterChart() {
+  const ctx = document.getElementById('waterChart').getContext('2d');
+  const last7DaysData = {};
+  
+  // 統計每日總和
+  recordData.forEach(r => {
+    last7DaysData[r.date] = (last7DaysData[r.date] || 0) + r.ml;
+  });
+
+  const sortedDates = Object.keys(last7DaysData).sort().slice(-7);
+  const chartData = sortedDates.map(date => last7DaysData[date]);
+  const chartLabels = sortedDates.map(date => date.slice(5)); // 只取 MM-DD
+
+  if (waterChartInstance) waterChartInstance.destroy();
+  waterChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: '飲水量 (ml)',
+        data: chartData,
+        borderColor: '#478fb8',
+        backgroundColor: 'rgba(71,143,184,0.1)',
+        fill: true,
+        tension: 0.3
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+function updateWeightChart() {
+  const ctx = document.getElementById('weightChart').getContext('2d');
+  const sortedWeight = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-7);
+  
+  const chartLabels = sortedWeight.map(w => w.date.slice(5));
+  const chartData = sortedWeight.map(w => w.weight);
+
+  if (weightChartInstance) weightChartInstance.destroy();
+  weightChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: '體重 (kg)',
+        data: chartData,
+        borderColor: '#34a873',
+        tension: 0.1
+      }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
+  });
 }
 
 // ---------------- 飲水 ----------------
@@ -771,11 +858,20 @@ function renderDeworm(){
   </tr>`).join("");
 }
 
+// ==============================================
+// 體重 CSV 匯出 / 匯入
+// ==============================================
 function exportWeightCSV() {
-  if (!Array.isArray(weightData) || weightData.length === 0) return alert("無資料");
+  if (!Array.isArray(weightData) || weightData.length === 0) {
+    alert("目前沒有體重紀錄可匯出");
+    return;
+  }
   let csv = "\uFEFF日期,體重(kg),備註\n";
   weightData.forEach(item => {
-    csv += `"${item.date}","${item.weight}","${(item.note||"")}"\n`;
+    const d = (item.date || "").trim();
+    const w = (item.weight || "").trim();
+    const n = (item.note || "").replace(/"/g, '""').trim();
+    csv += `"${d}","${w}","${n}"\n`;
   });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -785,44 +881,69 @@ function exportWeightCSV() {
 
 function importWeightCSV() {
   const input = document.createElement("input");
-  input.type = "file"; input.accept = ".csv";
+  input.type = "file";
+  input.accept = ".csv";
   input.onchange = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
     const text = await file.text();
     const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
+    let count = 0;
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      if (parts[0] && parts[1]) await weightCol.add({ date: parts[0], weight: parts[1], note: parts[2] || "", stamp: Date.now() + i });
+      const date = parts[0];
+      const weight = parts[1];
+      const note = parts[2] || "";
+      if (!date || !weight) continue;
+      await weightCol.add({ date, weight, note, stamp: Date.now() + i });
+      count++;
     }
-    alert("完成");
+    alert(`體重匯入完成：${count} 筆`);
   };
   input.click();
 }
 
+// ==============================================
+// 體外驅蟲 CSV 匯出 / 匯入
+// ==============================================
 function exportParaCSV() {
-  if (!Array.isArray(dewormData) || dewormData.length === 0) return alert("無資料");
-  let csv = "\uFEFF日期,藥品,下回日期\n";
+  if (!Array.isArray(dewormData) || dewormData.length === 0) {
+    alert("目前沒有體外驅蟲紀錄可匯出");
+    return;
+  }
+  let csv = "\uFEFF日期,藥品/品牌,下次到期日,備註\n";
   dewormData.forEach(item => {
-    csv += `"${item.date}","${item.drug}","${item.nextDate}"\n`;
+    const d = (item.date || "").trim();
+    const drug = (item.drug || "").replace(/"/g, '""').trim();
+    const next = (item.nextDate || "").trim();
+    csv += `"${d}","${drug}","${next}",""\n`;
   });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv]));
-  a.download = `${currentCatName}_驅蟲紀錄.csv`;
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `${currentCatName}_體外驅蟲.csv`;
   a.click();
 }
 
 function importParaCSV() {
   const input = document.createElement("input");
-  input.type = "file"; input.accept = ".csv";
+  input.type = "file";
+  input.accept = ".csv";
   input.onchange = async (e) => {
-    const file = e.target.files[0]; if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
     const text = await file.text();
     const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
+    let count = 0;
     for (let i = 1; i < lines.length; i++) {
       const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      if (parts[0] && parts[1]) await dewormCol.add({ date: parts[0], drug: parts[1], nextDate: parts[2] || "", stamp: Date.now() + i });
+      const date = parts[0];
+      const drug = parts[1];
+      const nextDate = parts[2] || "";
+      if (!date || !drug) continue;
+      await dewormCol.add({ date, drug, nextDate, stamp: Date.now() + i });
+      count++;
     }
-    alert("完成");
+    alert(`驅蟲匯入完成：${count} 筆`);
   };
   input.click();
 }
