@@ -322,6 +322,11 @@ input#importFile { display: none; }
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
+    <div style="text-align:left;width:100%;padding:0 8px;margin:4px 0 8px;">
+      <label style="font-size:14px;color:var(--text-main);cursor:pointer;">
+        <input type="checkbox" id="rememberPwd"> 記憶密碼
+      </label>
+    </div>
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
   </div>
@@ -455,16 +460,69 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)return false;
 });
 
-// 密碼
+// 密碼 + 記憶密碼 + 4小時自動登出
 const validPws = ["0963612120", "0952867812", "ha821208"];
+const LOGOUT_HOUR = 4;
+let autoLogoutTimer = null;
+
+// 頁面載入自動回填記憶密碼 & 檢查登入有效期
+(function loadRememberPwd(){
+  const saved = localStorage.getItem("saveLoginPwd");
+  const mark = localStorage.getItem("rememberPwdMark");
+  if(mark === "1" && saved){
+    document.getElementById("inPwd").value = saved;
+    document.getElementById("rememberPwd").checked = true;
+  }
+  const expireTime = parseInt(localStorage.getItem("loginExpireTime") || "0", 10);
+  const now = Date.now();
+  if(expireTime && now < expireTime){
+    document.querySelector(".inlock-wrap").style.display="none";
+    document.querySelector(".main-content").style.display="block";
+    initCatSystem();
+    startAutoLogoutCountdown();
+  }else{
+    localStorage.removeItem("loginExpireTime");
+  }
+})();
+
+// 啟動4小時倒數計時
+function startAutoLogoutCountdown(){
+  if(autoLogoutTimer) clearTimeout(autoLogoutTimer);
+  const ms = LOGOUT_HOUR * 60 * 60 * 1000;
+  autoLogoutTimer = setTimeout(function(){
+    forceLogout();
+  }, ms);
+}
+
+// 強制登出返回鎖屏
+function forceLogout(){
+  document.querySelector(".inlock-wrap").style.display="flex";
+  document.querySelector(".main-content").style.display="none";
+  localStorage.removeItem("loginExpireTime");
+  if(autoLogoutTimer) clearTimeout(autoLogoutTimer);
+}
+
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
+  const needRemember = document.getElementById("rememberPwd").checked;
+
   if(validPws.includes(val)){
+    if(needRemember){
+      localStorage.setItem("rememberPwdMark","1");
+      localStorage.setItem("saveLoginPwd", val);
+    }else{
+      localStorage.removeItem("rememberPwdMark");
+      localStorage.removeItem("saveLoginPwd");
+    }
+    const expire = Date.now() + LOGOUT_HOUR * 60 * 60 * 1000;
+    localStorage.setItem("loginExpireTime", expire.toString());
+
     document.querySelector(".inlock-wrap").style.display="none";
     document.querySelector(".main-content").style.display="block";
     tip.innerText = "";
     initCatSystem();
+    startAutoLogoutCountdown();
   }else{
     tip.innerText = "❌ 密碼錯誤";
     document.getElementById("inPwd").value = "";
