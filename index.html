@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no">
 <title>小貓醫療紀錄系統</title>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 .inlock-wrap{position:fixed;inset:0;background:linear-gradient(160deg, #f6f9fe, #eaf2f9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
@@ -14,339 +14,102 @@
 .inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  transition: background 0.3s ease, color 0.3s ease, transform 0.2s ease;
-}
-
+*{margin:0;padding:0;box-sizing:border-box;transition:background 0.3s ease,color 0.3s ease,transform 0.2s ease;}
 :root {
-  --bg-gradient-1: #f6f9fe;
-  --bg-gradient-2: #eaf2f9;
-  --card-bg: #ffffff;
-  --text-main: #506473;
-  --primary: #478fb8;
-  --primary-light: rgba(71, 143, 184, 0.12);
-  --border-color: #dce9f2;
-  --input-bg: #f9fbfe;
-  --btn-gray: #d7e3ec;
-  --table-bg: #f8fbfd;
-  --table-head: #f0f6fb;
-  --danger: #f28484;
-  --success: #34a873;
-  --warn: #e39548;
-  --green: #34a873;
-  --orange: #f2994a;
+  --bg-gradient-1: #f6f9fe;--bg-gradient-2: #eaf2f9;--card-bg: #ffffff;
+  --text-main: #506473;--primary: #478fb8;--primary-light: rgba(71,143,184,0.12);
+  --border-color: #dce9f2;--input-bg: #f9fbfe;--btn-gray: #d7e3ec;
+  --table-bg: #f8fbfd;--table-head: #f0f6fb;--danger: #f28484;
+  --success: #34a873;--warn: #e39548;
 }
-
 .dark-mode {
-  --bg-gradient-1: #1a202c;
-  --bg-gradient-2: #121822;
-  --card-bg: #242c37;
-  --text-main: #cbd5e0;
-  --primary: #63b3e0;
-  --primary-light: rgba(99, 179, 224, 0.15);
-  --border-color: #3a4756;
-  --input-bg: #2d3743;
-  --btn-gray: #3a4756;
-  --table-bg: #2d3743;
-  --table-head: #323e4d;
+  --bg-gradient-1: #1a202c;--bg-gradient-2: #121822;--card-bg: #242c37;
+  --text-main: #cbd5e0;--primary: #63b3e0;--primary-light: rgba(99,179,224,0.15);
+  --border-color: #3a4756;--input-bg: #2d3743;--btn-gray: #3a4756;
+  --table-bg: #2d3743;--table-head: #323e4d;
 }
-
-body {
-  font-family: "微軟正黑體", "Noto Sans TC", sans-serif;
-  background: linear-gradient(160deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
-  padding: 20px 14px;
-  min-height: 100vh;
-  color: var(--text-main);
-}
-
-.wrapper {
-  width: 100%;
-  max-width:560px;
-  margin: 0 auto;
-}
-
-.main-title {
-  text-align: center;
-  font-size: 24px;
-  color: var(--primary);
-  font-weight: 600;
-  margin-bottom: 12px;
-  letter-spacing: 1px;
-}
-
-.cat-selector {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  align-items: center;
-  justify-content: center;
-}
-.cat-select {
-  padding: 10px 14px;
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  background: var(--input-bg);
-  color: var(--text-main);
-  font-size: 15px;
-  width: 180px;
-  text-align: center;
-}
-.cat-add-btn {
-  padding: 10px 12px;
-  border-radius: 16px;
-  border: none;
-  background: var(--primary);
-  color: #fff;
-  cursor: pointer;
-}
-
-.tab-wrap {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-}
-.tab-btn {
-  flex: 1;
-  padding: 10px;
-  border-radius: 16px;
-  border: none;
-  background: var(--btn-gray);
-  color: var(--text-main);
-  font-size: 14px;
-  cursor: pointer;
-  min-width: 80px;
-}
-.tab-btn.active {
-  background: var(--primary);
-  color: #fff;
-}
-.tab-content {
-  display: none;
-}
-.tab-content.active {
-  display: block;
-}
-
-.theme-switch {
-  display: block;
-  margin: 0 auto 16px;
-  border: none;
-  background: var(--primary-light);
-  color: var(--primary);
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size:14px;
-}
-.theme-switch:active { transform: scale(0.96); }
-
-.info-banner {
-  width: 100%;
-  background: var(--primary-light);
-  border-radius: 30px;
-  padding: 13px 16px;
-  text-align: center;
-  font-size: 15px;
-  color: var(--primary);
-  margin-bottom: 16px;
-}
-
-.ui-card {
-  background: var(--card-bg);
-  border-radius: 28px;
-  padding: 20px 18px;
-  margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(71, 143, 184, 0.08);
-  overflow: hidden;
-}
-
-.form-input {
-  width: 100%;
-  padding: 13px 12px;
-  margin: 6px 0;
-  border: 1px solid var(--border-color);
-  border-radius: 20px;
-  background-color: var(--input-bg);
-  font-size: 15px;
-  text-align: center;
-  color: var(--text-main);
-}
-.form-textarea {
-  text-align: left;
-  min-height: 70px;
-  resize: vertical;
-}
-.form-input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-
-.quick-btn-group {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-.btn-quick {
-  flex: 1;
-  padding: 10px;
-  border: 1px solid var(--primary);
-  background: transparent;
-  color: var(--primary);
-  border-radius: 15px;
-  cursor: pointer;
-  font-weight: 500;
-}
-.btn-quick:active {
-  background: var(--primary);
-  color: #fff;
-  transform: scale(0.97);
-}
-
-.btn-primary {
-  width: 100%;
-  padding: 14px;
-  margin-top: 5px;
-  border: none;
-  border-radius: 20px;
-  background: linear-gradient(90deg, #58a2cc, #478fb8);
-  color: #fff;
-  font-size: 16px;
-  font-weight: 500;
-  cursor: pointer;
-}
-.btn-primary:active { opacity: 0.92; transform: scale(0.99); }
-
-.btn-delete {
-  border: none;
-  background: var(--danger);
-  color: #fff;
-  padding: 4px 6px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 11px;
-}
-.btn-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-.btn-clear-day, .btn-export, .btn-import {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  border-radius: 20px;
-  background: var(--btn-gray);
-  color: var(--text-main);
-  font-size: 14px;
-  cursor: pointer;
-}
-
-input#importFile { display: none; }
-
-.today-total-box {
-  text-align: center;
-  font-size: 22px;
-  font-weight: 600;
-  padding: 10px 0;
-}
-.text-low { color: #e39548; }
-.text-normal { color: #34a873; }
-.text-high { color: #58a2cc; }
-.warn-low, .warn-high {
-  text-align: center;
-  font-size: 14px;
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
-
-.record-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-}
-.record-table th {
-  background: var(--table-head);
-  color: var(--primary);
-  padding: 10px 4px;
-  border-radius: 14px;
-  font-weight: 500;
-}
-.record-table td {
-  background: var(--table-bg);
-  text-align: center;
-  padding: 10px 4px;
-  font-size: 14px;
-}
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
-}
-.stat-item {
-  background: var(--primary-light);
-  border-radius: 20px;
-  padding: 12px 6px;
-  text-align: center;
-}
-.stat-label { font-size: 12px; color: var(--primary); margin-bottom: 3px; }
-.stat-num { font-size: 16px; font-weight: 600; }
-
-.loading-text {
-  text-align:center;
-  color:var(--primary);
-  padding:10px;
-  font-size:14px;
-}
-.sync-badge{
-  text-align:center;
-  font-size:12px;
-  color:var(--success);
-  margin-bottom:8px;
-}
+body {font-family:"微軟正黑體","Noto Sans TC",sans-serif;background:linear-gradient(160deg,var(--bg-gradient-1),var(--bg-gradient-2));padding:20px 14px;min-height:100vh;color:var(--text-main);}
+.wrapper{width:100%;max-width:560px;margin:0 auto;}
+.main-title{text-align:center;font-size:24px;color:var(--primary);font-weight:600;margin-bottom:12px;letter-spacing:1px;}
+.cat-selector{display:flex;gap:8px;margin-bottom:16px;align-items:center;justify-content:center;}
+.cat-select{padding:10px 14px;border-radius:16px;border:1px solid var(--border-color);background:var(--input-bg);color:var(--text-main);font-size:15px;width:180px;text-align:center;}
+.cat-add-btn{padding:10px 12px;border-radius:16px;border:none;background:var(--primary);color:#fff;cursor:pointer;}
+.tab-wrap{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tab-btn{flex:1;padding:10px;border-radius:16px;border:none;background:var(--btn-gray);color:var(--text-main);font-size:14px;cursor:pointer;min-width:80px;}
+.tab-btn.active{background:var(--primary);color:#fff;}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.theme-switch{display:block;margin:0 auto 16px;border:none;background:var(--primary-light);color:var(--primary);padding:8px 16px;border-radius:20px;cursor:pointer;font-size:14px;}
+.theme-switch:active{transform:scale(0.96);}
+.info-banner{width:100%;background:var(--primary-light);border-radius:30px;padding:13px 16px;text-align:center;font-size:15px;color:var(--primary);margin-bottom:16px;}
+.ui-card{background:var(--card-bg);border-radius:28px;padding:20px 18px;margin-bottom:16px;box-shadow:0 8px 24px rgba(71,143,184,0.08);overflow:hidden;}
+.form-input{width:100%;padding:13px 12px;margin:6px 0;border:1px solid var(--border-color);border-radius:20px;background:var(--input-bg);font-size:15px;text-align:center;color:var(--text-main);}
+.form-textarea{text-align:left;min-height:70px;resize:vertical;}
+.form-input:focus{outline:none;border-color:var(--primary);}
+.quick-btn-group{display:flex;gap:10px;margin-bottom:10px;}
+.btn-quick{flex:1;padding:10px;border:1px solid var(--primary);background:transparent;color:var(--primary);border-radius:15px;cursor:pointer;font-weight:500;}
+.btn-quick:active{background:var(--primary);color:#fff;transform:scale(0.97);}
+.btn-primary{width:100%;padding:14px;margin-top:5px;border:none;border-radius:20px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;font-weight:500;cursor:pointer;}
+.btn-primary:active{opacity:0.92;transform:scale(0.99);}
+.btn-delete{border:none;background:var(--danger);color:#fff;padding:4px 6px;border-radius:8px;cursor:pointer;font-size:11px;}
+.btn-row{display:flex;gap:8px;margin-top:12px;}
+.btn-clear-day,.btn-export,.btn-import{flex:1;padding:12px;border:none;border-radius:20px;background:var(--btn-gray);color:var(--text-main);font-size:14px;cursor:pointer;}
+input#importFile,input#photoUpload{display:none;}
+.today-total-box{text-align:center;font-size:22px;font-weight:600;padding:10px 0;}
+.text-low{color:#e39548;}.text-normal{color:#34a873;}.text-high{color:#58a2cc;}
+.warn-low,.warn-high{text-align:center;font-size:14px;margin-bottom:12px;line-height:1.5;}
+.record-table{width:100%;border-collapse:separate;border-spacing:0 8px;}
+.record-table th{background:var(--table-head);color:var(--primary);padding:10px 4px;border-radius:14px;font-weight:500;}
+.record-table td{background:var(--table-bg);text-align:center;padding:10px 4px;font-size:14px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.stat-item{background:var(--primary-light);border-radius:20px;padding:12px 6px;text-align:center;}
+.stat-label{font-size:12px;color:var(--primary);margin-bottom:3px;}
+.stat-num{font-size:16px;font-weight:600;}
+.loading-text{text-align:center;color:var(--primary);padding:10px;font-size:14px;}
+.sync-badge{text-align:center;font-size:12px;color:var(--success);margin-bottom:8px;}
+.chart-wrap{width:100%;height:260px;margin:10px 0;}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.photo-item{border-radius:16px;overflow:hidden;background:var(--table-bg);position:relative;}
+.photo-item img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+.photo-desc{font-size:12px;padding:6px;text-align:center;}
 </style>
-
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 </head>
-
 <body>
-
 <div class="inlock-wrap">
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
+    <div style="text-align:left;width:100%;padding:0 8px;margin:4px 0 8px;">
+      <label style="font-size:14px;color:var(--text-main);cursor:pointer;">
+        <input type="checkbox" id="rememberPwd"> 記憶密碼
+      </label>
+    </div>
     <div class="inlock-tip" id="inTip"></div>
     <button class="inlock-btn" onclick="checkInPwd()">確認解鎖</button>
   </div>
 </div>
-
 <div class="main-content">
 <div class="wrapper">
   <h1 class="main-title">🐾 波波健康全紀錄</h1>
   <div class="sync-badge" id="syncBadge">☁️ 雲端同步連線中...</div>
   <button class="theme-switch" onclick="toggleDarkMode()">🌓 切換深色模式</button>
-
   <div class="cat-selector">
     <select class="cat-select" id="catSelect" onchange="switchCat()"></select>
     <button class="cat-add-btn" onclick="addNewCat()">+ 新增貓咪</button>
   </div>
-
   <div class="tab-wrap">
     <button class="tab-btn active" data-tab="water">飲水紀錄</button>
-    <button class="tab-btn" data-tab="weight">體重紀錄</button>
+    <button class="tab-btn" data-tab="weight">體重趨勢</button>
     <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
+    <button class="tab-btn" data-tab="photo">醫療相簿</button>
+    <button class="tab-btn" data-tab="medical">電子病歷</button>
   </div>
 
-  <!-- 飲水 -->
   <div class="tab-content active" id="tab-water">
-    <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
+    <div class="info-banner">💧 建議每日：150～210ml</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="selectDate">
       <input class="form-input" type="time" id="selectTime">
@@ -355,17 +118,14 @@ input#importFile { display: none; }
         <button class="btn-quick" onclick="quickAdd(50)">+50ml</button>
         <button class="btn-quick" onclick="quickAdd(75)">+75ml</button>
       </div>
-      <input class="form-input" type="number" id="waterML" placeholder="手動輸入水量 ml" inputmode="numeric" min="1">
+      <input class="form-input" type="number" id="waterML" placeholder="手動輸入水量ml" inputmode="numeric" min="1">
       <button class="btn-primary" onclick="addRecord()">✅ 新增飲水紀錄</button>
     </div>
-
     <div class="ui-card">
       <div class="today-total-box" id="totalShow">今日總計：0 ml</div>
       <div id="warnTip"></div>
       <table class="record-table">
-        <thead>
-          <tr><th>時間</th><th>飲水量</th><th>操作</th></tr>
-        </thead>
+        <thead><tr><th>時間</th><th>飲水量</th><th>操作</th></tr></thead>
         <tbody id="recordBody"></tbody>
       </table>
       <div class="btn-row">
@@ -375,28 +135,26 @@ input#importFile { display: none; }
       </div>
       <input type="file" id="importFile" accept=".csv" onchange="importCSV(event)">
     </div>
-
     <div class="ui-card">
-      <div style="text-align:center; color:var(--primary); margin-bottom:12px; font-weight:500;">📊 長期數據統計</div>
+      <div style="text-align:center;color:var(--primary);margin-bottom:12px;font-weight:500;">📊 長期數據統計</div>
       <div class="stat-grid">
         <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">本月最高單筆</div><div class="stat-num" id="monthMax">0 ml</div></div>
       </div>
+      <div class="chart-wrap"><canvas id="waterChart"></canvas></div>
     </div>
   </div>
 
-  <!-- 體重 -->
   <div class="tab-content" id="tab-weight">
-    <div class="info-banner">⚖️ 體重趨勢追蹤｜自動計算增減</div>
+    <div class="info-banner">⚖️ 體重趨勢｜一週降幅5%為生病警訊</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
-      <input class="form-input" type="number" step="0.01" id="weightVal" placeholder="輸入體重 kg">
-      <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
+      <input class="form-input" type="number" step="0.01" id="weightVal" placeholder="輸入體重kg">
+      <input class="form-input" id="weightNote" placeholder="備註：飯前/飯後">
       <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
     </div>
-
     <div class="ui-card">
       <div class="today-total-box" id="weightLatest">最新體重：0 kg</div>
       <table class="record-table">
@@ -408,28 +166,26 @@ input#importFile { display: none; }
         <button class="btn-import" onclick="importWeightCSV()">📥 匯入CSV</button>
       </div>
     </div>
-
     <div class="ui-card">
-      <div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計</div>
+      <div style="text-align:center;margin-bottom:10px;font-weight:500;">📈 體重統計 & 趨勢曲線</div>
       <div class="stat-grid">
         <div class="stat-item"><div class="stat-label">最高體重</div><div class="stat-num" id="wMax">0 kg</div></div>
         <div class="stat-item"><div class="stat-label">最低體重</div><div class="stat-num" id="wMin">0 kg</div></div>
         <div class="stat-item"><div class="stat-label">30日平均</div><div class="stat-num" id="wAvg">0 kg</div></div>
         <div class="stat-item"><div class="stat-label">最近變化</div><div class="stat-num" id="wDiff">0 kg</div></div>
       </div>
+      <div class="chart-wrap"><canvas id="weightChart"></canvas></div>
     </div>
   </div>
 
-  <!-- 體外驅蟲 -->
   <div class="tab-content" id="tab-deworm">
-    <div class="info-banner">🪲 體外驅蟲紀錄｜提醒下次使用時間</div>
+    <div class="info-banner">🪲 體外驅蟲｜自動提醒下次週期</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="dewormDate">
-      <input class="form-input" id="dewormDrug" placeholder="藥品名稱">
-      <input class="form-input" type="date" id="dewormNext" placeholder="預計下次使用日期">
+      <input class="form-input" id="dewormDrug" placeholder="藥品名稱/廠牌">
+      <input class="form-input" type="date" id="dewormNext" placeholder="預計下次施打日">
       <button class="btn-primary" onclick="addDeworm()">✅ 新增驅蟲紀錄</button>
     </div>
-
     <div class="ui-card">
       <table class="record-table">
         <thead><tr><th>使用日期</th><th>藥品</th><th>下次日期</th><th>刪除</th></tr></thead>
@@ -442,216 +198,258 @@ input#importFile { display: none; }
     </div>
   </div>
 
+  <div class="tab-content" id="tab-photo">
+    <div class="info-banner">📷 醫療照片日誌｜傷口/糞便/檢查影像雲端留存</div>
+    <div class="ui-card">
+      <input class="form-input" type="date" id="photoDate">
+      <input class="form-input" id="photoDesc" placeholder="症狀/部位/檢查名稱備註">
+      <label class="btn-primary" style="display:block;text-align:center;margin-top:8px;">
+        選擇照片上傳
+        <input type="file" id="photoUpload" accept="image/*" multiple onchange="uploadMedicalPhoto(event)">
+      </label>
+    </div>
+    <div class="ui-card">
+      <div style="text-align:center;margin-bottom:10px;font-weight:500;">雲端醫療相簿</div>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-medical">
+    <div class="info-banner">📋 完整電子病歷｜檢查報告+專科醫師院所管理</div>
+    <div class="ui-card">
+      <input class="form-input" id="docName" placeholder="醫師姓名 / 專科別">
+      <input class="form-input" id="docHospital" placeholder="任職院所 / 診間地址">
+      <input class="form-input" id="docNote" placeholder="看診時段 / 院所異動備註">
+      <button class="btn-primary" onclick="addDoctorMemo()">✅ 儲存醫師資料</button>
+    </div>
+    <div class="ui-card">
+      <input class="form-input" id="reportTitle" placeholder="檢查報告名稱（IDEXX/超音波/心臟）">
+      <textarea class="form-input form-textarea" id="reportContent" placeholder="數值異常、診斷重點、後續處置"></textarea>
+      <button class="btn-primary" onclick="addMedicalReport()">✅ 存入檢查報告</button>
+    </div>
+    <div class="ui-card">
+      <div style="text-align:center;margin-bottom:10px;font-weight:500;">專科醫師名單</div>
+      <table class="record-table">
+        <thead><tr><th>醫師/專科</th><th>院所</th><th>操作</th></tr></thead>
+        <tbody id="doctorBody"></tbody>
+      </table>
+    </div>
+    <div class="ui-card">
+      <div style="text-align:center;margin-bottom:10px;font-weight:500;">檢查報告庫</div>
+      <table class="record-table">
+        <thead><tr><th>報告名稱</th><th>摘要</th><th>操作</th></tr></thead>
+        <tbody id="reportBody"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 </div>
 
 <script>
-// 防護
-document.oncontextmenu = () => false;
-document.addEventListener('keydown',e=>{
-  if(e.keyCode===123) return false;
-  if(e.ctrlKey&&e.keyCode===85)return false;
-  if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)return false;
-  if(e.ctrlKey&&e.keyCode===83)return false;
+document.oncontextmenu=()=>!1;
+document.addEventListener("keydown",e=>{
+  if(e.keyCode===123)return!1;
+  if(e.ctrlKey&&e.keyCode===85)return!1;
+  if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)return!1;
+  if(e.ctrlKey&&e.keyCode===83)return!1;
 });
-
-// 密碼
-const validPws = ["0963612120", "0952867812", "ha821208"];
-function checkInPwd(){
-  const val = document.getElementById("inPwd").value.trim();
-  const tip = document.getElementById("inTip");
-  if(validPws.includes(val)){
+const validPws=["0963612120","0952867812","ha821208"];
+const LOGOUT_HOUR=4;
+let autoLogoutTimer=null;
+(function(){
+  let s=localStorage.getItem("saveLoginPwd");
+  let m=localStorage.getItem("rememberPwdMark");
+  if(m==="1"&&s){
+    document.getElementById("inPwd").value=s;
+    document.getElementById("rememberPwd").checked=!0;
+  }
+  let exp=parseInt(localStorage.getItem("loginExpireTime")||"0",10);
+  let now=Date.now();
+  if(exp&&now<exp){
     document.querySelector(".inlock-wrap").style.display="none";
     document.querySelector(".main-content").style.display="block";
-    tip.innerText = "";
-    initCatSystem();
+    initCatSystem();startAutoLogoutCountdown();
+  }else localStorage.removeItem("loginExpireTime");
+})();
+function startAutoLogoutCountdown(){
+  if(autoLogoutTimer)clearTimeout(autoLogoutTimer);
+  autoLogoutTimer=setTimeout(forceLogout,LOGOUT_HOUR*3600000);
+}
+function forceLogout(){
+  document.querySelector(".inlock-wrap").style.display="flex";
+  document.querySelector(".main-content").style.display="none";
+  localStorage.removeItem("loginExpireTime");
+  if(autoLogoutTimer)clearTimeout(autoLogoutTimer);
+}
+function checkInPwd(){
+  let v=document.getElementById("inPwd").value.trim();
+  let tip=document.getElementById("inTip");
+  let rem=document.getElementById("rememberPwd").checked;
+  if(validPws.includes(v)){
+    rem?(localStorage.setItem("rememberPwdMark","1"),localStorage.setItem("saveLoginPwd",v))
+    :(localStorage.removeItem("rememberPwdMark"),localStorage.removeItem("saveLoginPwd"));
+    localStorage.setItem("loginExpireTime",(Date.now()+LOGOUT_HOUR*3600000).toString());
+    document.querySelector(".inlock-wrap").style.display="none";
+    document.querySelector(".main-content").style.display="block";
+    tip.innerText="";initCatSystem();startAutoLogoutCountdown();
   }else{
-    tip.innerText = "❌ 密碼錯誤";
-    document.getElementById("inPwd").value = "";
+    tip.innerText="❌ 密碼錯誤";document.getElementById("inPwd").value="";
   }
 }
-document.addEventListener("keydown",e=>{
-  if(e.key==="Enter") checkInPwd();
-});
+document.addEventListener("keydown",e=>{if(e.key==="Enter")checkInPwd();});
 
-// Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
-  authDomain: "naibo-health.firebaseapp.com",
-  projectId: "naibo-health",
-  storageBucket: "naibo-health.firebasestorage.app",
-  messagingSenderId: "1008746304734",
-  appId: "1:1008746304734:web:33b87646673ee83b975e4f"
+const firebaseConfig={
+  apiKey:"AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
+  authDomain:"naibo-health.firebaseapp.com",
+  projectId:"naibo-health",
+  storageBucket:"naibo-health.firebasestorage.app",
+  messagingSenderId:"1008746304734",
+  appId:"1:1008746304734:web:33b87646673ee83b975e4f"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db=firebase.firestore();
+const storage=firebase.storage();
 
-// 多貓核心
-let currentCat = "default";
-let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
-let currentCatName = "波波";
+let currentCat="default";
+let catList=JSON.parse(localStorage.getItem("petCats")||'[{"id":"default","name":"波波"}]');
+let currentCatName="波波";
+let waterUnsubscribe=null,weightUnsubscribe=null,dewormUnsubscribe=null;
+let photoUnsubscribe=null,doctorUnsubscribe=null,reportUnsubscribe=null;
+let chartWaterIns=null,chartWeightIns=null;
+let recordData=[],weightData=[],dewormData=[],photoData=[],doctorData=[],reportData=[];
+let darkMode=!1;
 
-// 監聽控制
-let waterUnsubscribe = null;
-let weightUnsubscribe = null;
-let dewormUnsubscribe = null;
-
-function initCatSystem(){
-  renderCatSelect();
-  switchCat();
-  setNow();
-}
+function initCatSystem(){renderCatSelect();switchCat();setNow();}
 function renderCatSelect(){
-  const sel = document.getElementById("catSelect");
-  sel.innerHTML = catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  let s=document.getElementById("catSelect");
+  s.innerHTML=catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
 }
 function addNewCat(){
-  const name = prompt("輸入新貓咪名稱：");
-  if(!name)return;
-  const id = "cat_"+Date.now();
-  catList.push({id,name});
+  let n=prompt("輸入新貓咪名稱：");if(!n)return;
+  let id="cat_"+Date.now();
+  catList.push({id,name:n});
   localStorage.setItem("petCats",JSON.stringify(catList));
-  renderCatSelect();
-  document.getElementById("catSelect").value = id;
-  switchCat();
+  renderCatSelect();document.getElementById("catSelect").value=id;switchCat();
 }
-
-// 關閉舊監聽 + 切換貓 + 重新監聽
 function switchCat(){
-  // 先取消舊的監聽
-  if(waterUnsubscribe) waterUnsubscribe();
-  if(weightUnsubscribe) weightUnsubscribe();
-  if(dewormUnsubscribe) dewormUnsubscribe();
-
-  // 切換當前貓
-  currentCat = document.getElementById("catSelect").value;
-  const catObj = catList.find(c=>c.id === currentCat);
-  currentCatName = catObj ? catObj.name : "貓咪";
-
-  // 清空畫面
-  recordData = [];
-  weightData = [];
-  dewormData = [];
-  renderPage();
-  renderWeight();
-  renderDeworm();
-
-  // 重新監聽
+  if(waterUnsubscribe)waterUnsubscribe();if(weightUnsubscribe)weightUnsubscribe();
+  if(dewormUnsubscribe)dewormUnsubscribe();if(photoUnsubscribe)photoUnsubscribe();
+  if(doctorUnsubscribe)doctorUnsubscribe();if(reportUnsubscribe)reportUnsubscribe();
+  currentCat=document.getElementById("catSelect").value;
+  let o=catList.find(c=>c.id===currentCat);
+  currentCatName=o?o.name:"貓咪";
+  recordData=[];weightData=[];dewormData=[];photoData=[];doctorData=[];reportData=[];
+  renderPage();renderWeight();renderDeworm();renderPhotoAlbum();renderDoctorList();renderReportList();
   listenAllData();
 }
-
-// 切換分頁
-document.querySelectorAll('.tab-btn').forEach(btn=>{
-  btn.onclick = function(){
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    this.classList.add('active');
-    const t = this.dataset.tab;
-    if(t==="water")document.getElementById("tab-water").classList.add("active");
-    if(t==="weight")document.getElementById("tab-weight").classList.add("active");
-    if(t==="deworm")document.getElementById("tab-deworm").classList.add("active");
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.onclick=function(){
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c=>c.classList.remove("active"));
+    this.classList.add("active");
+    let t=this.dataset.tab;
+    let m={water:"tab-water",weight:"tab-weight",deworm:"tab-deworm",photo:"tab-photo",medical:"tab-medical"};
+    if(m[t])document.getElementById(m[t]).classList.add("active");
   }
 });
-
-let waterCol, weightCol, dewormCol;
-let recordData = [], weightData = [], dewormData = [];
-let darkMode = false;
-
-// 正確監聽 + 取消舊監聽
+let waterCol,weightCol,dewormCol,photoCol,doctorCol,reportCol;
 function listenAllData(){
-  waterCol = db.collection(`catWater_${currentCat}`);
-  weightCol = db.collection(`catWeight_${currentCat}`);
-  dewormCol = db.collection(`catDeworm_${currentCat}`);
+  waterCol=db.collection(`catWater_${currentCat}`);
+  weightCol=db.collection(`catWeight_${currentCat}`);
+  dewormCol=db.collection(`catDeworm_${currentCat}`);
+  photoCol=db.collection(`catMedicalPhoto_${currentCat}`);
+  doctorCol=db.collection(`catDoctorMemo_${currentCat}`);
+  reportCol=db.collection(`catMedicalReport_${currentCat}`);
 
-  waterUnsubscribe = waterCol.onSnapshot(snap=>{
-    recordData=[]; snap.forEach(d=>recordData.push(d.data()));
-    renderPage();
+  waterUnsubscribe=waterCol.onSnapshot(s=>{
+    recordData=[];s.forEach(d=>recordData.push(d.data()));renderPage();drawWaterChart();
     document.getElementById("syncBadge").innerText="☁️ 已同步";
   });
-  weightUnsubscribe = weightCol.onSnapshot(snap=>{
-    weightData=[]; snap.forEach(d=>weightData.push(d.data()));
-    renderWeight();
+  weightUnsubscribe=weightCol.onSnapshot(s=>{
+    weightData=[];s.forEach(d=>weightData.push(d.data()));renderWeight();drawWeightChart();
   });
-  dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
-    dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
-    renderDeworm();
+  dewormUnsubscribe=dewormCol.onSnapshot(s=>{
+    dewormData=[];s.forEach(d=>dewormData.push(d.data()));renderDeworm();
+  });
+  photoUnsubscribe=photoCol.onSnapshot(s=>{
+    photoData=[];s.forEach(d=>photoData.push(d.data()));renderPhotoAlbum();
+  });
+  doctorUnsubscribe=doctorCol.onSnapshot(s=>{
+    doctorData=[];s.forEach(d=>doctorData.push(d.data()));renderDoctorList();
+  });
+  reportUnsubscribe=reportCol.onSnapshot(s=>{
+    reportData=[];s.forEach(d=>reportData.push(d.data()));renderReportList();
   });
 }
-
-const setNow = () => {
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('selectDate').value = today;
-  document.getElementById('weightDate').value = today;
-  document.getElementById('dewormDate').value = today;
+const setNow=()=>{
+  let t=new Date().toISOString().split("T")[0];
+  document.getElementById("selectDate").value=t;
+  document.getElementById("weightDate").value=t;
+  document.getElementById("dewormDate").value=t;
+  document.getElementById("photoDate").value=t;
 };
-function toggleDarkMode(){
-  darkMode=!darkMode;
-  document.body.classList.toggle("dark-mode");
-}
+function toggleDarkMode(){darkMode=!darkMode;document.body.classList.toggle("dark-mode");drawWaterChart();drawWeightChart();}
 
-// ---------------- 飲水 ----------------
 function quickAdd(v){document.getElementById("waterML").value=v;addRecord();}
 async function addRecord(){
-  const d=document.getElementById("selectDate").value;
-  const t=document.getElementById("selectTime").value;
-  const ml=parseInt(document.getElementById("waterML").value);
-  if(!d||!t||isNaN(ml)||ml<1)return alert("輸入完整");
+  let d=document.getElementById("selectDate").value;
+  let t=document.getElementById("selectTime").value;
+  let ml=parseInt(document.getElementById("waterML").value);
+  if(!d||!t||isNaN(ml)||ml<1)return alert("請填寫完整資訊");
   await waterCol.add({date:d,time:t,ml,stamp:Date.now()});
   document.getElementById("waterML").value="";
 }
 async function delOne(stamp){
-  const snap=await waterCol.where("stamp","==",stamp).get();
-  snap.forEach(d=>d.ref.delete());
+  let s=await waterCol.where("stamp","==",stamp).get();
+  s.forEach(d=>d.ref.delete());
 }
 async function clearDayRecord(){
-  const d=document.getElementById("selectDate").value;
-  if(!confirm("清空?"))return;
-  const snap=await waterCol.where("date","==",d).get();
-  const b=db.batch(); snap.forEach(d=>b.delete(d.ref)); await b.commit();
+  let d=document.getElementById("selectDate").value;
+  if(!confirm("確定清空今日所有飲水紀錄？"))return;
+  let s=await waterCol.where("date","==",d).get();
+  let b=db.batch();s.forEach(d=>b.delete(d.ref));await b.commit();
 }
 function exportCSV(){
-  if(!recordData.length)return alert("無資料");
+  if(!recordData.length)return alert("無可匯出資料");
   let csv="\uFEFF日期,時間,水量\n";
   recordData.forEach(x=>csv+=`${x.date},${x.time},${x.ml}\n`);
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv]));
-  a.download="飲水紀錄.csv";
-  a.click();
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv]));a.download="飲水紀錄.csv";a.click();
 }
 function triggerImport(){document.getElementById("importFile").click();}
 async function importCSV(e){
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();
+  let f=e.target.files[0];if(!f)return;
+  let r=new FileReader();
   r.onload=async ev=>{
-    const lines=ev.target.result.split("\n");
+    let lines=ev.target.result.split("\n");
     for(let i=1;i<lines.length;i++){
-      const [d,t,ml]=lines[i].split(",");
+      let [d,t,ml]=lines[i].split(",");
       if(d&&t&&ml)await waterCol.add({date:d,time:t,ml:parseInt(ml),stamp:Date.now()+i});
     }
-    alert("匯入完成");
+    alert("飲水紀錄匯入完成");
   };
   r.readAsText(f);
 }
-function getDayDiff(a,b){return Math.floor((new Date(a)-new Date(b))/86400000)}
+function getDayDiff(a,b){return Math.floor((new Date(a)-new Date(b))/86400000);}
 function calcStat(){
-  const today=new Date().toISOString().split('T')[0];
-  const w=recordData.filter(x=>getDayDiff(today,x.date)<7);
-  const wTotal=w.reduce((s,x)=>s+x.ml,0);
-  const m=recordData.filter(x=>x.date.startsWith(today.slice(0,7)));
-  const mMax=m.length?Math.max(...m.map(x=>x.ml)):0;
+  let t=new Date().toISOString().split("T")[0];
+  let w=recordData.filter(x=>getDayDiff(t,x.date)<7);
+  let wTotal=w.reduce((s,x)=>s+x.ml,0);
+  let m=recordData.filter(x=>x.date.startsWith(t.slice(0,7)));
+  let mMax=m.length?Math.max(...m.map(x=>x.ml)):0;
   document.getElementById("weekAvg").innerText=Math.round(wTotal/Math.max(w.length,1))+" ml";
   document.getElementById("weekTotal").innerText=wTotal+" ml";
   document.getElementById("monthAvg").innerText=Math.round(m.reduce((s,x)=>s+x.ml,0)/Math.max(m.length,1))+" ml";
   document.getElementById("monthMax").innerText=mMax+" ml";
 }
 function renderPage(){
-  const d=document.getElementById("selectDate").value;
-  const list=recordData.filter(x=>x.date===d).sort((a,b)=>a.time>b.time?-1:1);
-  const total=list.reduce((s,x)=>s+x.ml,0);
+  let d=document.getElementById("selectDate").value;
+  let list=recordData.filter(x=>x.date===d).sort((a,b)=>a.time>b.time?-1:1);
+  let total=list.reduce((s,x)=>s+x.ml,0);
   let cls="text-low",tip="";
-  if(total>=150&&total<=210){cls="text-normal";tip="<div class='warn-high'>✅ 達標</div>"}
-  else if(total>210){cls="text-high";tip="<div class='warn-high'>⚠️ 過量</div>"}
-  else if(total>0){tip="<div class='warn-low'>⚠️ 不足</div>"}
+  if(total>=150&&total<=210){cls="text-normal";tip="<div class='warn-high'>✅ 飲水量達標</div>"}
+  else if(total>210){cls="text-high";tip="<div class='warn-high'>⚠️ 飲水過量</div>"}
+  else if(total>0){tip="<div class='warn-low'>⚠️ 飲水不足</div>"}
   document.getElementById("totalShow").innerHTML=`今日：<span class="${cls}">${total}</span> ml`;
   document.getElementById("warnTip").innerHTML=tip;
   document.getElementById("recordBody").innerHTML=list.map(x=>`
@@ -660,37 +458,29 @@ function renderPage(){
 }
 document.getElementById("selectDate").addEventListener("change",renderPage);
 
-// ---------------- 體重 ----------------
 async function addWeight(){
-  const d=document.getElementById("weightDate").value;
-  const v=parseFloat(document.getElementById("weightVal").value);
-  const n=document.getElementById("weightNote").value;
-  if(!d||isNaN(v))return alert("輸入完整");
+  let d=document.getElementById("weightDate").value;
+  let v=parseFloat(document.getElementById("weightVal").value);
+  let n=document.getElementById("weightNote").value;
+  if(!d||isNaN(v))return alert("請填寫日期與體重");
   await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
-  document.getElementById("weightVal").value="";
-  document.getElementById("weightNote").value="";
+  document.getElementById("weightVal").value="";document.getElementById("weightNote").value="";
 }
 async function delWeight(stamp){
-  const s=await weightCol.where("stamp","==",stamp).get();
+  let s=await weightCol.where("stamp","==",stamp).get();
   s.forEach(x=>x.ref.delete());
 }
 function renderWeight(){
-  const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById("weightBody").innerHTML=list.map(x=>`
-  <tr>
-    <td>${x.date}</td>
-    <td>${parseFloat(x.weight).toFixed(2)}</td>
-    <td>${x.note||"-"}</td>
-    <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
-  </tr>`).join("");
-
+  <tr><td>${x.date}</td><td>${parseFloat(x.weight).toFixed(2)}</td><td>${x.note||"-"}</td>
+  <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td></tr>`).join("");
   if(list.length){
     document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
-    const vals=list.map(x=>parseFloat(x.weight));
-    const max=Math.max(...vals).toFixed(2);
-    const min=Math.min(...vals).toFixed(2);
-    const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
-    const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
+    let vals=list.map(x=>parseFloat(x.weight));
+    let max=Math.max(...vals).toFixed(2),min=Math.min(...vals).toFixed(2);
+    let avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
+    let diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
     document.getElementById("wMax").innerText=max+" kg";
     document.getElementById("wMin").innerText=min+" kg";
     document.getElementById("wAvg").innerText=avg+" kg";
@@ -698,119 +488,187 @@ function renderWeight(){
   }
 }
 
-// ---------------- 體外驅蟲 ----------------
 async function addDeworm(){
-  const d=document.getElementById("dewormDate").value;
-  const drug=document.getElementById("dewormDrug").value.trim();
-  const next=document.getElementById("dewormNext").value;
-  if(!d||!drug)return alert("輸入完整");
+  let d=document.getElementById("dewormDate").value;
+  let drug=document.getElementById("dewormDrug").value.trim();
+  let next=document.getElementById("dewormNext").value;
+  if(!d||!drug)return alert("請填寫日期與藥品名稱");
   await dewormCol.add({date:d,drug,nextDate:next,stamp:Date.now()});
-  document.getElementById("dewormDrug").value="";
-  document.getElementById("dewormNext").value="";
+  document.getElementById("dewormDrug").value="";document.getElementById("dewormNext").value="";
 }
 async function delDeworm(stamp){
-  const s=await dewormCol.where("stamp","==",stamp).get();
+  let s=await dewormCol.where("stamp","==",stamp).get();
   s.forEach(x=>x.ref.delete());
 }
 function renderDeworm(){
-  const list=[...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  let list=[...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById("dewormBody").innerHTML=list.map(x=>`
-  <tr>
-    <td>${x.date}</td>
-    <td>${x.drug}</td>
-    <td>${x.nextDate||"-"}</td>
-    <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td>
-  </tr>`).join("");
+  <tr><td>${x.date}</td><td>${x.drug}</td><td>${x.nextDate||"-"}</td>
+  <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td></tr>`).join("");
 }
 
-// ==============================================
-// 體重 CSV 匯出 / 匯入
-// ==============================================
-function exportWeightCSV() {
-  if (!Array.isArray(weightData) || weightData.length === 0) {
-    alert("目前沒有體重紀錄可匯出");
-    return;
-  }
-  let csv = "\uFEFF日期,體重(kg),備註\n";
-  weightData.forEach(item => {
-    const d = (item.date || "").trim();
-    const w = (item.weight || "").trim();
-    const n = (item.note || "").replace(/"/g, '""').trim();
-    csv += `"${d}","${w}","${n}"\n`;
+function exportWeightCSV(){
+  if(!weightData.length)return alert("無體重資料可匯出");
+  let csv="\uFEFF日期,體重(kg),備註\n";
+  weightData.forEach(item=>{
+    let d=item.date||"";let w=item.weight||"";
+    let n=(item.note||"").replace(/"/g,'""');
+    csv+=`"${d}","${w}","${n}"\n`;
   });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  a.download = `${currentCatName}_體重紀錄.csv`;
-  a.click();
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=`${currentCatName}_體重紀錄.csv`;a.click();
 }
-
-function importWeightCSV() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".csv";
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const text = await file.text();
-    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
-    let count = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      const date = parts[0];
-      const weight = parts[1];
-      const note = parts[2] || "";
-      if (!date || !weight) continue;
-      await weightCol.add({ date, weight, note, stamp: Date.now() + i });
-      count++;
+function importWeightCSV(){
+  let i=document.createElement("input");i.type="file";i.accept=".csv";
+  i.onchange=async e=>{
+    let f=e.target.files[0];if(!f)return;
+    let t=await f.text();
+    let lines=t.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
+    let cnt=0;
+    for(let j=1;j<lines.length;j++){
+      let p=lines[j].split(",").map(x=>x.replace(/^"|"$/g,"").trim());
+      let date=p[0],w=p[1],note=p[2]||"";
+      if(!date||!w)continue;
+      await weightCol.add({date,weight:parseFloat(w),note,stamp:Date.now()+j});
+      cnt++;
     }
-    alert(`體重匯入完成：${count} 筆`);
+    alert(`體重匯入完成：${cnt}筆`);
   };
-  input.click();
+  i.click();
 }
-
-// ==============================================
-// 體外驅蟲 CSV 匯出 / 匯入
-// ==============================================
-function exportParaCSV() {
-  if (!Array.isArray(dewormData) || dewormData.length === 0) {
-    alert("目前沒有體外驅蟲紀錄可匯出");
-    return;
-  }
-  let csv = "\uFEFF日期,藥品/品牌,下次到期日,備註\n";
-  dewormData.forEach(item => {
-    const d = (item.date || "").trim();
-    const drug = (item.drug || "").replace(/"/g, '""').trim();
-    const next = (item.nextDate || "").trim();
-    csv += `"${d}","${drug}","${next}",""\n`;
+function exportParaCSV(){
+  if(!dewormData.length)return alert("無驅蟲資料可匯出");
+  let csv="\uFEFF日期,藥品,下次到期日\n";
+  dewormData.forEach(item=>{
+    let d=item.date||"";let g=(item.drug||"").replace(/"/g,'""');
+    let n=item.nextDate||"";csv+=`"${d}","${g}","${n}"\n`;
   });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  a.download = `${currentCatName}_體外驅蟲.csv`;
-  a.click();
+  let a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));
+  a.download=`${currentCatName}_體外驅蟲.csv`;a.click();
+}
+function importParaCSV(){
+  let i=document.createElement("input");i.type="file";i.accept=".csv";
+  i.onchange=async e=>{
+    let f=e.target.files[0];if(!f)return;
+    let t=await f.text();
+    let lines=t.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
+    let cnt=0;
+    for(let j=1;j<lines.length;j++){
+      let p=lines[j].split(",").map(x=>x.replace(/^"|"$/g,"").trim());
+      let date=p[0],drug=p[1],next=p[2]||"";
+      if(!date||!drug)continue;
+      await dewormCol.add({date,drug,nextDate:next,stamp:Date.now()+j});
+      cnt++;
+    }
+    alert(`驅蟲匯入完成：${cnt}筆`);
+  };
+  i.click();
 }
 
-function importParaCSV() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".csv";
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const text = await file.text();
-    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
-    let count = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      const date = parts[0];
-      const drug = parts[1];
-      const nextDate = parts[2] || "";
-      if (!date || !drug) continue;
-      await dewormCol.add({ date, drug, nextDate, stamp: Date.now() + i });
-      count++;
-    }
-    alert(`驅蟲匯入完成：${count} 筆`);
-  };
-  input.click();
+function drawWaterChart(){
+  let ctx=document.getElementById("waterChart").getContext("2d");
+  let now=Date.now();
+  let labs=[],vals=[];
+  for(let i=29;i>=0;i--){
+    let d=new Date(now-i*86400000).toISOString().split("T")[0];
+    labs.push(d.slice(5));
+    let s=recordData.filter(x=>x.date===d).reduce((sum,x)=>sum+x.ml,0);
+    vals.push(s);
+  }
+  let c=darkMode?"#63b3e0":"#478fb8";
+  let g=darkMode?"rgba(255,255,255,0.1)":"rgba(71,143,184,0.1)";
+  if(chartWaterIns)chartWaterIns.destroy();
+  chartWaterIns=new Chart(ctx,{
+    type:"line",
+    data:{labels:labs,datasets:[{label:"每日飲水量(ml)",data:vals,borderColor:c,backgroundColor:c+"33",fill:!0,tension:0.3}]},
+    options:{responsive:!0,maintainAspectRatio:!1,plugins:{legend:{display:!1}},scales:{x:{grid:{color:g}},y:{grid:{color:g},min:0}}}
+  });
+}
+function drawWeightChart(){
+  let ctx=document.getElementById("weightChart").getContext("2d");
+  let list=[...weightData].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let labs=list.map(x=>x.date.slice(5));
+  let vals=list.map(x=>parseFloat(x.weight));
+  let c=darkMode?"#63b3e0":"#478fb8";
+  let g=darkMode?"rgba(255,255,255,0.1)":"rgba(71,143,184,0.1)";
+  if(chartWeightIns)chartWeightIns.destroy();
+  chartWeightIns=new Chart(ctx,{
+    type:"line",
+    data:{labels:labs,datasets:[{label:"體重(kg)",data:vals,borderColor:c,backgroundColor:c+"33",fill:!0,tension:0.3}]},
+    options:{responsive:!0,maintainAspectRatio:!1,plugins:{legend:{display:!1}},scales:{x:{grid:{color:g}},y:{grid:{color:g}}}}
+  });
+}
+
+async function uploadMedicalPhoto(e){
+  let files=e.target.files;if(!files.length)return;
+  let date=document.getElementById("photoDate").value;
+  let desc=document.getElementById("photoDesc").value.trim();
+  for(let file of files){
+    let name=`medical_${Date.now()}_${file.name}`;
+    let ref=storage.ref(`cat_${currentCat}/medical_photo/${name}`);
+    await ref.put(file);
+    let url=await ref.getDownloadURL();
+    await photoCol.add({date,desc,url,fileName:name,stamp:Date.now()});
+  }
+  document.getElementById("photoDesc").value="";
+  alert("醫療照片上傳完成，已存入雲端病歷");
+  e.target.value="";
+}
+async function delPhoto(stamp,fileName){
+  let snap=await photoCol.where("stamp","==",stamp).get();
+  snap.forEach(async d=>{
+    await storage.ref(`cat_${currentCat}/medical_photo/${fileName}`).delete().catch(()=>{});
+    await d.ref.delete();
+  });
+}
+function renderPhotoAlbum(){
+  let grid=document.getElementById("photoGrid");
+  let list=[...photoData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  grid.innerHTML=list.map(x=>`
+  <div class="photo-item">
+    <img src="${x.url}" loading="lazy">
+    <div class="photo-desc">${x.date}<br>${x.desc||"無備註"}</div>
+    <button class="btn-delete" style="width:100%;border-radius:0 0 16px 16px;" onclick="delPhoto(${x.stamp},'${x.fileName}')">刪除</button>
+  </div>`).join("");
+}
+
+async function addDoctorMemo(){
+  let name=document.getElementById("docName").value.trim();
+  let hosp=document.getElementById("docHospital").value.trim();
+  let note=document.getElementById("docNote").value.trim();
+  if(!name||!hosp)return alert("請填寫醫師姓名與院所");
+  await doctorCol.add({name,hospital:hosp,note,stamp:Date.now()});
+  document.getElementById("docName").value="";document.getElementById("docHospital").value="";document.getElementById("docNote").value="";
+}
+async function delDoctor(stamp){
+  let s=await doctorCol.where("stamp","==",stamp).get();
+  s.forEach(x=>x.ref.delete());
+}
+function renderDoctorList(){
+  let list=[...doctorData].sort((a,b)=>b.stamp-a.stamp);
+  document.getElementById("doctorBody").innerHTML=list.map(x=>`
+  <tr><td>${x.name}</td><td>${x.hospital}</td>
+  <td><button class='btn-delete' onclick='delDoctor(${x.stamp})'>刪</button></td></tr>`).join("");
+}
+
+async function addMedicalReport(){
+  let title=document.getElementById("reportTitle").value.trim();
+  let content=document.getElementById("reportContent").value.trim();
+  if(!title)return alert("請填寫報告名稱");
+  await reportCol.add({title,content,stamp:Date.now(),createDate:new Date().toISOString().split("T")[0]});
+  document.getElementById("reportTitle").value="";document.getElementById("reportContent").value="";
+}
+async function delReport(stamp){
+  let s=await reportCol.where("stamp","==",stamp).get();
+  s.forEach(x=>x.ref.delete());
+}
+function renderReportList(){
+  let list=[...reportData].sort((a,b)=>b.stamp-a.stamp);
+  document.getElementById("reportBody").innerHTML=list.map(x=>`
+  <tr><td>${x.title}</td><td style="font-size:12px;">${x.content.substring(0,28)}${x.content.length>28?"…":""}</td>
+  <td><button class='btn-delete' onclick='delReport(${x.stamp})'>刪</button></td></tr>`).join("");
 }
 </script>
 </body>
