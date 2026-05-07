@@ -310,6 +310,21 @@ input#importFile { display: none; }
   color:var(--success);
   margin-bottom:8px;
 }
+
+/* 清除全部數據按鈕樣式 */
+.btn-danger-full {
+  width: 100%;
+  padding: 14px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 20px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.btn-danger-full:active { opacity: 0.9; transform: scale(0.99); }
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -384,7 +399,7 @@ input#importFile { display: none; }
       <div class="stat-grid">
         <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
-        <div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
+        <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">本月最高單筆</div><div class="stat-num" id="monthMax">0 ml</div></div>
       </div>
     </div>
@@ -443,6 +458,11 @@ input#importFile { display: none; }
         <button class="btn-import" onclick="importParaCSV()">📥 匯入CSV</button>
       </div>
     </div>
+  </div>
+
+  <!-- 🔥 清除所有數據按鈕 -->
+  <div style="margin-top:20px;">
+    <button class="btn-danger-full" onclick="showClearAllConfirm()">⚠️ 清除所有貓咪全部數據</button>
   </div>
 
 </div>
@@ -907,6 +927,44 @@ function importParaCSV() {
     alert(`驅蟲匯入完成：${count} 筆`);
   };
   input.click();
+}
+
+// ==============================================
+// 🔥 清除所有貓咪所有數據（密碼驗證）
+// ==============================================
+function showClearAllConfirm() {
+  if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) {
+    return;
+  }
+
+  const inputPwd = prompt("請輸入登入密碼以確認清除：");
+  if (!inputPwd) return;
+
+  if (!validPws.includes(inputPwd.trim())) {
+    alert("❌ 密碼錯誤，無法清除！");
+    return;
+  }
+
+  clearAllCatsAllData();
+}
+
+async function clearAllCatsAllData() {
+  try {
+    for (const cat of catList) {
+      const catId = cat.id;
+      const colls = [`catWater_${catId}`, `catWeight_${catId}`, `catDeworm_${catId}`];
+
+      for (const collName of colls) {
+        const snap = await db.collection(collName).get();
+        const batch = db.batch();
+        snap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+      }
+    }
+    alert("✅ 所有貓咪全部數據已清除完成！");
+  } catch (err) {
+    alert("❌ 清除失敗：" + err.message);
+  }
 }
 </script>
 </body>
