@@ -28,7 +28,7 @@
   --card-bg: #ffffff;
   --text-main: #506473;
   --primary: #478fb8;
-  --primary-light: rgba(71, 143, 184, 0.12);
+  --primary-light: rgba(71,143,184,0.12);
   --border-color: #dce9f2;
   --input-bg: #f9fbfe;
   --btn-gray: #d7e3ec;
@@ -47,7 +47,7 @@
   --card-bg: #242c37;
   --text-main: #cbd5e0;
   --primary: #63b3e0;
-  --primary-light: rgba(99, 179, 224, 0.15);
+  --primary-light: rgba(99,179,224,0.15);
   --border-color: #3a4756;
   --input-bg: #2d3743;
   --btn-gray: #3a4756;
@@ -161,7 +161,7 @@ body {
   border-radius: 28px;
   padding: 20px 18px;
   margin-bottom: 16px;
-  box-shadow: 0 8px 24px rgba(71, 143, 184, 0.08);
+  box-shadow: 0 8px 24px rgba(71,143,184,0.08);
   overflow: hidden;
 }
 
@@ -692,11 +692,28 @@ async function delOne(stamp){
   snap.forEach(d=>d.ref.delete());
 }
 
+// 🔥 清空今日 + 密碼驗證
 async function clearDayRecord(){
+  // 1. 第一次確認
+  if(!confirm("⚠️ 確定要清空「當天選取日期」的所有飲水紀錄嗎？")) return;
+  
+  // 2. 要求輸入密碼
+  const inputPwd = prompt("請輸入登入密碼以確認清空：");
+  if (!inputPwd) return;
+  
+  // 3. 驗證密碼
+  if (!validPws.includes(inputPwd.trim())) {
+    alert("❌ 密碼錯誤，無法清空！");
+    return;
+  }
+
+  // 4. 密碼正確，執行清空
   const d=document.getElementById("selectDate").value;
-  if(!confirm("確定清空今日所有紀錄？"))return;
   const snap=await waterCol.where("date","==",d).get();
-  const b=db.batch(); snap.forEach(d=>b.delete(d.ref)); await b.commit();
+  const b=db.batch(); 
+  snap.forEach(d=>b.delete(d.ref)); 
+  await b.commit();
+  alert("✅ 今日飲水紀錄已清空！");
 }
 
 function exportCSV(){
