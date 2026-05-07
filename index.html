@@ -384,7 +384,7 @@ input#importFile { display: none; }
       <div class="stat-grid">
         <div class="stat-item"><div class="stat-label">近7日日均飲水</div><div class="stat-num" id="weekAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">近7日總飲水量</div><div class="stat-num" id="weekTotal">0 ml</div></div>
-        <div class="stat-item"><div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
+        <div class="stat-label">本月日均飲水</div><div class="stat-num" id="monthAvg">0 ml</div></div>
         <div class="stat-item"><div class="stat-label">本月最高單筆</div><div class="stat-num" id="monthMax">0 ml</div></div>
       </div>
     </div>
@@ -559,7 +559,7 @@ let currentCatName = "波波";
 
 let waterUnsubscribe = null;
 let weightUnsubscribe = null;
-let dewormUnsubscribe = null;
+dewormUnsubscribe = null;
 
 function initCatSystem(){
   renderCatSelect();
@@ -691,8 +691,17 @@ function exportCSV(){
 
 function triggerImport(){document.getElementById("importFile").click();}
 
+// ------------ 匯入CSV改為「覆蓋模式」修復 ------------
 async function importCSV(e){
   const f=e.target.files[0];if(!f)return;
+  
+  // 匯入前 → 先清空這隻貓的所有飲水紀錄（覆蓋）
+  if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
+  const snapAll = await waterCol.get();
+  const batch = db.batch();
+  snapAll.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+
   const r=new FileReader();
   r.onload=async ev=>{
     const lines=ev.target.result.split("\n").filter(l=>l.trim());
@@ -705,7 +714,7 @@ async function importCSV(e){
         count++;
       }
     }
-    alert(`匯入完成：${count} 筆`);
+    alert(`覆蓋匯入完成：${count} 筆`);
   };
   r.readAsText(f);
 }
