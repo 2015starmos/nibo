@@ -772,7 +772,7 @@ function calcStat(){
 
 function renderPage(){
   const d=document.getElementById("selectDate").value;
-  const list=recordData.filter(x=>x.date===d).sort((a,b)=>a.time.localeCompare(b.time));
+const list=recordData.filter(x=>x.date===d).sort((a,b)=>b.time.localeCompare(a.time));
   const total=list.reduce((s,x)=>s+x.ml,0);
   let cls="text-low",tip="";
   if(total>=150&&total<=210){cls="text-normal";tip="<div class='warn-high'>✅ 達標</div>"}
