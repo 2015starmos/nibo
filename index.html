@@ -268,6 +268,7 @@ input#importFile { display: none; }
   width: 100%;
   border-collapse: separate;
   border-spacing: 0 8px;
+  table-layout: fixed;
 }
 .record-table th {
   background: var(--table-head);
@@ -275,12 +276,14 @@ input#importFile { display: none; }
   padding: 10px 4px;
   border-radius: 14px;
   font-weight: 500;
+  font-size:13px;
 }
 .record-table td {
   background: var(--table-bg);
   text-align: center;
   padding: 10px 4px;
   font-size: 14px;
+  word-break:break-word;
 }
 
 .stat-grid {
@@ -311,7 +314,6 @@ input#importFile { display: none; }
   margin-bottom:8px;
 }
 
-/* 清除全部數據按鈕樣式 */
 .btn-danger-full {
   width: 100%;
   padding: 14px;
@@ -362,7 +364,6 @@ input#importFile { display: none; }
     <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
   </div>
 
-  <!-- 飲水 -->
   <div class="tab-content active" id="tab-water">
     <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
     <div class="ui-card">
@@ -393,10 +394,8 @@ input#importFile { display: none; }
       </div>
       <input type="file" id="importFile" accept=".csv" onchange="importCSV(event)">
     </div>
-
   </div>
 
-  <!-- 體重 -->
   <div class="tab-content" id="tab-weight">
     <div class="info-banner">⚖️ 體重趨勢追蹤｜自動計算增減</div>
     <div class="ui-card">
@@ -414,8 +413,9 @@ input#importFile { display: none; }
       </table>
       <div class="btn-row">
         <button class="btn-export" onclick="exportWeightCSV()">📤 匯出CSV</button>
-        <button class="btn-import" onclick="importWeightCSV()">📥 匯入CSV</button>
+        <button class="btn-import" onclick="triggerWeightImport()">📥 匯入CSV</button>
       </div>
+      <input type="file" id="importWeightFile" accept=".csv" style="display:none;" onchange="importWeightCSV(event)">
     </div>
 
     <div class="ui-card">
@@ -429,16 +429,15 @@ input#importFile { display: none; }
     </div>
   </div>
 
-  <!-- 體外驅蟲 -->
   <div class="tab-content" id="tab-deworm">
     <div class="info-banner">🪲 體外驅蟲紀錄｜提醒下次使用時間</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="dewormDate">
-<select class="form-input" id="dewormDrug">
-  <option value="">請選擇藥品</option>
-  <option value="全能貓">全能貓</option>
-  <option value="寵愛">寵愛</option>
-</select>
+      <select class="form-input" id="dewormDrug">
+        <option value="">請選擇藥品</option>
+        <option value="全能貓">全能貓</option>
+        <option value="寵愛">寵愛</option>
+      </select>
       <input class="form-input" type="date" id="dewormNext" placeholder="預計下次使用日期">
       <button class="btn-primary" onclick="addDeworm()">✅ 新增驅蟲紀錄</button>
     </div>
@@ -450,12 +449,12 @@ input#importFile { display: none; }
       </table>
       <div class="btn-row">
         <button class="btn-export" onclick="exportParaCSV()">📤 匯出CSV</button>
-        <button class="btn-import" onclick="importParaCSV()">📥 匯入CSV</button>
+        <button class="btn-import" onclick="triggerParaImport()">📥 匯入CSV</button>
       </div>
+      <input type="file" id="importParaFile" accept=".csv" style="display:none;" onchange="importParaCSV(event)">
     </div>
   </div>
 
-  <!-- 🔥 清除所有數據按鈕 -->
   <div style="margin-top:20px;">
     <button class="btn-danger-full" onclick="showClearAllConfirm()">⚠️ 清除所有貓咪全部數據</button>
   </div>
@@ -464,16 +463,14 @@ input#importFile { display: none; }
 </div>
 
 <script>
-// 防護
 document.oncontextmenu = () => false;
 document.addEventListener('keydown',e=>{
-  if(e.keyCode===123) return false;
-  if(e.ctrlKey&&e.keyCode===85)return false;
-  if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)return false;
-  if(e.ctrlKey&&e.keyCode===83)return false;
+  if(e.keyCode===123) e.preventDefault();
+  if(e.ctrlKey&&e.keyCode===85)e.preventDefault();
+  if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)e.preventDefault();
+  if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
-// ===== 登入模組：記住密碼 + 4小時自動登出 =====
 const validPws = ["0963612120", "0952867812", "ha821208"];
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
@@ -502,7 +499,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 深色模式還原
   if(localStorage.getItem('darkMode') === 'true'){
     darkMode = true;
     document.body.classList.add('dark-mode');
@@ -555,7 +551,6 @@ function startLoginExpireCheck(){
   }, 5000);
 }
 
-// Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
   authDomain: "naibo-health.firebaseapp.com",
@@ -567,7 +562,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 多貓核心
 let currentCat = "default";
 let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
 let currentCatName = "波波";
@@ -666,7 +660,6 @@ function toggleDarkMode(){
   localStorage.setItem('darkMode', darkMode);
 }
 
-// ---------------- 飲水 ----------------
 function quickAdd(v){
   document.getElementById("waterML").value=v;
   addRecord();
@@ -687,7 +680,6 @@ async function delOne(stamp){
   snap.forEach(d=>d.ref.delete());
 }
 
-// 🔥 清空今日 + 密碼驗證 + 防空白
 async function clearDayRecord(){
   if(!confirm("⚠️ 確定要清空「當天選取日期」的所有飲水紀錄嗎？")) return;
   
@@ -721,6 +713,7 @@ function exportCSV(){
   a.href=URL.createObjectURL(new Blob([csv]));
   a.download=`${currentCatName}_飲水紀錄.csv`;
   a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
 
 function triggerImport(){document.getElementById("importFile").click();}
@@ -747,6 +740,7 @@ async function importCSV(e){
       }
     }
     alert(`覆蓋匯入完成：${count} 筆`);
+    document.getElementById("importFile").value = "";
   };
   r.readAsText(f);
 }
@@ -769,7 +763,6 @@ function renderPage(){
 
 document.getElementById("selectDate").addEventListener("change",renderPage);
 
-// ---------------- 體重 ----------------
 async function addWeight(){
   const d=document.getElementById("weightDate").value;
   const v=parseFloat(document.getElementById("weightVal").value);
@@ -810,7 +803,6 @@ function renderWeight(){
   }
 }
 
-// ---------------- 體外驅蟲 ----------------
 async function addDeworm(){
   const d=document.getElementById("dewormDate").value;
   const drug=document.getElementById("dewormDrug").value.trim();
@@ -838,14 +830,8 @@ function renderDeworm(){
   </tr>`).join("");
 }
 
-// ==============================================
-// 體重 CSV 匯出 / 匯入
-// ==============================================
 function exportWeightCSV() {
-  if (!Array.isArray(weightData) || weightData.length === 0) {
-    alert("目前沒有體重紀錄可匯出");
-    return;
-  }
+  if (!weightData.length) {alert("目前沒有體重紀錄");return;}
   let csv = "\uFEFF日期,體重(kg),備註\n";
   weightData.forEach(item => {
     const d = (item.date || "").trim();
@@ -854,44 +840,33 @@ function exportWeightCSV() {
     csv += `"${d}","${w}","${n}"\n`;
   });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.href = URL.createObjectURL(new Blob([csv]));
   a.download = `${currentCatName}_體重紀錄.csv`;
   a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
 
-function importWeightCSV() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".csv";
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const text = await file.text();
-    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
-    let count = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      const date = parts[0];
-      const weight = parts[1];
-      const note = parts[2] || "";
-      if (!date || !weight || isNaN(parseFloat(weight))) continue;
-      await weightCol.add({ date, weight, note, stamp: Date.now() + i });
-      count++;
-    }
-    alert(`體重匯入完成：${count} 筆`);
-  };
-  input.click();
-}
-
-// ==============================================
-// 體外驅蟲 CSV 匯出 / 匯入
-// ==============================================
-function exportParaCSV() {
-  if (!Array.isArray(dewormData) || dewormData.length === 0) {
-    alert("目前沒有體外驅蟲紀錄可匯出");
-    return;
+function triggerWeightImport(){document.getElementById("importWeightFile").click();}
+async function importWeightCSV(e){
+  const file = e.target.files[0];if(!file)return;
+  if(!confirm("匯入會新增資料，確定？"))return;
+  const text = await file.text();
+  const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l=>l.trim());
+  let count=0;
+  for(let i=1;i<lines.length;i++){
+    const parts=lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
+    const date=parts[0], weight=parts[1], note=parts[2]||"";
+    if(!date||!weight||isNaN(parseFloat(weight)))continue;
+    await weightCol.add({date,weight,note,stamp:Date.now()+i});
+    count++;
   }
-  let csv = "\uFEFF日期,藥品/品牌,下次到期日\n";
+  alert(`體重匯入完成：${count} 筆`);
+  document.getElementById("importWeightFile").value="";
+}
+
+function exportParaCSV() {
+  if (!dewormData.length) {alert("目前沒有驅蟲紀錄");return;}
+  let csv = "\uFEFF日期,藥品,下次日期\n";
   dewormData.forEach(item => {
     const d = (item.date || "").trim();
     const drug = (item.drug || "").replace(/"/g, '""').trim();
@@ -899,42 +874,32 @@ function exportParaCSV() {
     csv += `"${d}","${drug}","${next}"\n`;
   });
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
-  a.download = `${currentCatName}_體外驅蟲.csv`;
+  a.href = URL.createObjectURL(new Blob([csv]));
+  a.download = `${currentCatName}_驅蟲紀錄.csv`;
   a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
 
-function importParaCSV() {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.accept = ".csv";
-  input.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const text = await file.text();
-    const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l => l.trim());
-    let count = 0;
-    for (let i = 1; i < lines.length; i++) {
-      const parts = lines[i].split(",").map(p => p.replace(/^"|"$/g, "").trim());
-      const date = parts[0];
-      const drug = parts[1];
-      const nextDate = parts[2] || "";
-      if (!date || !drug) continue;
-      await dewormCol.add({ date, drug, nextDate, stamp: Date.now() + i });
-      count++;
-    }
-    alert(`驅蟲匯入完成：${count} 筆`);
-  };
-  input.click();
-}
-
-// ==============================================
-// 🔥 清除所有貓咪所有數據（密碼驗證 + 防空白）
-// ==============================================
-function showClearAllConfirm() {
-  if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) {
-    return;
+function triggerParaImport(){document.getElementById("importParaFile").click();}
+async function importParaCSV(e){
+  const file=e.target.files[0];if(!file)return;
+  if(!confirm("匯入會新增資料，確定？"))return;
+  const text=await file.text();
+  const lines=text.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
+  let count=0;
+  for(let i=1;i<lines.length;i++){
+    const parts=lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
+    const date=parts[0], drug=parts[1], nextDate=parts[2]||"";
+    if(!date||!drug)continue;
+    await dewormCol.add({date,drug,nextDate,stamp:Date.now()+i});
+    count++;
   }
+  alert(`驅蟲匯入完成：${count} 筆`);
+  document.getElementById("importParaFile").value="";
+}
+
+function showClearAllConfirm() {
+  if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) return;
 
   let inputPwd = "";
   while(true){
@@ -942,23 +907,16 @@ function showClearAllConfirm() {
     if(inputPwd === null) return;
     inputPwd = inputPwd.trim();
     if(inputPwd !== "") break;
-    alert("❌ 不可以輸入空白，請輸入密碼！");
+    alert("❌ 不可以空白！");
   }
-
-  if (!validPws.includes(inputPwd)) {
-    alert("❌ 密碼錯誤，無法清除！");
-    return;
-  }
-
+  if (!validPws.includes(inputPwd)) {alert("❌ 密碼錯誤");return;}
   clearAllCatsAllData();
 }
 
 async function clearAllCatsAllData() {
   try {
     for (const cat of catList) {
-      const catId = cat.id;
-      const colls = [`catWater_${catId}`, `catWeight_${catId}`, `catDeworm_${catId}`];
-
+      const colls = [`catWater_${cat.id}`, `catWeight_${cat.id}`, `catDeworm_${cat.id}`];
       for (const collName of colls) {
         const snap = await db.collection(collName).get();
         const batch = db.batch();
@@ -966,9 +924,9 @@ async function clearAllCatsAllData() {
         await batch.commit();
       }
     }
-    alert("✅ 所有貓咪全部數據已清除完成！");
+    alert("✅ 所有數據已清除！");
   } catch (err) {
-    alert("❌ 清除失敗：" + err.message);
+    alert("❌ 失敗："+err.message);
   }
 }
 </script>
