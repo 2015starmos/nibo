@@ -394,7 +394,7 @@ input#importFile { display: none; }
       <input type="file" id="importFile" accept=".csv" onchange="importCSV(event)">
     </div>
 
-    
+  </div>
 
   <!-- 體重 -->
   <div class="tab-content" id="tab-weight">
@@ -570,7 +570,7 @@ let currentCatName = "波波";
 
 let waterUnsubscribe = null;
 let weightUnsubscribe = null;
-dewormUnsubscribe = null;
+let dewormUnsubscribe = null;
 
 function initCatSystem(){
   renderCatSelect();
@@ -683,22 +683,24 @@ async function delOne(stamp){
   snap.forEach(d=>d.ref.delete());
 }
 
-// 🔥 清空今日 + 密碼驗證
+// 🔥 清空今日 + 密碼驗證 + 防空白
 async function clearDayRecord(){
-  // 1. 第一次確認
   if(!confirm("⚠️ 確定要清空「當天選取日期」的所有飲水紀錄嗎？")) return;
   
-  // 2. 要求輸入密碼
-  const inputPwd = prompt("請輸入登入密碼以確認清空：");
-  if (!inputPwd) return;
-  
-  // 3. 驗證密碼
-  if (!validPws.includes(inputPwd.trim())) {
+  let inputPwd = "";
+  while(true){
+    inputPwd = prompt("請輸入登入密碼以確認清空：");
+    if(inputPwd === null) return;
+    inputPwd = inputPwd.trim();
+    if(inputPwd !== "") break;
+    alert("❌ 不可以輸入空白，請輸入密碼！");
+  }
+
+  if (!validPws.includes(inputPwd)) {
     alert("❌ 密碼錯誤，無法清空！");
     return;
   }
 
-  // 4. 密碼正確，執行清空
   const d=document.getElementById("selectDate").value;
   const snap=await waterCol.where("date","==",d).get();
   const b=db.batch(); 
@@ -719,11 +721,9 @@ function exportCSV(){
 
 function triggerImport(){document.getElementById("importFile").click();}
 
-// ------------ 匯入CSV改為「覆蓋模式」修復 ------------
 async function importCSV(e){
   const f=e.target.files[0];if(!f)return;
   
-  // 匯入前 → 先清空這隻貓的所有飲水紀錄（覆蓋）
   if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
   const snapAll = await waterCol.get();
   const batch = db.batch();
@@ -751,7 +751,7 @@ function getDayDiff(a,b){return Math.floor((new Date(a)-new Date(b))/86400000)}
   
 function renderPage(){
   const d=document.getElementById("selectDate").value;
-const list=recordData.filter(x=>x.date===d).sort((a,b)=>b.time.localeCompare(a.time));
+  const list=recordData.filter(x=>x.date===d).sort((a,b)=>b.time.localeCompare(a.time));
   const total=list.reduce((s,x)=>s+x.ml,0);
   let cls="text-low",tip="";
   if(total>=150&&total<=210){cls="text-normal";tip="<div class='warn-high'>✅ 達標</div>"}
@@ -925,35 +925,28 @@ function importParaCSV() {
 }
 
 // ==============================================
-// 🔥 清除所有貓咪所有數據（密碼驗證）
+// 🔥 清除所有貓咪所有數據（密碼驗證 + 防空白）
 // ==============================================
-async function clearDayRecord(){
-  // 1. 第一次確認
-  if(!confirm("⚠️ 確定要清空「當天選取日期」的所有飲水紀錄嗎？")) return;
-  
-  // 2. 要求輸入密碼 + 防空白
+function showClearAllConfirm() {
+  if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) {
+    return;
+  }
+
   let inputPwd = "";
   while(true){
-    inputPwd = prompt("請輸入登入密碼以確認清空：");
+    inputPwd = prompt("請輸入登入密碼以確認清除：");
     if(inputPwd === null) return;
     inputPwd = inputPwd.trim();
     if(inputPwd !== "") break;
     alert("❌ 不可以輸入空白，請輸入密碼！");
   }
 
-  // 3. 驗證密碼
   if (!validPws.includes(inputPwd)) {
-    alert("❌ 密碼錯誤，無法清空！");
+    alert("❌ 密碼錯誤，無法清除！");
     return;
   }
 
-  // 4. 密碼正確，執行清空
-  const d=document.getElementById("selectDate").value;
-  const snap=await waterCol.where("date","==",d).get();
-  const b=db.batch(); 
-  snap.forEach(d=>b.delete(d.ref)); 
-  await b.commit();
-  alert("✅ 今日飲水紀錄已清空！");
+  clearAllCatsAllData();
 }
 
 async function clearAllCatsAllData() {
