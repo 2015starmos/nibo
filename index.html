@@ -748,19 +748,7 @@ async function importCSV(e){
 }
 
 function getDayDiff(a,b){return Math.floor((new Date(a)-new Date(b))/86400000)}
-
-function calcStat(){
-  const today=new Date().toISOString().split('T')[0];
-  const w=recordData.filter(x=>getDayDiff(today,x.date)<7);
-  const wTotal=w.reduce((s,x)=>s+x.ml,0);
-  const m=recordData.filter(x=>x.date.startsWith(today.slice(0,7)));
-  const mMax=m.length?Math.max(...m.map(x=>x.ml)):0;
-  document.getElementById("weekAvg").innerText=Math.round(wTotal/Math.max(w.length,1))+" ml";
-  document.getElementById("weekTotal").innerText=wTotal+" ml";
-  document.getElementById("monthAvg").innerText=Math.round(m.reduce((s,x)=>s+x.ml,0)/Math.max(m.length,1))+" ml";
-  document.getElementById("monthMax").innerText=mMax+" ml";
-}
-
+  
 function renderPage(){
   const d=document.getElementById("selectDate").value;
 const list=recordData.filter(x=>x.date===d).sort((a,b)=>b.time.localeCompare(a.time));
@@ -773,7 +761,6 @@ const list=recordData.filter(x=>x.date===d).sort((a,b)=>b.time.localeCompare(a.t
   document.getElementById("warnTip").innerHTML=tip;
   document.getElementById("recordBody").innerHTML=list.map(x=>`
   <tr><td>${x.time}</td><td>${x.ml}ml</td><td><button class='btn-delete' onclick='delOne(${x.stamp})'>刪</button></td></tr>`).join("");
-  calcStat();
 }
 
 document.getElementById("selectDate").addEventListener("change",renderPage);
