@@ -940,20 +940,33 @@ function importParaCSV() {
 // ==============================================
 // 🔥 清除所有貓咪所有數據（密碼驗證）
 // ==============================================
-function showClearAllConfirm() {
-  if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) {
+async function clearDayRecord(){
+  // 1. 第一次確認
+  if(!confirm("⚠️ 確定要清空「當天選取日期」的所有飲水紀錄嗎？")) return;
+  
+  // 2. 要求輸入密碼 + 防空白
+  let inputPwd = "";
+  while(true){
+    inputPwd = prompt("請輸入登入密碼以確認清空：");
+    if(inputPwd === null) return;
+    inputPwd = inputPwd.trim();
+    if(inputPwd !== "") break;
+    alert("❌ 不可以輸入空白，請輸入密碼！");
+  }
+
+  // 3. 驗證密碼
+  if (!validPws.includes(inputPwd)) {
+    alert("❌ 密碼錯誤，無法清空！");
     return;
   }
 
-  const inputPwd = prompt("請輸入登入密碼以確認清除：");
-  if (!inputPwd) return;
-
-  if (!validPws.includes(inputPwd.trim())) {
-    alert("❌ 密碼錯誤，無法清除！");
-    return;
-  }
-
-  clearAllCatsAllData();
+  // 4. 密碼正確，執行清空
+  const d=document.getElementById("selectDate").value;
+  const snap=await waterCol.where("date","==",d).get();
+  const b=db.batch(); 
+  snap.forEach(d=>b.delete(d.ref)); 
+  await b.commit();
+  alert("✅ 今日飲水紀錄已清空！");
 }
 
 async function clearAllCatsAllData() {
