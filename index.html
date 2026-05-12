@@ -966,6 +966,48 @@ async function clearAllCatsAllData() {
     alert("❌ 失敗："+err.message);
   }
 }
+//========== Discord 指令自動新增波波飲水 ==========
+function getMlFromMessage(text){
+  const res = text.match(/\d+/);
+  if(!res) return 0;
+  let num = parseInt(res[0]);
+  return num >= 10 && num <= 500 ? num : 0;
+}
+
+async function discordAutoAddWater(msgText){
+  let ml = getMlFromMessage(msgText);
+  if(ml === 0) return "無法解析水量";
+
+  currentCat = "default";
+  currentCatName = "波波";
+  await switchCat();
+
+  const now = new Date();
+  const d = now.toISOString().split('T')[0];
+  const t = now.toTimeString().slice(0,5);
+
+  await waterCol.add({
+    date:d,
+    time:t,
+    ml:ml,
+    stamp:Date.now()
+  });
+
+  return `✅ 已幫波波新增 ${ml}ml 飲水紀錄`;
+}
+
+// 接收 GitHub Pages 網址帶參數
+(function(){
+  const params = new URLSearchParams(location.search);
+  const cmd = params.get("cmd");
+  if(cmd){
+    discordAutoAddWater(cmd).then(ret=>{
+      alert(ret);
+      history.replaceState({},document.title,location.pathname);
+    });
+  }
+})();
+//================================================
 </script>
 </body>
 </html>
