@@ -472,29 +472,6 @@ document.addEventListener('keydown',e=>{
 });
 
 const validPws = ["0963612120", "0952867812", "ha821208"];
-  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1503726239687381113/SE3KF6ZMimy8kCxkXn5N5FqqwcrqmRLoe-7eZ69uJKvjN1S5HLl9RISxvyEaKXtMJqxq";
-
-async function sendDiscordMessage(content) {
-  if (!DISCORD_WEBHOOK_URL) return;
-  try {
-    // 用公共CORS代理繞過本機跨域限制
-    const proxy = "https://api.allorigins.win/raw?url=";
-    const targetUrl = encodeURIComponent(DISCORD_WEBHOOK_URL);
-
-    await fetch(proxy + targetUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        username: "波波健康小幫手",
-        avatar_url: "https://cdn-icons-png.flaticon.com/512/105/105685.png",
-        content: content
-      })
-    });
-    console.log("✅ Discord 推送成功:", content);
-  } catch (err) {
-    console.error("❌ Discord 推送失敗:", err);
-  }
-}
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
 
@@ -695,10 +672,6 @@ async function addRecord(){
   if(!d||!t||isNaN(ml)||ml<1)return alert("請輸入正確水量");
   await waterCol.add({date:d,time:t,ml,stamp:Date.now()});
   document.getElementById("waterML").value="";
-
-  // 推送 Discord 通知
-  const msg = `🐾【${currentCatName} 飲水紀錄】\n日期：${d}\n時間：${t}\n飲水量：${ml} ml`;
-  sendDiscordMessage(msg);
 }
 
 async function delOne(stamp){
@@ -798,11 +771,6 @@ async function addWeight(){
   await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
   document.getElementById("weightVal").value="";
   document.getElementById("weightNote").value="";
-
-  // 推送 Discord 通知
-  const noteStr = n ? `\n備註：${n}` : "";
-  const msg = `🐾【${currentCatName} 體重紀錄】\n日期：${d}\n體重：${parseFloat(v).toFixed(2)} kg${noteStr}`;
-  sendDiscordMessage(msg);
 }
 
 async function delWeight(stamp){
@@ -843,11 +811,6 @@ async function addDeworm(){
   await dewormCol.add({date:d,drug,nextDate:next,stamp:Date.now()});
   document.getElementById("dewormDrug").value="";
   document.getElementById("dewormNext").value="";
-
-  // 推送 Discord 通知
-  const nextStr = next ? `\n下次預計：${next}` : "";
-  const msg = `🐛【${currentCatName} 驅蟲紀錄】\n日期：${d}\n藥品：${drug}${nextStr}`;
-  sendDiscordMessage(msg);
 }
 
 async function delDeworm(stamp){
@@ -966,58 +929,6 @@ async function clearAllCatsAllData() {
     alert("❌ 失敗："+err.message);
   }
 }
-//===== 簡單一鍵輸入Discord指令 自動解析新增 =====
-function getMlFromText(text){
-  const m = text.match(/\d+/);
-  if(!m) return 0;
-  let num = parseInt(m[0]);
-  return num >=10 && num <=500 ? num : 0;
-}
-
-async function manualInputDiscordCmd(){
-  let cmd = prompt("請貼上Discord打的指令：\n例如：喝水50、50ML、ML60");
-  if(!cmd) return;
-
-  let ml = getMlFromText(cmd);
-  if(ml === 0){
-    alert("❌ 無法解析有效水量，請重新輸入");
-    return;
-  }
-
-  // 固定切換到波波
-  currentCat = "default";
-  currentCatName = "波波";
-  await switchCat();
-
-  // 自動帶現在日期時間
-  const now = new Date();
-  const d = now.toISOString().split('T')[0];
-  const t = now.toTimeString().slice(0,5);
-
-  // 直接寫入 Firebase
-  await waterCol.add({
-    date:d,
-    time:t,
-    ml:ml,
-    stamp:Date.now()
-  });
-
-  alert(`✅ 成功幫波波新增 ${ml}ml 飲水紀錄`);
-  renderPage();
-}
-
-// 頁面加入按鈕
-window.addEventListener("load", ()=>{
-  const btn = document.createElement("button");
-  btn.innerText = "📥 輸入Discord喝水指令";
-  btn.style.cssText = `
-    width:100%;margin:12px 0;padding:14px;border:none;
-    border-radius:20px;background:#478fb8;color:white;
-    font-size:16px;font-weight:bold;cursor:pointer;
-  `;
-  document.querySelector(".tab-wrap").after(btn);
-  btn.onclick = manualInputDiscordCmd;
-});
 </script>
 </body>
 </html>
