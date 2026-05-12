@@ -477,13 +477,22 @@ const validPws = ["0963612120", "0952867812", "ha821208"];
 async function sendDiscordMessage(content) {
   if (!DISCORD_WEBHOOK_URL) return;
   try {
-    await fetch(DISCORD_WEBHOOK_URL, {
+    // 用公共CORS代理繞過本機跨域限制
+    const proxy = "https://api.allorigins.win/raw?url=";
+    const targetUrl = encodeURIComponent(DISCORD_WEBHOOK_URL);
+
+    await fetch(proxy + targetUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content })
+      body: JSON.stringify({
+        username: "波波健康小幫手",
+        avatar_url: "https://cdn-icons-png.flaticon.com/512/105/105685.png",
+        content: content
+      })
     });
+    console.log("✅ Discord 推送成功:", content);
   } catch (err) {
-    console.error("Discord 推送失敗:", err);
+    console.error("❌ Discord 推送失敗:", err);
   }
 }
 const LOGIN_EXPIRE_HOUR = 4;
