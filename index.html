@@ -472,6 +472,20 @@ document.addEventListener('keydown',e=>{
 });
 
 const validPws = ["0963612120", "0952867812", "ha821208"];
+  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1503726239687381113/SE3KF6ZMimy8kCxkXn5N5FqqwcrqmRLoe-7eZ69uJKvjN1S5HLl9RISxvyEaKXtMJqxq";
+
+async function sendDiscordMessage(content) {
+  if (!DISCORD_WEBHOOK_URL) return;
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content })
+    });
+  } catch (err) {
+    console.error("Discord 推送失敗:", err);
+  }
+}
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
 
@@ -672,6 +686,10 @@ async function addRecord(){
   if(!d||!t||isNaN(ml)||ml<1)return alert("請輸入正確水量");
   await waterCol.add({date:d,time:t,ml,stamp:Date.now()});
   document.getElementById("waterML").value="";
+
+  // 推送 Discord 通知
+  const msg = `🐾【${currentCatName} 飲水紀錄】\n日期：${d}\n時間：${t}\n飲水量：${ml} ml`;
+  sendDiscordMessage(msg);
 }
 
 async function delOne(stamp){
@@ -771,6 +789,11 @@ async function addWeight(){
   await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
   document.getElementById("weightVal").value="";
   document.getElementById("weightNote").value="";
+
+  // 推送 Discord 通知
+  const noteStr = n ? `\n備註：${n}` : "";
+  const msg = `🐾【${currentCatName} 體重紀錄】\n日期：${d}\n體重：${parseFloat(v).toFixed(2)} kg${noteStr}`;
+  sendDiscordMessage(msg);
 }
 
 async function delWeight(stamp){
@@ -811,6 +834,11 @@ async function addDeworm(){
   await dewormCol.add({date:d,drug,nextDate:next,stamp:Date.now()});
   document.getElementById("dewormDrug").value="";
   document.getElementById("dewormNext").value="";
+
+  // 推送 Discord 通知
+  const nextStr = next ? `\n下次預計：${next}` : "";
+  const msg = `🐛【${currentCatName} 驅蟲紀錄】\n日期：${d}\n藥品：${drug}${nextStr}`;
+  sendDiscordMessage(msg);
 }
 
 async function delDeworm(stamp){
