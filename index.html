@@ -966,75 +966,57 @@ async function clearAllCatsAllData() {
     alert("❌ 失敗："+err.message);
   }
 }
-//========== Discord 指令自動新增波波飲水 ==========
-function getMlFromMessage(text){
-  const res = text.match(/\d+/);
-  if(!res) return 0;
-  let num = parseInt(res[0]);
-  return num >= 10 && num <= 500 ? num : 0;
+//===== 簡單一鍵輸入Discord指令 自動解析新增 =====
+function getMlFromText(text){
+  const m = text.match(/\d+/);
+  if(!m) return 0;
+  let num = parseInt(m[0]);
+  return num >=10 && num <=500 ? num : 0;
 }
 
-// 手動一鍵同步 Discord 飲水指令（支援所有格式）
-async function syncDiscordWater() {
-  const CHANNEL_ID = "1503726238507790383"; // 你的 Discord 頻道ID
-  const TOKEN = ""; // 這裡不用填，下面會教你用簡單方式
-  let addCount = 0;
+async function manualInputDiscordCmd(){
+  let cmd = prompt("請貼上Discord打的指令：\n例如：喝水50、50ML、ML60");
+  if(!cmd) return;
 
-  // 1. 手動複製頻道訊息JSON貼過來（簡單又穩定，不會有權限問題）
-  const messagesText = prompt("請複製 Discord 頻道訊息的 JSON 貼在這裡（教學看下面）：");
-  if (!messagesText) return alert("已取消同步");
-
-  try {
-    const messages = JSON.parse(messagesText);
-
-    for (const msg of messages) {
-      const text = msg.content.toLowerCase();
-      const match = text.match(/\d+/);
-      if (!match) continue;
-
-      const ml = parseInt(match[0]);
-      if (ml < 10 || ml > 500) continue;
-
-      // 避免重複新增
-      const exists = recordData.some(r => r.stamp === BigInt(msg.id));
-      if (exists) continue;
-
-      // 固定新增給波波
-      currentCat = "default";
-      currentCatName = "波波";
-      await switchCat();
-
-      const msgTime = new Date(msg.timestamp);
-      const date = msgTime.toISOString().split("T")[0];
-      const time = msgTime.toTimeString().slice(0, 5);
-
-      await waterCol.add({
-        date,
-        time,
-        ml,
-        stamp: Date.now()
-      });
-      addCount++;
-    }
-
-    alert(`✅ 同步完成！新增了 ${addCount} 筆飲水紀錄`);
-    location.reload(); // 重整頁面顯示新資料
-  } catch (err) {
-    alert("❌ 解析失敗，請確認複製的JSON格式正確：" + err.message);
+  let ml = getMlFromText(cmd);
+  if(ml === 0){
+    alert("❌ 無法解析有效水量，請重新輸入");
+    return;
   }
+
+  // 固定切換到波波
+  currentCat = "default";
+  currentCatName = "波波";
+  await switchCat();
+
+  // 自動帶現在日期時間
+  const now = new Date();
+  const d = now.toISOString().split('T')[0];
+  const t = now.toTimeString().slice(0,5);
+
+  // 直接寫入 Firebase
+  await waterCol.add({
+    date:d,
+    time:t,
+    ml:ml,
+    stamp:Date.now()
+  });
+
+  alert(`✅ 成功幫波波新增 ${ml}ml 飲水紀錄`);
+  renderPage();
 }
 
-// 在頁面加入「同步按鈕」
-window.addEventListener("load", () => {
+// 頁面加入按鈕
+window.addEventListener("load", ()=>{
   const btn = document.createElement("button");
-  btn.innerText = "🔄 同步 Discord 飲水指令";
+  btn.innerText = "📥 輸入Discord喝水指令";
   btn.style.cssText = `
-    width: 100%; margin: 12px 0; padding: 14px; border: none;
-    border-radius: 20px; background: #63b3e0; color: white;
-    font-size: 16px; font-weight: bold; cursor: pointer;
+    width:100%;margin:12px 0;padding:14px;border:none;
+    border-radius:20px;background:#478fb8;color:white;
+    font-size:16px;font-weight:bold;cursor:pointer;
   `;
   document.querySelector(".tab-wrap").after(btn);
-  btn.onclick = syncDiscordWater;
+  btn.onclick = manualInputDiscordCmd;
 });
 </script>
 </body>
