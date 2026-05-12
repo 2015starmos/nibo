@@ -364,6 +364,9 @@ input#importFile { display: none; }
     <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
   </div>
 
+  <!-- 🌟 這裡是我幫你新增的 Discord 一鍵按鈕 -->
+  <button id="discordAddBtn" style="width:100%;margin:12px 0;padding:14px;border:none;border-radius:20px;background:#478fb8;color:white;font-size:16px;font-weight:bold;cursor:pointer;">📥 貼上 Discord 喝水指令</button>
+
   <div class="tab-content active" id="tab-water">
     <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
     <div class="ui-card">
@@ -503,6 +506,31 @@ window.addEventListener('DOMContentLoaded', () => {
     darkMode = true;
     document.body.classList.add('dark-mode');
   }
+
+  // 綁定 Discord 按鈕功能
+  document.getElementById("discordAddBtn").onclick = async function(){
+    let cmd = prompt("請貼上你在 Discord 打的指令\n例如：喝水50、50ml、喝30");
+    if(!cmd) return;
+
+    let ml = parseInt(cmd.replace(/\D/g, ''));
+    if(isNaN(ml) || ml < 10 || ml > 500){
+      alert("❌ 請輸入正確水量（10~500ml）");
+      return;
+    }
+
+    const now = new Date();
+    const date = now.toISOString().split('T')[0];
+    const time = now.toTimeString().slice(0,5);
+
+    await waterCol.add({
+      date: date,
+      time: time,
+      ml: ml,
+      stamp: Date.now()
+    });
+
+    alert(`✅ 成功幫波波新增 ${ml}ml 飲水！`);
+  };
 });
 
 function checkInPwd(){
