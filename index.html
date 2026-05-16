@@ -400,7 +400,7 @@ input#importFile { display: none; }
     <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
-      <input class="form-input" type="number" step="0.01" min="0" id="weightVal" placeholder="輸入體重 kg">
+      <input class="form-input" type="number" min="0" id="weightVal" placeholder="輸入體重 kg">
       <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
       <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
     </div>
@@ -765,7 +765,7 @@ document.getElementById("selectDate").addEventListener("change",renderPage);
 
 async function addWeight(){
   const d=document.getElementById("weightDate").value;
-  const v=parseFloat(document.getElementById("weightVal").value);
+  const v=document.getElementById("weightVal").value;
   const n=document.getElementById("weightNote").value;
   if(!d||isNaN(v)||v<=0)return alert("請輸入正確體重");
   await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
@@ -777,30 +777,6 @@ async function delWeight(stamp){
   if(!confirm("確定刪除此筆體重？")) return;
   const s=await weightCol.where("stamp","==",stamp).get();
   s.forEach(x=>x.ref.delete());
-}
-
-function renderWeight(){
-  const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById("weightBody").innerHTML=list.map(x=>`
-  <tr>
-    <td>${x.date}</td>
-    <td>${parseFloat(x.weight).toFixed(2)}</td>
-    <td>${x.note||"-"}</td>
-    <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
-  </tr>`).join("");
-
-  if(list.length){
-    document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
-    const vals=list.map(x=>parseFloat(x.weight));
-    const max=Math.max(...vals).toFixed(2);
-    const min=Math.min(...vals).toFixed(2);
-    const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
-    const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
-    document.getElementById("wMax").innerText=max+" kg";
-    document.getElementById("wMin").innerText=min+" kg";
-    document.getElementById("wAvg").innerText=avg+" kg";
-    document.getElementById("wDiff").innerText=diff+" kg";
-  }
 }
 
 async function addDeworm(){
@@ -828,6 +804,31 @@ function renderDeworm(){
     <td>${x.nextDate||"-"}</td>
     <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td>
   </tr>`).join("");
+}
+
+// 修正後體重渲染函數 無四捨五入
+function renderWeight(){
+  const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("weightBody").innerHTML=list.map(x=>`
+  <tr>
+    <td>${x.date}</td>
+    <td>${x.weight}</td>
+    <td>${x.note||"-"}</td>
+    <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
+  </tr>`).join("");
+
+  if(list.length){
+    document.getElementById("weightLatest").innerText=`最新體重：${list[0].weight} kg`;
+    const vals=list.map(x=>Number(x.weight));
+    const max=Math.max(...vals);
+    const min=Math.min(...vals);
+    const avg=vals.length ? (vals.reduce((s,x)=>s+x,0)/vals.length) : 0;
+    const diff=list.length>=2?(vals[0]-vals[1]):0;
+    document.getElementById("wMax").innerText=max+" kg";
+    document.getElementById("wMin").innerText=min+" kg";
+    document.getElementById("wAvg").innerText=avg+" kg";
+    document.getElementById("wDiff").innerText=diff+" kg";
+  }
 }
 
 function exportWeightCSV() {
