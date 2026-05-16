@@ -327,7 +327,7 @@ input#importFile { display: none; }
   text-align: center;
 }
 .stat-label { font-size: 12px; color: var(--primary); margin-bottom: 3px; }
-.stat-num { font-size: 16px; font-weight: 600; }
+.stat-num { font-size: 16px; font-weight: 600; line-height: 1.3; }
 
 .loading-text {
   text-align:center;
@@ -597,7 +597,6 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
-// 將此陣列改為 let 宣告，便於前端動態更新
 let validPws = ["0963612120", "0952867812", "ha821208"];
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
@@ -745,7 +744,6 @@ function switchCat(){
   listenAllData();
 }
 
-// 監聽並攔截頁籤切換邏輯
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = function(){
     const t = this.dataset.tab;
@@ -898,7 +896,6 @@ function triggerImport(){document.getElementById("importFile").click();}
 async function importCSV(e){
   const f=e.target.files[0];if(!f)return;
   
-  // 依據後台選擇的分類模式決定覆蓋或增量
   const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
   if(isOverwrite) {
     if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
@@ -975,18 +972,30 @@ function renderWeight(){
   if(list.length){
     document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
     const vals=list.map(x=>parseFloat(x.weight));
-    const max=Math.max(...vals).toFixed(2);
-    const min=Math.min(...vals).toFixed(2);
     const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
     const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
-    document.getElementById("wMax").innerText=max+" kg";
-    document.getElementById("wMin").innerText=min+" kg";
+
+    // 🎯 核心更新：精準尋找最高與最低體重對應的年月日
+    let maxItem = list[0];
+    let minItem = list[0];
+    list.forEach(x => {
+      if (parseFloat(x.weight) > parseFloat(maxItem.weight)) {
+        maxItem = x;
+      }
+      if (parseFloat(x.weight) < parseFloat(minItem.weight)) {
+        minItem = x;
+      }
+    });
+
+    // 格式化輸出，將日期以半透明小字顯示在體重下方
+    document.getElementById("wMax").innerHTML=`${parseFloat(maxItem.weight).toFixed(2)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
+    document.getElementById("wMin").innerHTML=`${parseFloat(minItem.weight).toFixed(2)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
     document.getElementById("wAvg").innerText=avg+" kg";
     document.getElementById("wDiff").innerText=diff+" kg";
   } else {
     document.getElementById("weightLatest").innerText=`最新：0 kg`;
-    document.getElementById("wMax").innerText="0 kg";
-    document.getElementById("wMin").innerText="0 kg";
+    document.getElementById("wMax").innerHTML="0 kg";
+    document.getElementById("wMin").innerHTML="0 kg";
     document.getElementById("wAvg").innerText="0 kg";
     document.getElementById("wDiff").innerText="0 kg";
   }
@@ -1141,11 +1150,6 @@ async function clearAllCatsAllData() {
   }
 }
 
-/* ==========================================================================
-   以下為本次新增之「後台延伸功能」控制處理
-   ========================================================================== */
-
-// 渲染後台雲端貓咪檔案名單
 function renderAdminCatList() {
   const container = document.getElementById("adminCatList");
   if(catList.length === 0) {
@@ -1163,7 +1167,6 @@ function renderAdminCatList() {
   `).join("");
 }
 
-// 編輯貓咪名稱
 function editCatName(id) {
   const cat = catList.find(c => c.id === id);
   if(!cat) return;
@@ -1176,7 +1179,6 @@ function editCatName(id) {
   if(currentCat === id) currentCatName = cat.name;
 }
 
-// 刪除貓咪檔案及連帶清除雲端資料
 async function deleteCatProfile(id) {
   const cat = catList.find(c => c.id === id);
   if(!cat) return;
@@ -1205,7 +1207,6 @@ async function deleteCatProfile(id) {
   }
 }
 
-// 密碼變更功能邏輯
 function updateAdminPassword() {
   const oldPwd = document.getElementById("oldAdminPwd").value.trim();
   const newPwd = document.getElementById("newAdminPwd").value.trim();
@@ -1231,7 +1232,6 @@ function updateAdminPassword() {
   document.getElementById("confirmAdminPwd").value = "";
 }
 
-// 匯出全部貓咪清單 CSV
 function exportAdminCatListCSV() {
   if(!catList.length) return alert("無資料");
   let csv = "\uFEFF貓咪ID,貓咪名稱\n";
@@ -1243,7 +1243,6 @@ function exportAdminCatListCSV() {
   setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
 }
 
-// 觸發匯入貓咪清單檔案
 function triggerCatListImport() { document.getElementById("importCatListFile").click(); }
 async function importCatListCSV(e) {
   const file = e.target.files[0]; if(!file) return;
@@ -1275,7 +1274,6 @@ async function importCatListCSV(e) {
   document.getElementById("importCatListFile").value = "";
 }
 
-// 全域備份打包導出為 JSON 結構 (涵蓋全體貓咪所有集合資料)
 async function exportAllDataJSON() {
   document.getElementById("syncBadge").innerText = "⏳ 正在打包備份全域數據...";
   try {
@@ -1311,7 +1309,6 @@ async function exportAllDataJSON() {
   }
 }
 
-// 觸發全域還原 JSON 檔案選取
 function triggerAllRestore() { document.getElementById("importAllFile").click(); }
 async function importAllDataJSON(e) {
   const file = e.target.files[0]; if(!file) return;
@@ -1333,7 +1330,6 @@ async function importAllDataJSON(e) {
     if(!confirm(confirmPrompt)) return;
     document.getElementById("syncBadge").innerText = "⏳ 雲端數據還原佈署中...";
 
-    // 若為覆蓋模式，優先抹除目前的清單與資料庫
     if(isOverwrite) {
       for (const oldCat of catList) {
         const colls = [`catWater_${oldCat.id}`, `catWeight_${oldCat.id}`, `catDeworm_${oldCat.id}`];
@@ -1346,7 +1342,6 @@ async function importAllDataJSON(e) {
       }
       catList = backupData.cats || [];
     } else {
-      // 增量模式：合併名單
       if(backupData.cats) {
         backupData.cats.forEach(nc => {
           if(!catList.some(oc => oc.id === nc.id)) catList.push(nc);
@@ -1357,7 +1352,6 @@ async function importAllDataJSON(e) {
     localStorage.setItem("petCats", JSON.stringify(catList));
     renderCatSelect();
 
-    // 還原寫入數據庫
     for (const catId in backupData.payload) {
       const target = backupData.payload[catId];
       
