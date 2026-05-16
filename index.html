@@ -15,6 +15,34 @@
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
 
+/* 管理員驗證彈窗樣式 */
+.admin-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.admin-modal-box {
+  width: 100%;
+  max-width: 340px;
+  background: #fff;
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  text-align: center;
+}
+.admin-modal-title {
+  font-size: 18px;
+  color: #478fb8;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -327,6 +355,34 @@ input#importFile { display: none; }
   cursor: pointer;
 }
 .btn-danger-full:active { opacity: 0.9; transform: scale(0.99); }
+
+/* 後台專用微調樣式 */
+.admin-cat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--border-color);
+}
+.radio-group {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin: 10px 0;
+}
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.grid-3col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -347,6 +403,15 @@ input#importFile { display: none; }
   </div>
 </div>
 
+<div class="admin-modal-backdrop" id="adminAuthModal" style="display: none;">
+  <div class="admin-modal-box">
+    <div class="admin-modal-title">管理員驗證</div>
+    <input type="password" class="form-input" id="adminModalPwd" placeholder="輸入管理員密碼" style="margin-bottom: 16px;">
+    <button class="btn-primary" onclick="verifyAdminTab()">確認進入後台</button>
+    <button class="btn-clear-day" onclick="cancelAdminTab()" style="margin-top: 8px; width: 100%;">取消</button>
+  </div>
+</div>
+
 <div class="main-content">
 <div class="wrapper">
   <h1 class="main-title">🐾 貓貓の健康全紀錄</h1>
@@ -362,6 +427,7 @@ input#importFile { display: none; }
     <button class="tab-btn active" data-tab="water">飲水紀錄</button>
     <button class="tab-btn" data-tab="weight">體重紀錄</button>
     <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
+    <button class="tab-btn" data-tab="admin" id="tabBtnAdmin">系統後台</button>
   </div>
 
   <div class="tab-content active" id="tab-water">
@@ -455,8 +521,68 @@ input#importFile { display: none; }
     </div>
   </div>
 
-  <div style="margin-top:20px;">
-    <button class="btn-danger-full" onclick="showClearAllConfirm()">⚠️ 清除所有貓咪全部數據</button>
+  <div class="tab-content" id="tab-admin">
+    <div class="info-banner">⚙️ 專業管理後台</div>
+    
+    <button class="btn-clear-day" onclick="adminLogout()" style="width:100%; margin-bottom:16px;">後台登出</button>
+
+    <div class="ui-card">
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">🔐密碼管理 (雲端)</div>
+      <input type="password" class="form-input" id="oldAdminPwd" placeholder="舊登入密碼">
+      <input type="password" class="form-input" id="newAdminPwd" placeholder="新登入密碼">
+      <input type="password" class="form-input" id="confirmAdminPwd" placeholder="確認新密碼">
+      <button class="btn-primary" onclick="updateAdminPassword()">更新使用者密碼</button>
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">🐾 貓咪檔案管理 (雲端)</div>
+      <div id="adminCatList"></div>
+      <button class="btn-primary" onclick="addNewCat()" style="margin-top:12px;">新增貓咪</button>
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; font-weight:500;">💾全域備份與還原</div>
+      <div class="radio-group">
+        <label class="radio-label"><input type="radio" name="restoreMode" value="overwrite" checked> 覆蓋還原</label>
+        <label class="radio-label"><input type="radio" name="restoreMode" value="incremental"> 增量匯入</label>
+      </div>
+      <div class="btn-row" style="margin-top:0;">
+        <button class="btn-export" onclick="exportAllDataJSON()" style="background:var(--success); color:#fff;">完整備份匯出</button>
+        <button class="btn-import" onclick="triggerAllRestore()" style="background:var(--orange); color:#fff;">全域還原匯入</button>
+      </div>
+      <input type="file" id="importAllFile" accept=".json" style="display:none;" onchange="importAllDataJSON(event)">
+      <div style="text-align:center; font-size:11px; color:var(--danger); margin-top:8px;">覆蓋=清空舊數據還原 | 增量=保留舊數據追加</div>
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">📁分類匯入匯出</div>
+      <div class="radio-group">
+        <label class="radio-label"><input type="radio" name="categoryMode" value="overwrite" checked> 覆蓋匯入</label>
+        <label class="radio-label"><input type="radio" name="categoryMode" value="incremental"> 增量匯入</label>
+      </div>
+      <div class="grid-3col">
+        <button class="btn-export" onclick="exportCSV()">匯出全部飲水</button>
+        <button class="btn-export" onclick="exportWeightCSV()">匯出全部體重</button>
+      </div>
+      <div class="grid-3col">
+        <button class="btn-export" onclick="exportParaCSV()">匯出全部驅蟲</button>
+        <button class="btn-export" onclick="exportAdminCatListCSV()">匯出貓咪清單</button>
+      </div>
+      <div class="grid-3col" style="margin-top:12px;">
+        <button class="btn-import" onclick="triggerImport()">匯入飲水數據</button>
+        <button class="btn-import" onclick="triggerWeightImport()">匯入體重數據</button>
+      </div>
+      <div class="grid-3col">
+        <button class="btn-import" onclick="triggerParaImport()">匯入驅蟲數據</button>
+        <button class="btn-import" onclick="triggerCatListImport()">匯入貓咪清單</button>
+      </div>
+      <input type="file" id="importCatListFile" accept=".csv" style="display:none;" onchange="importCatListCSV(event)">
+    </div>
+
+    <div class="ui-card">
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">🗑️ 數據清理</div>
+      <button class="btn-danger-full" onclick="showClearAllConfirm()">清空全部數據</button>
+    </div>
   </div>
 
 </div>
@@ -471,9 +597,11 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
-const validPws = ["0963612120", "0952867812", "ha821208"];
+// 將此陣列改為 let 宣告，便於前端動態更新
+let validPws = ["0963612120", "0952867812", "ha821208"];
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
+let isAdminAuthenticated = false; 
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -532,7 +660,13 @@ function checkInPwd(){
 }
 
 document.addEventListener("keydown",e=>{
-  if(e.key==="Enter") checkInPwd();
+  if(e.key==="Enter") {
+    if(document.querySelector(".inlock-wrap").style.display !== "none") {
+      checkInPwd();
+    } else if(document.getElementById("adminAuthModal").style.display === "flex") {
+      verifyAdminTab();
+    }
+  }
 });
 
 function manualLogout(){
@@ -540,6 +674,7 @@ function manualLogout(){
   if(loginCheckTimer) clearInterval(loginCheckTimer);
   document.querySelector(".inlock-wrap").style.display="flex";
   document.querySelector(".main-content").style.display="none";
+  isAdminAuthenticated = false;
 }
 
 function startLoginExpireCheck(){
@@ -577,7 +712,7 @@ function initCatSystem(){
 }
 function renderCatSelect(){
   const sel = document.getElementById("catSelect");
-  sel.innerHTML = catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
+  sel.innerHTML = catList.map(c=>`<option value="${c.id}">${c.name || '未命名'}</option>`).join("");
 }
 function addNewCat(){
   const name = prompt("輸入新貓咪名稱：");
@@ -588,6 +723,7 @@ function addNewCat(){
   renderCatSelect();
   document.getElementById("catSelect").value = id;
   switchCat();
+  if(isAdminAuthenticated) renderAdminCatList();
 }
 
 function switchCat(){
@@ -609,17 +745,58 @@ function switchCat(){
   listenAllData();
 }
 
+// 監聽並攔截頁籤切換邏輯
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.onclick = function(){
-    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
-    this.classList.add('active');
     const t = this.dataset.tab;
-    if(t==="water")document.getElementById("tab-water").classList.add("active");
-    if(t==="weight")document.getElementById("tab-weight").classList.add("active");
-    if(t==="deworm")document.getElementById("tab-deworm").classList.add("active");
+    
+    if(t === "admin" && !isAdminAuthenticated) {
+      document.getElementById("adminAuthModal").style.display = "flex";
+      document.getElementById("adminModalPwd").focus();
+      return;
+    }
+    
+    executeTabSwitch(this, t);
   }
 });
+
+function executeTabSwitch(element, tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  element.classList.add('active');
+  if(tabName==="water")document.getElementById("tab-water").classList.add("active");
+  if(tabName==="weight")document.getElementById("tab-weight").classList.add("active");
+  if(tabName==="deworm")document.getElementById("tab-deworm").classList.add("active");
+  if(tabName==="admin") {
+    document.getElementById("tab-admin").classList.add("active");
+    renderAdminCatList();
+  }
+}
+
+function verifyAdminTab() {
+  const pwd = document.getElementById("adminModalPwd").value.trim();
+  if(validPws.includes(pwd)) {
+    isAdminAuthenticated = true;
+    document.getElementById("adminAuthModal").style.display = "none";
+    document.getElementById("adminModalPwd").value = "";
+    executeTabSwitch(document.getElementById("tabBtnAdmin"), "admin");
+  } else {
+    alert("❌ 管理員密碼錯誤！");
+    document.getElementById("adminModalPwd").value = "";
+  }
+}
+
+function cancelAdminTab() {
+  document.getElementById("adminAuthModal").style.display = "none";
+  document.getElementById("adminModalPwd").value = "";
+}
+
+function adminLogout() {
+  isAdminAuthenticated = false;
+  const waterBtn = document.querySelector('.tab-btn[data-tab="water"]');
+  executeTabSwitch(waterBtn, "water");
+  alert("後台已安全登出。");
+}
 
 let waterCol, weightCol, dewormCol;
 let recordData = [], weightData = [], dewormData = [];
@@ -721,25 +898,31 @@ function triggerImport(){document.getElementById("importFile").click();}
 async function importCSV(e){
   const f=e.target.files[0];if(!f)return;
   
-  if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
-  const snapAll = await waterCol.get();
-  const batch = db.batch();
-  snapAll.forEach(doc => batch.delete(doc.ref));
-  await batch.commit();
+  // 依據後台選擇的分類模式決定覆蓋或增量
+  const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
+  if(isOverwrite) {
+    if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
+    const snapAll = await waterCol.get();
+    const batch = db.batch();
+    snapAll.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  } else {
+    if(!confirm("將以[增量]模式匯入資料，確定繼續？")) return;
+  }
 
   const r=new FileReader();
   r.onload=async ev=>{
-    const lines=ev.target.result.split("\n").filter(l=>l.trim());
+    const lines=ev.target.result.replace(/^\uFEFF/, "").split("\n").filter(l=>l.trim());
     let count=0;
     for(let i=1;i<lines.length;i++){
       const [d,t,mlStr]=lines[i].split(",");
       const ml=parseInt(mlStr);
       if(d&&t&&!isNaN(ml)&&ml>0){
-        await waterCol.add({date:d,time:t,ml,stamp:Date.now()+i});
+        await waterCol.add({date:d.trim(),time:t.trim(),ml,stamp:Date.now()+i});
         count++;
       }
     }
-    alert(`覆蓋匯入完成：${count} 筆`);
+    alert(`匯入完成：${count} 筆`);
     document.getElementById("importFile").value = "";
   };
   r.readAsText(f);
@@ -800,6 +983,12 @@ function renderWeight(){
     document.getElementById("wMin").innerText=min+" kg";
     document.getElementById("wAvg").innerText=avg+" kg";
     document.getElementById("wDiff").innerText=diff+" kg";
+  } else {
+    document.getElementById("weightLatest").innerText=`最新：0 kg`;
+    document.getElementById("wMax").innerText="0 kg";
+    document.getElementById("wMin").innerText="0 kg";
+    document.getElementById("wAvg").innerText="0 kg";
+    document.getElementById("wDiff").innerText="0 kg";
   }
 }
 
@@ -834,9 +1023,9 @@ function exportWeightCSV() {
   if (!weightData.length) {alert("目前沒有體重紀錄");return;}
   let csv = "\uFEFF日期,體重(kg),備註\n";
   weightData.forEach(item => {
-    const d = (item.date || "").trim();
-    const w = (item.weight || "").trim();
-    const n = (item.note || "").replace(/"/g, '""').trim();
+    const d = (item.date || "");
+    const w = item.weight;
+    const n = (item.note || "").replace(/"/g, '""');
     csv += `"${d}","${w}","${n}"\n`;
   });
   const a = document.createElement("a");
@@ -849,7 +1038,18 @@ function exportWeightCSV() {
 function triggerWeightImport(){document.getElementById("importWeightFile").click();}
 async function importWeightCSV(e){
   const file = e.target.files[0];if(!file)return;
-  if(!confirm("匯入會新增資料，確定？"))return;
+  const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
+  
+  if(isOverwrite) {
+    if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
+    const snapAll = await weightCol.get();
+    const batch = db.batch();
+    snapAll.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  } else {
+    if(!confirm("將以[增量]模式匯入體重資料，確定？"))return;
+  }
+
   const text = await file.text();
   const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l=>l.trim());
   let count=0;
@@ -857,7 +1057,7 @@ async function importWeightCSV(e){
     const parts=lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
     const date=parts[0], weight=parts[1], note=parts[2]||"";
     if(!date||!weight||isNaN(parseFloat(weight)))continue;
-    await weightCol.add({date,weight,note,stamp:Date.now()+i});
+    await weightCol.add({date,weight:parseFloat(weight),note,stamp:Date.now()+i});
     count++;
   }
   alert(`體重匯入完成：${count} 筆`);
@@ -868,9 +1068,9 @@ function exportParaCSV() {
   if (!dewormData.length) {alert("目前沒有驅蟲紀錄");return;}
   let csv = "\uFEFF日期,藥品,下次日期\n";
   dewormData.forEach(item => {
-    const d = (item.date || "").trim();
-    const drug = (item.drug || "").replace(/"/g, '""').trim();
-    const next = (item.nextDate || "").trim();
+    const d = (item.date || "");
+    const drug = (item.drug || "").replace(/"/g, '""');
+    const next = (item.nextDate || "");
     csv += `"${d}","${drug}","${next}"\n`;
   });
   const a = document.createElement("a");
@@ -883,7 +1083,18 @@ function exportParaCSV() {
 function triggerParaImport(){document.getElementById("importParaFile").click();}
 async function importParaCSV(e){
   const file=e.target.files[0];if(!file)return;
-  if(!confirm("匯入會新增資料，確定？"))return;
+  const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
+
+  if(isOverwrite) {
+    if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
+    const snapAll = await dewormCol.get();
+    const batch = db.batch();
+    snapAll.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
+  } else {
+    if(!confirm("將以[增量]模式匯入驅蟲資料，確定？"))return;
+  }
+
   const text=await file.text();
   const lines=text.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
   let count=0;
@@ -927,6 +1138,251 @@ async function clearAllCatsAllData() {
     alert("✅ 所有數據已清除！");
   } catch (err) {
     alert("❌ 失敗："+err.message);
+  }
+}
+
+/* ==========================================================================
+   以下為本次新增之「後台延伸功能」控制處理
+   ========================================================================== */
+
+// 渲染後台雲端貓咪檔案名單
+function renderAdminCatList() {
+  const container = document.getElementById("adminCatList");
+  if(catList.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:10px; color:#aaa;">尚無貓咪檔案</div>`;
+    return;
+  }
+  container.innerHTML = catList.map(cat => `
+    <div class="admin-cat-item">
+      <span>${cat.name || 'undefined'}</span>
+      <div>
+        <button class="btn-clear-day" style="padding:4px 10px; border-radius:8px; font-size:12px;" onclick="editCatName('${cat.id}')">編輯</button>
+        <button class="btn-delete" style="padding:4px 10px; border-radius:8px; font-size:12px;" onclick="deleteCatProfile('${cat.id}')">刪除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+// 編輯貓咪名稱
+function editCatName(id) {
+  const cat = catList.find(c => c.id === id);
+  if(!cat) return;
+  const newName = prompt(`請輸入貓咪 [${cat.name}] 的新名稱:`, cat.name);
+  if(!newName || newName.trim() === "") return;
+  cat.name = newName.trim();
+  localStorage.setItem("petCats", JSON.stringify(catList));
+  renderCatSelect();
+  renderAdminCatList();
+  if(currentCat === id) currentCatName = cat.name;
+}
+
+// 刪除貓咪檔案及連帶清除雲端資料
+async function deleteCatProfile(id) {
+  const cat = catList.find(c => c.id === id);
+  if(!cat) return;
+  if(!confirm(`⚠️ 警告：確定要刪除貓咪 [${cat.name}] 嗎？\n這將一併永久抹除該貓咪在雲端的飲水、體重、驅蟲所有資料且無法復原！`)) return;
+  
+  try {
+    const colls = [`catWater_${id}`, `catWeight_${id}`, `catDeworm_${id}`];
+    for (const collName of colls) {
+      const snap = await db.collection(collName).get();
+      const batch = db.batch();
+      snap.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+    }
+    catList = catList.filter(c => c.id !== id);
+    if(catList.length === 0) {
+      catList.push({id: "default", name: "波波"});
+    }
+    localStorage.setItem("petCats", JSON.stringify(catList));
+    renderCatSelect();
+    document.getElementById("catSelect").value = catList[0].id;
+    switchCat();
+    renderAdminCatList();
+    alert("✅ 貓咪檔案與全數數據已安全移除。");
+  } catch(e) {
+    alert("❌ 刪除失敗: " + e.message);
+  }
+}
+
+// 密碼變更功能邏輯
+function updateAdminPassword() {
+  const oldPwd = document.getElementById("oldAdminPwd").value.trim();
+  const newPwd = document.getElementById("newAdminPwd").value.trim();
+  const confPwd = document.getElementById("confirmAdminPwd").value.trim();
+
+  if(!oldPwd || !newPwd || !confPwd) {
+    return alert("請填寫所有密碼欄位！");
+  }
+  if(!validPws.includes(oldPwd)) {
+    return alert("❌ 舊登入密碼驗證錯誤！");
+  }
+  if(newPwd !== confPwd) {
+    return alert("❌ 兩次輸入的新密碼不一致！");
+  }
+  if(newPwd.length < 4) {
+    return alert("密碼強度過低，請輸入至少4位數。");
+  }
+
+  validPws.push(newPwd);
+  alert("✅ 使用者密碼更新成功！新密碼即時生效。");
+  document.getElementById("oldAdminPwd").value = "";
+  document.getElementById("newAdminPwd").value = "";
+  document.getElementById("confirmAdminPwd").value = "";
+}
+
+// 匯出全部貓咪清單 CSV
+function exportAdminCatListCSV() {
+  if(!catList.length) return alert("無資料");
+  let csv = "\uFEFF貓咪ID,貓咪名稱\n";
+  catList.forEach(c => csv += `"${c.id}","${c.name}"\n`);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv]));
+  a.download = `貓咪清單備份.csv`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+}
+
+// 觸發匯入貓咪清單檔案
+function triggerCatListImport() { document.getElementById("importCatListFile").click(); }
+async function importCatListCSV(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
+  
+  if(isOverwrite) {
+    if(!confirm("確定要[覆蓋匯入]貓咪名單嗎？此操作將取代現有名單。")) return;
+    catList = [];
+  } else {
+    if(!confirm("將以[增量]模式追加貓咪名單？")) return;
+  }
+
+  const text = await file.text();
+  const lines = text.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
+  let count = 0;
+  for(let i=1; i<lines.length; i++) {
+    const parts = lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
+    const id = parts[0], name = parts[1];
+    if(!id || !name) continue;
+    if(!catList.some(c => c.id === id)) {
+      catList.push({ id, name });
+      count++;
+    }
+  }
+  localStorage.setItem("petCats", JSON.stringify(catList));
+  renderCatSelect();
+  renderAdminCatList();
+  alert(`貓咪清單匯入完成：${count} 筆`);
+  document.getElementById("importCatListFile").value = "";
+}
+
+// 全域備份打包導出為 JSON 結構 (涵蓋全體貓咪所有集合資料)
+async function exportAllDataJSON() {
+  document.getElementById("syncBadge").innerText = "⏳ 正在打包備份全域數據...";
+  try {
+    let backupPackage = {
+      version: "2026.1",
+      timestamp: Date.now(),
+      cats: catList,
+      payload: {}
+    };
+
+    for (const cat of catList) {
+      backupPackage.payload[cat.id] = { water: [], weight: [], deworm: [] };
+      
+      const waterSnap = await db.collection(`catWater_${cat.id}`).get();
+      waterSnap.forEach(d => backupPackage.payload[cat.id].water.push(d.data()));
+
+      const weightSnap = await db.collection(`catWeight_${cat.id}`).get();
+      weightSnap.forEach(d => backupPackage.payload[cat.id].weight.push(d.data()));
+
+      const dewormSnap = await db.collection(`catDeworm_${cat.id}`).get();
+      dewormSnap.forEach(d => backupPackage.payload[cat.id].deworm.push(d.data()));
+    }
+
+    const blob = new Blob([JSON.stringify(backupPackage, null, 2)], {type: "application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `貓貓健康全紀錄_全域完整雲端備份_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    document.getElementById("syncBadge").innerText = "☁️ 已同步";
+    alert("✅ 雲端全域完整備份打包下載完成！");
+  } catch(err) {
+    alert("❌ 備份打包失敗: " + err.message);
+  }
+}
+
+// 觸發全域還原 JSON 檔案選取
+function triggerAllRestore() { document.getElementById("importAllFile").click(); }
+async function importAllDataJSON(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const isOverwrite = document.querySelector('input[name="restoreMode"]:checked')?.value === 'overwrite';
+
+  try {
+    const text = await file.text();
+    const backupData = JSON.parse(text);
+    
+    if(!backupData.version || !backupData.payload) {
+      return alert("❌ 還原失敗：此檔案非本系統標準全域Json備份檔！");
+    }
+
+    const modeText = isOverwrite ? "【覆蓋還原】" : "【增量匯入】";
+    const confirmPrompt = isOverwrite 
+      ? `⚠️ 警告：即將執行 ${modeText}！\n這會清除雲端資料庫上所有貓咪的現有全部飲水、體重、驅蟲數據，並覆蓋取代為備份檔內容！確認繼續？`
+      : `確認是否執行 ${modeText}？\n系統會保留現有雲端數據，僅追加備份檔中的新紀錄。確認繼續？`;
+
+    if(!confirm(confirmPrompt)) return;
+    document.getElementById("syncBadge").innerText = "⏳ 雲端數據還原佈署中...";
+
+    // 若為覆蓋模式，優先抹除目前的清單與資料庫
+    if(isOverwrite) {
+      for (const oldCat of catList) {
+        const colls = [`catWater_${oldCat.id}`, `catWeight_${oldCat.id}`, `catDeworm_${oldCat.id}`];
+        for (const cName of colls) {
+          const snap = await db.collection(cName).get();
+          const batch = db.batch();
+          snap.forEach(d => batch.delete(d.ref));
+          await batch.commit();
+        }
+      }
+      catList = backupData.cats || [];
+    } else {
+      // 增量模式：合併名單
+      if(backupData.cats) {
+        backupData.cats.forEach(nc => {
+          if(!catList.some(oc => oc.id === nc.id)) catList.push(nc);
+        });
+      }
+    }
+
+    localStorage.setItem("petCats", JSON.stringify(catList));
+    renderCatSelect();
+
+    // 還原寫入數據庫
+    for (const catId in backupData.payload) {
+      const target = backupData.payload[catId];
+      
+      if(target.water && target.water.length) {
+        const coll = db.collection(`catWater_${catId}`);
+        for(const item of target.water) await coll.add(item);
+      }
+      if(target.weight && target.weight.length) {
+        const coll = db.collection(`catWeight_${catId}`);
+        for(const item of target.weight) await coll.add(item);
+      }
+      if(target.deworm && target.deworm.length) {
+        const coll = db.collection(`catDeworm_${catId}`);
+        for(const item of target.deworm) await coll.add(item);
+      }
+    }
+
+    document.getElementById("catSelect").value = catList[0].id;
+    switchCat();
+    renderAdminCatList();
+    alert(`✅ 全域數據${modeText}還原處置已成功完成！`);
+  } catch(err) {
+    alert("❌ 解析還原出錯: " + err.message);
+  } finally {
+    document.getElementById("importAllFile").value = "";
   }
 }
 </script>
