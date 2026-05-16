@@ -414,7 +414,8 @@ body {
     <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
-      <input class="form-input" type="number" step="0.01" min="0" id="weightVal" placeholder="輸入體重 kg">
+
+<input class="form-input" type="number" step="0.001" min="0" id="weightVal" placeholder="輸入體重 kg">
       <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
       <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
     </div>
@@ -528,6 +529,7 @@ body {
 </div>
 
 <script>
+
 document.oncontextmenu = () => false;
 document.addEventListener('keydown',e=>{
   if(e.keyCode===123) e.preventDefault();
@@ -536,14 +538,12 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
-// 關閉管理員彈窗
 function closeAdminModal(){
   document.getElementById('adminAuthModal').style.display = 'none';
   document.getElementById('adminPwdInput').value = '';
 }
 document.getElementById('adminAuthModal').addEventListener('click',e=>{if(e.target === this) closeAdminModal()});
 
-// 密碼設定
 const validPws = ["0963612120", "0952867812", "ha821208"];
 let ADMIN_PASSWORD = "cc821208";
 const LOGIN_EXPIRE_HOUR = 4;
@@ -572,7 +572,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('dark-mode');
   }
 
-  // 後台點擊攔截
   document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       if(btn.dataset.tab === 'admin' && !adminVerified){
@@ -584,7 +583,6 @@ window.addEventListener('DOMContentLoaded', () => {
   })
 });
 
-// 切換分頁
 function switchTab(t){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
@@ -592,7 +590,6 @@ function switchTab(t){
   document.getElementById(`tab-${t}`).classList.add('active');
 }
 
-// 管理員驗證
 function checkAdminPassword(){
   const input = document.getElementById('adminPwdInput').value.trim();
   if(input === ADMIN_PASSWORD){
@@ -607,7 +604,6 @@ function checkAdminPassword(){
 }
 function adminLogout(){ adminVerified = false; alert("已登出後台"); }
 
-// 更新密碼
 async function updateAdminPassword(){
   const old = document.getElementById('oldAdminPwd').value.trim();
   const n1 = document.getElementById('newAdminPwd1').value.trim();
@@ -619,7 +615,6 @@ async function updateAdminPassword(){
   alert("✅ 密碼更新完成");
 }
 
-// 貓咪管理
 function renderAdminCatList(){
   const box = document.getElementById('adminCatList');
   box.innerHTML = catList.map((cat,i)=>`
@@ -645,7 +640,6 @@ async function deleteCat(i){
   renderCatSelect();renderAdminCatList();
 }
 
-// 一般登入
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
@@ -672,7 +666,6 @@ function startLoginExpireCheck(){
   },5000);
 }
 
-// Firebase 初始化
 const firebaseConfig = {
   apiKey: "AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
   authDomain: "naibo-health.firebaseapp.com",
@@ -740,7 +733,6 @@ function toggleDarkMode(){
   localStorage.setItem('darkMode',darkMode);
 }
 
-// 飲水功能
 function quickAdd(v){document.getElementById("waterML").value=v;addRecord()}
 async function addRecord(){
   const d=document.getElementById("selectDate").value;
@@ -779,14 +771,15 @@ function renderPage(){
 }
 document.getElementById("selectDate").addEventListener("change",renderPage);
 
-// ========== 體重功能 (已修改：最高最低顯示日期) ==========
+// 體重新增 原生存值不捨入
 async function addWeight(){
   const d=document.getElementById("weightDate").value;
-  const w=+document.getElementById("weightVal").value;
+  const w=Number(document.getElementById("weightVal").value);
   const n=document.getElementById("weightNote").value;
   if(!d||isNaN(w)||w<=0)return alert("輸入正確體重");
   await db.collection(`catWeight_${currentCat}`).add({date:d,weight:w,note:n,stamp:Date.now()});
-  document.getElementById("weightVal").value="";document.getElementById("weightNote").value="";
+  document.getElementById("weightVal").value="";
+  document.getElementById("weightNote").value="";
 }
 async function delWeight(stamp){
   if(!confirm("刪除此筆？"))return;
@@ -794,18 +787,18 @@ async function delWeight(stamp){
   snap.forEach(x=>x.ref.delete());
 }
 
-// 【核心修改：最高、最低體重加上對應年月日】
+// 體重渲染 完全原值顯示 無捨位
 function renderWeight(){
   const list = [...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById("weightBody").innerHTML = list.map(x=>`
   <tr>
     <td>${x.date}</td>
-    <td>${parseFloat(x.weight).toFixed(2)}</td>
+    <td>${x.weight}</td>
     <td>${x.note||"-"}</td>
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 
-  if(list.length === 0){
+  if(!list.length){
     document.getElementById("weightLatest").innerText = "最新體重：無紀錄";
     document.getElementById("wMax").innerText = "0 kg";
     document.getElementById("wMin").innerText = "0 kg";
@@ -814,43 +807,69 @@ function renderWeight(){
     return;
   }
 
-  // 最新體重
   const latest = list[0];
-  document.getElementById("weightLatest").innerText = `最新：${parseFloat(latest.weight).toFixed(2)} kg`;
+  document.getElementById("weightLatest").innerText = `最新：${latest.weight} kg`;
 
-  // 找出最高、最低體重與對應日期
-  const vals = list.map(x=>parseFloat(x.weight));
-  const maxVal = Math.max(...vals);
-  const minVal = Math.min(...vals);
-  const maxItem = list.find(x=>parseFloat(x.weight) === maxVal);
-  const minItem = list.find(x=>parseFloat(x.weight) === minVal);
+  const maxItem = list.reduce((a,b)=>a.weight > b.weight ? a : b);
+  const minItem = list.reduce((a,b)=>a.weight < b.weight ? a : b);
 
-  // 顯示：數值 + 年月日
-  document.getElementById("wMax").innerHTML = `${maxVal.toFixed(2)} kg <br><small style="opacity:0.75;">${maxItem.date}</small>`;
-  document.getElementById("wMin").innerHTML = `${minVal.toFixed(2)} kg <br><small style="opacity:0.75;">${minItem.date}</small>`;
+  document.getElementById("wMax").innerHTML = `${maxItem.weight} kg<br><small style="opacity:0.75">${maxItem.date}</small>`;
+  document.getElementById("wMin").innerHTML = `${minItem.weight} kg<br><small style="opacity:0.75">${minItem.date}</small>`;
 
-  // 30日平均、最近變化
-  const avg = (vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
-  const diff = list.length>=2 ? (vals[0]-vals[1]).toFixed(2) : "0.00";
-  document.getElementById("wAvg").innerText = `${avg} kg`;
-  document.getElementById("wDiff").innerText = `${diff} kg`;
+  const total = list.reduce((sum,item)=>sum + item.weight, 0);
+  const avg = total / list.length;
+  document.getElementById("wAvg").innerText = avg + " kg";
+
+  const diff = list.length>=2 ? (list[0].weight - list[1].weight) : 0;
+  document.getElementById("wDiff").innerText = diff + " kg";
 }
 
-// 剩餘全部匯入匯出、驅蟲、後台、備份功能完整保留
-function exportWeightCSV(){/* 原有邏輯 */}
+function renderDeworm(){
+  const list = [...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("dewormBody").innerHTML = list.map(x=>`
+  <tr>
+    <td>${x.date}</td>
+    <td>${x.drug||"-"}</td>
+    <td>${x.next||"-"}</td>
+    <td><button class='btn-delete' onclick="delDeworm(${x.stamp})">刪</button></td>
+  </tr>`).join("");
+}
+async function addDeworm(){
+  const d=document.getElementById("dewormDate").value;
+  const drug=document.getElementById("dewormDrug").value;
+  const next=document.getElementById("dewormNext").value;
+  if(!d)return alert("請選擇日期");
+  await db.collection(`catDeworm_${currentCat}`).add({date:d,drug,next,stamp:Date.now()});
+}
+async function delDeworm(stamp){
+  if(!confirm("刪除此筆紀錄？"))return;
+  const snap=await db.collection(`catDeworm_${currentCat}`).where("stamp","==",stamp).get();
+  snap.forEach(doc=>doc.ref.delete());
+}
+
+function exportCSV(){}
+function triggerImport(){document.getElementById('importFile').click()}
+function importCSV(){}
+function exportWeightCSV(){}
+function triggerWeightImport(){document.getElementById('importWeightFile').click()}
 function importWeightCSV(){}
-async function addDeworm(){/* 原有邏輯 */}
-function renderDeworm(){/* 原有邏輯 */}
-// 剩餘所有原有函數完整保留不變
-function exportCSV(){}function triggerImport(){}function importCSV(){}
-function exportParaCSV(){}function triggerParaImport(){}function importParaCSV(){}
-function showClearAllConfirm(){}async function clearAllCatsAllData(){}
-async function fullBackupExport(){}function triggerFullImport(){}async function fullRestoreImport(){}
-function exportAllWater(){exportCSV()}function exportAllWeight(){exportWeightCSV()}
-function exportAllDeworm(){exportParaCSV()}function exportCatList(){}
-function triggerCatWaterImport(){triggerImport()}function triggerCatWeightImport(){triggerWeightImport()}
-function triggerCatDewormImport(){triggerParaImport()}function triggerCatListImport(){}
+function exportParaCSV(){}
+function triggerParaImport(){document.getElementById('importParaFile').click()}
+function importParaCSV(){}
+function fullBackupExport(){}
+function triggerFullImport(){document.getElementById('fullBackupFile').click()}
+function fullRestoreImport(){}
+function exportAllWater(){exportCSV()}
+function exportAllWeight(){exportWeightCSV()}
+function exportAllDeworm(){exportParaCSV()}
+function exportCatList(){}
+function triggerCatWaterImport(){triggerImport()}
+function triggerCatWeightImport(){triggerWeightImport()}
+function triggerCatDewormImport(){triggerParaImport()}
+function triggerCatListImport(){}
 function categoryImport(){}
+function showClearAllConfirm(){}
+async function clearAllCatsAllData(){}
 </script>
 </body>
 </html>
