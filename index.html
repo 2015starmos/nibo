@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="format-detection" content="telephone=no">
-<title>貓咪健康專業後台｜點後台才彈密碼</title>
+<title>貓咪健康專業後台｜進站密碼+後台密碼</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -39,17 +39,24 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 .btn-block{flex:1;padding:12px;border-radius:16px;border:none;background:var(--gray);color:var(--text);cursor:pointer;font-size:14px}
 .btn-backup{background:var(--success);color:#fff}
 .btn-restore{background:var(--warn);color:#fff}
+.btn-logout{background:#999;color:#fff}
 .cat-admin-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .cat-admin-name{font-size:16px;font-weight:500}
 .cat-admin-btn{padding:6px 10px;border-radius:12px;border:none;font-size:13px;cursor:pointer;margin:0 2px}
 .cat-admin-edit{background:var(--pri-light);color:var(--pri)}
 .cat-admin-del{background:var(--danger);color:#fff}
-.inlock-wrap{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+
+/* 進站密碼彈窗（一進來就顯示） */
+.inlock-wrap-start{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px}
 .inlock-box{width:100%;max-width:340px;background:var(--card);border-radius:20px;padding:24px}
 .inlock-title{font-size:18px;color:var(--pri);text-align:center;margin-bottom:16px;font-weight:600}
 .inlock-input{width:100%;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--input-bg);text-align:center;font-size:16px;margin-bottom:10px}
 .inlock-btn{width:100%;padding:12px;border-radius:16px;background:var(--pri);color:#fff;border:none;font-size:16px}
 .inlock-tip{text-align:center;font-size:14px;color:var(--danger);height:20px}
+
+/* 後台密碼彈窗（只有點後台才顯示） */
+.inlock-wrap-admin{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
+
 .file-hide{display:none}
 .title-split{font-size:16px;font-weight:600;margin:10px 0 6px;color:var(--pri)}
 .mode-check{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:14px}
@@ -58,8 +65,18 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 </style>
 </head>
 <body>
-<!-- 管理員密碼框：預設隱藏，只有點後台才顯示 -->
-<div class="inlock-wrap" id="adminLock">
+<!-- 一進網頁就彈：使用者密碼驗證 -->
+<div class="inlock-wrap-start" id="startLock">
+<div class="inlock-box">
+<div class="inlock-title">請輸入使用者密碼</div>
+<input class="inlock-input" type="password" id="startPwdIn" placeholder="輸入密碼">
+<div class="inlock-tip" id="startTip"></div>
+<button class="inlock-btn" onclick="checkStartPwd()">進入系統</button>
+</div>
+</div>
+
+<!-- 點後台才彈：管理員密碼驗證 -->
+<div class="inlock-wrap-admin" id="adminLock">
 <div class="inlock-box">
 <div class="inlock-title">管理員驗證</div>
 <input class="inlock-input" type="password" id="adminPwdIn" placeholder="輸入管理員密碼">
@@ -68,7 +85,7 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 </div>
 </div>
 
-<div class="wrapper">
+<div class="wrapper" id="mainWrapper" style="display:none;">
 <h1 class="main-title">🐾貓咪健康管理系統</h1>
 <div class="sync-badge" id="syncBadge">雲端連線中</div>
 <button class="theme-switch" onclick="toggleDarkMode()">切換深色模式</button>
@@ -85,7 +102,6 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <button class="tab-btn" data-tab="admin">系統後台</button>
 </div>
 
-<!-- 飲水頁 -->
 <div class="tab-content active" id="tab-water">
 <div class="info-banner">每日建議飲水量150-210ml</div>
 <div class="ui-card">
@@ -97,7 +113,6 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <div class="ui-card" id="waterListBox"></div>
 </div>
 
-<!-- 體重頁 -->
 <div class="tab-content" id="tab-weight">
 <div class="info-banner">體重趨勢追蹤</div>
 <div class="ui-card">
@@ -109,7 +124,6 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <div class="ui-card" id="weightListBox"></div>
 </div>
 
-<!-- 驅蟲頁 -->
 <div class="tab-content" id="tab-deworm">
 <div class="info-banner">驅蟲時間備註</div>
 <div class="ui-card">
@@ -121,9 +135,14 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <div class="ui-card" id="dewormListBox"></div>
 </div>
 
-<!-- 專業後台頁 -->
 <div class="tab-content" id="tab-admin">
 <div class="info-banner">專業管理後台｜管理密碼cc821208</div>
+
+<div class="ui-card">
+<div class="btn-row">
+<button class="btn-block btn-logout" onclick="logoutAdmin()">後台登出</button>
+</div>
+</div>
 
 <div class="ui-card">
 <div class="title-split">🔐密碼管理</div>
@@ -196,22 +215,43 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script>
+// 使用者密碼（一進網頁要輸入的三組）
+const START_PASSWORDS = ["0963612120", "0952867812", "ha821208"];
+// 管理員密碼（進後台要輸入）
 const ADMIN_PWD = "cc821208";
+
 let adminAuth = false;
-const DEFAULT_USER_PWD = ["0963612120","0952867812","ha821208"];
 let catList = JSON.parse(localStorage.getItem("petCats")||'[{"id":"c0","name":"波波"}]');
 let currentCat = catList[0].id;
 let waterData=[],weightData=[],dewormData=[];
 let wSub,wgSub,dwSub;
 
-function getFullMode(){
-  return document.getElementById("fullCover").checked ? "cover" : "add";
-}
-function getCsvMode(){
-  return document.getElementById("csvCover").checked ? "cover" : "add";
+// ---- 一進網頁：使用者密碼驗證 ----
+function checkStartPwd(){
+  let val = document.getElementById("startPwdIn").value.trim();
+  let tip = document.getElementById("startTip");
+  if(START_PASSWORDS.includes(val)){
+    document.getElementById("startLock").style.display="none";
+    document.getElementById("mainWrapper").style.display="block";
+    tip.innerText="";
+    init(); // 進入後才初始化系統
+  }else{
+    tip.innerText="密碼錯誤";
+    document.getElementById("startPwdIn").value="";
+  }
 }
 
-// 管理員密碼驗證
+// ---- 後台登出 ----
+function logoutAdmin(){
+  adminAuth = false;
+  alert("已登出管理員權限");
+  document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tab-content").forEach(x=>x.classList.remove("active"));
+  document.querySelector('[data-tab="water"]').classList.add("active");
+  document.getElementById("tab-water").classList.add("active");
+}
+
+// ---- 管理員密碼驗證（點後台才觸發）----
 function checkAdminPwd(){
   let val = document.getElementById("adminPwdIn").value.trim();
   let tip = document.getElementById("adminTip");
@@ -220,7 +260,6 @@ function checkAdminPwd(){
     document.getElementById("adminLock").style.display="none";
     tip.innerText="";
     renderAdminPage();
-    // 直接切換到後台分頁
     document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(x=>x.classList.remove("active"));
     document.querySelector('[data-tab="admin"]').classList.add("active");
@@ -231,20 +270,16 @@ function checkAdminPwd(){
   }
 }
 
-// 分頁切換：只有點 admin 才檢查密碼
+// ---- 分頁切換 ----
 document.querySelectorAll(".tab-btn").forEach(b=>{
   b.onclick=function(){
     let t = this.dataset.tab;
-
-    // 切換到「系統後台」且尚未驗證 → 彈密碼框
     if(t==="admin" && !adminAuth){
       document.getElementById("adminLock").style.display="flex";
       document.getElementById("adminPwdIn").value="";
       document.getElementById("adminTip").innerText="";
       return;
     }
-
-    // 一般分頁 / 已驗證後台 → 直接切換
     document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
     document.querySelectorAll(".tab-content").forEach(x=>x.classList.remove("active"));
     this.classList.add("active");
@@ -424,6 +459,13 @@ async function fullRestore(e){
   switchCat();
 }
 
+function getFullMode(){
+  return document.getElementById("fullCover").checked ? "cover" : "add";
+}
+function getCsvMode(){
+  return document.getElementById("csvCover").checked ? "cover" : "add";
+}
+
 function exportAllWater(){
   let now = new Date();
   let dstr = now.getFullYear()+""+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0');
@@ -557,9 +599,12 @@ function updateUserPwd(){
   let n1=document.getElementById("newUserPwd").value.trim();
   let n2=document.getElementById("newUserPwd2").value.trim();
   let tip=document.getElementById("pwdTip");
-  if(!DEFAULT_USER_PWD.includes(old)){tip.innerText="舊密碼錯誤";tip.style.color="var(--danger)";return}
+  if(!START_PASSWORDS.includes(old)){tip.innerText="舊密碼錯誤";tip.style.color="var(--danger)";return}
   if(n1!==n2){tip.innerText="兩次新密碼不一致";tip.style.color="var(--danger)";return}
   if(n1.length<4){tip.innerText="密碼至少4位";tip.style.color="var(--danger)";return}
+  // 更換使用者密碼清單
+  START_PASSWORDS.length=0;
+  START_PASSWORDS.push(n1);
   localStorage.setItem("userPwdSet",JSON.stringify([n1]));
   tip.innerText="使用者密碼更新成功";tip.style.color="var(--success)";
 }
@@ -597,7 +642,6 @@ function renderDeworm(){
   document.getElementById("dewormListBox").innerHTML=list.map(x=>`
   <div class="item-row">${x.date}｜${x.drug}｜下次${x.next||""}</div>`).join("");
 }
-window.onload=init;
 </script>
 </body>
 </html>
