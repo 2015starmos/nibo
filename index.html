@@ -400,7 +400,7 @@ input#importFile { display: none; }
   border-radius: 14px;
 }
 
-/* 🎯 新增：分頁控制面板樣式 */
+/* 分頁控制面板樣式 */
 .pagination-wrap {
   display: flex;
   justify-content: center;
@@ -636,6 +636,16 @@ input#importFile { display: none; }
 </div>
 
 <script>
+// 🎯 核心修正：確保全域變數及時正確初始化
+let currentWeightPage = 1;
+const weightPageSize = 10;
+let globalChartInstance = null; 
+
+let validPws = ["0963612120", "0952867812", "ha821208"];
+const LOGIN_EXPIRE_HOUR = 4;
+let loginCheckTimer = null;
+let isAdminAuthenticated = false; 
+
 document.oncontextmenu = () => false;
 document.addEventListener('keydown',e=>{
   if(e.keyCode===123) e.preventDefault();
@@ -643,16 +653,6 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)e.preventDefault();
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
-
-let validPws = ["0963612120", "0952867812", "ha821208"];
-const LOGIN_EXPIRE_HOUR = 4;
-let loginCheckTimer = null;
-let isAdminAuthenticated = false; 
-let globalChartInstance = null; 
-
-// 🎯 新增：控制體重分頁的全域變數
-let currentWeightPage = 1;
-const weightPageSize = 10;
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -789,7 +789,7 @@ function switchCat(){
   recordData = [];
   weightData = [];
   dewormData = [];
-  currentWeightPage = 1; // 換貓時重設為第一頁
+  currentWeightPage = 1; 
   renderPage();
   renderWeight();
   renderDeworm();
@@ -862,15 +862,17 @@ function listenAllData(){
     recordData=[]; snap.forEach(d=>recordData.push(d.data()));
     renderPage();
     document.getElementById("syncBadge").innerText="☁️ 已同步";
-  });
+  }, err => { console.error(err); });
+
   weightUnsubscribe = weightCol.onSnapshot(snap=>{
     weightData=[]; snap.forEach(d=>weightData.push(d.data()));
     renderWeight();
-  });
+  }, err => { console.error(err); });
+
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
     renderDeworm();
-  });
+  }, err => { console.error(err); });
 }
 
 const setNow = () => {
@@ -1008,7 +1010,7 @@ async function addWeight(){
   await weightCol.add({date:d,weight:rawValue,note:n,stamp:Date.now()});
   document.getElementById("weightVal").value="";
   document.getElementById("weightNote").value="";
-  currentWeightPage = 1; // 新增完後自動彈回第一頁顯示最新資料
+  currentWeightPage = 1; 
 }
 
 async function delWeight(stamp){
@@ -1017,21 +1019,17 @@ async function delWeight(stamp){
   s.forEach(x=>x.ref.delete());
 }
 
-// 🎯 核心更動三：體重分頁切換函數
 function changeWeightPage(direction) {
   currentWeightPage += direction;
   renderWeight();
 }
 
 function renderWeight(){
-  // 由新到舊（降序）排序，最新最上層
   const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   
-  // 🎯 核心控制：以 10 筆資料為單位切分進行換頁
   const totalItems = list.length;
   const totalPages = Math.ceil(totalItems / weightPageSize) || 1;
   
-  // 安全限制：防止頁碼越界
   if (currentWeightPage > totalPages) currentWeightPage = totalPages;
   if (currentWeightPage < 1) currentWeightPage = 1;
   
@@ -1039,7 +1037,6 @@ function renderWeight(){
   const endIndex = startIndex + weightPageSize;
   const pagedList = list.slice(startIndex, endIndex);
 
-  // 渲染分頁表格內容 (x.weight 為純原始字串輸出)
   document.getElementById("weightBody").innerHTML=pagedList.map(x=>`
   <tr>
     <td>${x.date}</td>
@@ -1048,7 +1045,6 @@ function renderWeight(){
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 
-  // 🎯 控制分頁 UI 顯示與隱藏
   const pagerWrap = document.getElementById("weightPagination");
   if (totalItems > weightPageSize) {
     pagerWrap.style.display = "flex";
@@ -1060,7 +1056,6 @@ function renderWeight(){
   }
 
   if(list.length){
-    // 🎯 最新體重欄位完全跟隨您打的文字，絕不四捨五入
     document.getElementById("weightLatest").innerText=`最新體重：${list[0].weight} kg`;
     
     const vals=list.map(x=>parseFloat(x.weight));
@@ -1083,7 +1078,6 @@ function renderWeight(){
     
     const diff = list.length >= 2 ? (parseFloat(list[0].weight) - parseFloat(list[1].weight)) : 0;
 
-    // 首頁四個格子維持最多小數點後三位排版
     document.getElementById("wMax").innerHTML=`${maxItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
     document.getElementById("wMin").innerHTML=`${minItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
     document.getElementById("wAvg").innerText= (avg % 1 === 0 ? avg : avg.toFixed(3)) + " kg";
@@ -1288,7 +1282,7 @@ async function importWeightCSV(e) {
   }
   alert(`體重匯入完成：${count} 筆`);
   document.getElementById("importWeightFile").value="";
-  currentWeightPage = 1; // 匯入完成後自動跳回第一頁
+  currentWeightPage = 1; 
 }
 
 function exportParaCSV() {
