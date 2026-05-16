@@ -9,18 +9,18 @@
 <style>
 .inlock-wrap{position:fixed;inset:0;background:linear-gradient(160deg, #f6f9fe, #eaf2f9);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .inlock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 6px 20px rgba(71,143,184,0.15);text-align:center;}
-.inlock-box h2{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
+.inlock-title{font-size:20px;color:#478fb8;margin-bottom:18px;font-weight:600;}
 .inlock-input{width:100%;padding:13px 16px;border:1px solid #dce9f2;border-radius:18px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:10px;}
 .inlock-btn{width:100%;padding:13px;border:none;border-radius:18px;background:linear-gradient(90deg,#58a2cc,#478fb8);color:#fff;font-size:16px;cursor:pointer;}
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
 
-/* 管理員驗證與數據詳情彈窗共用樣式 */
+/* 管理員驗證彈窗樣式 */
 .admin-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
-  backdrop-filter: blur(5px);
+  background: rgba(0,0,0,0.3);
+  backdrop-filter: blur(4px);
   z-index: 999;
   display: flex;
   align-items: center;
@@ -29,15 +29,12 @@
 }
 .admin-modal-box {
   width: 100%;
-  max-width: 420px;
-  background: var(--card-bg, #fff);
-  color: var(--text-main, #506473);
+  max-width: 340px;
+  background: #fff;
   border-radius: 24px;
   padding: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   text-align: center;
-  max-height: 85vh;
-  overflow-y: auto;
 }
 .admin-modal-title {
   font-size: 18px;
@@ -328,10 +325,6 @@ input#importFile { display: none; }
   border-radius: 20px;
   padding: 12px 6px;
   text-align: center;
-  cursor: pointer;
-}
-.stat-item:active {
-  transform: scale(0.97);
 }
 .stat-label { font-size: 12px; color: var(--primary); margin-bottom: 3px; }
 .stat-num { font-size: 16px; font-weight: 600; line-height: 1.3; }
@@ -390,42 +383,8 @@ input#importFile { display: none; }
   gap: 8px;
   margin-bottom: 8px;
 }
-
-/* 詳情視窗微調樣式 */
-.detail-list-box {
-  margin-top: 14px;
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-}
-
-/* 分頁控制面板樣式 */
-.pagination-wrap {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 14px;
-  margin-top: 14px;
-  font-size: 14px;
-}
-.page-btn {
-  padding: 6px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-  background: var(--btn-gray);
-  color: var(--text-main);
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 12px;
-}
-.page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
 </style>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
@@ -434,7 +393,7 @@ input#importFile { display: none; }
 
 <div class="inlock-wrap">
   <div class="inlock-box">
-    <h2>🔐 波波健康紀錄 解鎖</h2>
+    <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
     <input type="password" class="inlock-input" id="inPwd" placeholder="請輸入密碼">
     <label style="display:block;text-align:left;margin:8px auto 0;width:fit-content;font-size:14px;color:var(--text-main);cursor:pointer;">
       <input type="checkbox" id="savePwdCheck"> 記住密碼
@@ -450,31 +409,6 @@ input#importFile { display: none; }
     <input type="password" class="form-input" id="adminModalPwd" placeholder="輸入管理員密碼" style="margin-bottom: 16px;">
     <button class="btn-primary" onclick="verifyAdminTab()">確認進入後台</button>
     <button class="btn-clear-day" onclick="cancelAdminTab()" style="margin-top: 8px; width: 100%;">取消</button>
-  </div>
-</div>
-
-<div class="admin-modal-backdrop" id="weightDetailModal" style="display: none;">
-  <div class="admin-modal-box">
-    <div class="admin-modal-title" id="detailModalTitle">體重數據詳情</div>
-    
-    <div id="detailExtraInfo" style="font-size: 13px; color: var(--primary); margin-bottom: 10px; line-height: 1.4; text-align: left; background: var(--primary-light); padding: 8px 12px; border-radius: 12px; display:none;"></div>
-
-    <div style="position: relative; width: 100%; height: 200px; margin-bottom: 12px;">
-      <canvas id="detailChart"></canvas>
-    </div>
-
-    <div class="detail-list-box">
-      <table class="record-table" style="margin: 0; border-spacing: 0;">
-        <thead>
-          <tr style="position: sticky; top: 0; z-index: 10;">
-            <th>日期</th><th>體重</th><th>備註</th>
-          </tr>
-        </thead>
-        <tbody id="detailListBody"></tbody>
-      </table>
-    </div>
-
-    <button class="btn-primary" onclick="closeWeightDetailModal()" style="margin-top: 16px;">關閉詳情</button>
   </div>
 </div>
 
@@ -532,7 +466,7 @@ input#importFile { display: none; }
     <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
-      <input class="form-input" type="number" step="any" min="0" id="weightVal" placeholder="輸入體重 kg">
+      <input class="form-input" type="number" step="0.01" min="0" id="weightVal" placeholder="輸入體重 kg">
       <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
       <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
     </div>
@@ -543,13 +477,6 @@ input#importFile { display: none; }
         <thead><tr><th>日期</th><th>體重</th><th>備註</th><th>刪除</th></tr></thead>
         <tbody id="weightBody"></tbody>
       </table>
-      
-      <div class="pagination-wrap" id="weightPagination" style="display: none;">
-        <button class="page-btn" id="prevPageBtn" onclick="changeWeightPage(-1)">◀ 上一頁</button>
-        <span id="pageInfoText">第 1 / 1 頁</span>
-        <button class="page-btn" id="nextPageBtn" onclick="changeWeightPage(1)">下一頁 ▶</button>
-      </div>
-
       <div class="btn-row">
         <button class="btn-export" onclick="exportWeightCSV()">📤 匯出CSV</button>
         <button class="btn-import" onclick="triggerWeightImport()">📥 匯入CSV</button>
@@ -558,13 +485,39 @@ input#importFile { display: none; }
     </div>
 
     <div class="ui-card">
-      <div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計 (點擊區塊可看曲線圖與完整原始明細)</div>
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計</div>
       <div class="stat-grid">
-        <div class="stat-item" onclick="showWeightDetail('max')"><div class="stat-label">最高體重</div><div class="stat-num" id="wMax">0 kg</div></div>
-        <div class="stat-item" onclick="showWeightDetail('min')"><div class="stat-label">最低體重</div><div class="stat-num" id="wMin">0 kg</div></div>
-        <div class="stat-item" onclick="showWeightDetail('avg30')"><div class="stat-label">30日平均</div><div class="stat-num" id="wAvg">0 kg</div></div>
-        <div class="stat-item" onclick="showWeightDetail('diff')"><div class="stat-label">最近變化</div><div class="stat-num" id="wDiff">0 kg</div></div>
+        <div class="stat-item"><div class="stat-label">最高體重</div><div class="stat-num" id="wMax">0 kg</div></div>
+        <div class="stat-item"><div class="stat-label">最低體重</div><div class="stat-num" id="wMin">0 kg</div></div>
+        <div class="stat-item"><div class="stat-label">30日平均</div><div class="stat-num" id="wAvg">0 kg</div></div>
+        <div class="stat-item"><div class="stat-label">最近變化</div><div class="stat-num" id="wDiff">0 kg</div></div>
       </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-deworm">
+    <div class="info-banner">🐛 體外驅蟲紀錄｜提醒下次使用時間</div>
+    <div class="ui-card">
+      <input class="form-input" type="date" id="dewormDate">
+      <select class="form-input" id="dewormDrug">
+        <option value="">請選擇藥品</option>
+        <option value="全能貓">全能貓</option>
+        <option value="寵     愛">寵   愛</option>
+      </select>
+      <input class="form-input" type="date" id="dewormNext" placeholder="預計下次使用日期">
+      <button class="btn-primary" onclick="addDeworm()">✅ 新增驅蟲紀錄</button>
+    </div>
+
+    <div class="ui-card">
+      <table class="record-table">
+        <thead><tr><th>使用日期</th><th>藥品</th><th>下次日期</th><th>刪除</th></tr></thead>
+        <tbody id="dewormBody"></tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportParaCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="triggerParaImport()">📥 匯入CSV</button>
+      </div>
+      <input type="file" id="importParaFile" accept=".csv" style="display:none;" onchange="importParaCSV(event)">
     </div>
   </div>
 
@@ -636,16 +589,6 @@ input#importFile { display: none; }
 </div>
 
 <script>
-// 🎯 核心修正：確保全域變數及時正確初始化
-let currentWeightPage = 1;
-const weightPageSize = 10;
-let globalChartInstance = null; 
-
-let validPws = ["0963612120", "0952867812", "ha821208"];
-const LOGIN_EXPIRE_HOUR = 4;
-let loginCheckTimer = null;
-let isAdminAuthenticated = false; 
-
 document.oncontextmenu = () => false;
 document.addEventListener('keydown',e=>{
   if(e.keyCode===123) e.preventDefault();
@@ -653,6 +596,11 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.shiftKey&&e.keyCode===73)e.preventDefault();
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
+
+let validPws = ["0963612120", "0952867812", "ha821208"];
+const LOGIN_EXPIRE_HOUR = 4;
+let loginCheckTimer = null;
+let isAdminAuthenticated = false; 
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -789,7 +737,6 @@ function switchCat(){
   recordData = [];
   weightData = [];
   dewormData = [];
-  currentWeightPage = 1; 
   renderPage();
   renderWeight();
   renderDeworm();
@@ -862,17 +809,15 @@ function listenAllData(){
     recordData=[]; snap.forEach(d=>recordData.push(d.data()));
     renderPage();
     document.getElementById("syncBadge").innerText="☁️ 已同步";
-  }, err => { console.error(err); });
-
+  });
   weightUnsubscribe = weightCol.onSnapshot(snap=>{
     weightData=[]; snap.forEach(d=>weightData.push(d.data()));
     renderWeight();
-  }, err => { console.error(err); });
-
+  });
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
     renderDeworm();
-  }, err => { console.error(err); });
+  });
 }
 
 const setNow = () => {
@@ -968,12 +913,10 @@ async function importCSV(e){
     let count=0;
     for(let i=1;i<lines.length;i++){
       const [d,t,mlStr]=lines[i].split(",");
-      if(d && t && mlStr){
-        const ml=parseInt(mlStr);
-        if(!isNaN(ml)&&ml>0){
-          await waterCol.add({date:d.trim(),time:t.trim(),ml,stamp:Date.now()+i});
-          count++;
-        }
+      const ml=parseInt(mlStr);
+      if(d&&t&&!isNaN(ml)&&ml>0){
+        await waterCol.add({date:d.trim(),time:t.trim(),ml,stamp:Date.now()+i});
+        count++;
       }
     }
     alert(`匯入完成：${count} 筆`);
@@ -1002,15 +945,12 @@ document.getElementById("selectDate").addEventListener("change",renderPage);
 
 async function addWeight(){
   const d=document.getElementById("weightDate").value;
-  const rawValue = document.getElementById("weightVal").value.trim();
-  const v=parseFloat(rawValue);
+  const v=parseFloat(document.getElementById("weightVal").value);
   const n=document.getElementById("weightNote").value;
   if(!d||isNaN(v)||v<=0)return alert("請輸入正確體重");
-  
-  await weightCol.add({date:d,weight:rawValue,note:n,stamp:Date.now()});
+  await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
   document.getElementById("weightVal").value="";
   document.getElementById("weightNote").value="";
-  currentWeightPage = 1; 
 }
 
 async function delWeight(stamp){
@@ -1019,195 +959,45 @@ async function delWeight(stamp){
   s.forEach(x=>x.ref.delete());
 }
 
-function changeWeightPage(direction) {
-  currentWeightPage += direction;
-  renderWeight();
-}
-
 function renderWeight(){
   const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  
-  const totalItems = list.length;
-  const totalPages = Math.ceil(totalItems / weightPageSize) || 1;
-  
-  if (currentWeightPage > totalPages) currentWeightPage = totalPages;
-  if (currentWeightPage < 1) currentWeightPage = 1;
-  
-  const startIndex = (currentWeightPage - 1) * weightPageSize;
-  const endIndex = startIndex + weightPageSize;
-  const pagedList = list.slice(startIndex, endIndex);
-
-  document.getElementById("weightBody").innerHTML=pagedList.map(x=>`
+  document.getElementById("weightBody").innerHTML=list.map(x=>`
   <tr>
     <td>${x.date}</td>
-    <td>${x.weight}</td>
+    <td>${parseFloat(x.weight).toFixed(2)}</td>
     <td>${x.note||"-"}</td>
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 
-  const pagerWrap = document.getElementById("weightPagination");
-  if (totalItems > weightPageSize) {
-    pagerWrap.style.display = "flex";
-    document.getElementById("pageInfoText").innerText = `第 ${currentWeightPage} / ${totalPages} 頁 (共 ${totalItems} 筆)`;
-    document.getElementById("prevPageBtn").disabled = (currentWeightPage === 1);
-    document.getElementById("nextPageBtn").disabled = (currentWeightPage === totalPages);
-  } else {
-    pagerWrap.style.display = "none";
-  }
-
   if(list.length){
-    document.getElementById("weightLatest").innerText=`最新體重：${list[0].weight} kg`;
-    
+    document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
     const vals=list.map(x=>parseFloat(x.weight));
+    const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
+    const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
 
+    // 🎯 核心更新：精準尋找最高與最低體重對應的年月日
     let maxItem = list[0];
     let minItem = list[0];
     list.forEach(x => {
-      if (parseFloat(x.weight) > parseFloat(maxItem.weight)) maxItem = x;
-      if (parseFloat(x.weight) < parseFloat(minItem.weight)) minItem = x;
+      if (parseFloat(x.weight) > parseFloat(maxItem.weight)) {
+        maxItem = x;
+      }
+      if (parseFloat(x.weight) < parseFloat(minItem.weight)) {
+        minItem = x;
+      }
     });
 
-    const nowGeo = new Date();
-    const thirtyDaysAgo = new Date(nowGeo.getTime() - (30 * 24 * 60 * 60 * 1000));
-    const thirtyDaysVals = list
-      .filter(x => new Date(x.date) >= thirtyDaysAgo)
-      .map(x => parseFloat(x.weight));
-    
-    const finalAvgVals = thirtyDaysVals.length ? thirtyDaysVals : vals; 
-    const avg = finalAvgVals.reduce((s,x)=>s+x,0) / finalAvgVals.length;
-    
-    const diff = list.length >= 2 ? (parseFloat(list[0].weight) - parseFloat(list[1].weight)) : 0;
-
-    document.getElementById("wMax").innerHTML=`${maxItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
-    document.getElementById("wMin").innerHTML=`${minItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
-    document.getElementById("wAvg").innerText= (avg % 1 === 0 ? avg : avg.toFixed(3)) + " kg";
-    document.getElementById("wDiff").innerText=(diff > 0 ? "+" : "") + (diff % 1 === 0 ? diff : diff.toFixed(3)) + " kg";
+    // 格式化輸出，將日期以半透明小字顯示在體重下方
+    document.getElementById("wMax").innerHTML=`${parseFloat(maxItem.weight).toFixed(2)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
+    document.getElementById("wMin").innerHTML=`${parseFloat(minItem.weight).toFixed(2)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
+    document.getElementById("wAvg").innerText=avg+" kg";
+    document.getElementById("wDiff").innerText=diff+" kg";
   } else {
-    document.getElementById("weightLatest").innerText=`最新體重：0 kg`;
+    document.getElementById("weightLatest").innerText=`最新：0 kg`;
     document.getElementById("wMax").innerHTML="0 kg";
     document.getElementById("wMin").innerHTML="0 kg";
     document.getElementById("wAvg").innerText="0 kg";
     document.getElementById("wDiff").innerText="0 kg";
-  }
-}
-
-function showWeightDetail(type) {
-  if (!weightData || weightData.length === 0) {
-    alert("目前尚無體重數據可查看詳情。");
-    return;
-  }
-
-  const modal = document.getElementById("weightDetailModal");
-  const title = document.getElementById("detailModalTitle");
-  const listBody = document.getElementById("detailListBody");
-  const extraInfo = document.getElementById("detailExtraInfo");
-  
-  const chronoList = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date));
-  
-  let filteredData = [];
-  let modalTitleText = "";
-  let labelColor = darkMode ? "#63b3e0" : "#478fb8";
-  
-  extraInfo.style.display = "none"; 
-
-  if (type === 'max' || type === 'min') {
-    let targetWeight = Math.max(...chronoList.map(x => parseFloat(x.weight)));
-    if (type === 'min') targetWeight = Math.min(...chronoList.map(x => parseFloat(x.weight)));
-    
-    filteredData = chronoList.filter(x => parseFloat(x.weight) === targetWeight);
-    modalTitleText = type === 'max' ? `🏆 最高體重歷史紀錄` : `📉 最低體重歷史紀錄`;
-  } 
-  else if (type === 'avg30') {
-    const thirtyDaysAgo = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
-    filteredData = chronoList.filter(x => new Date(x.date) >= thirtyDaysAgo);
-    if(filteredData.length === 0) filteredData = chronoList; 
-    
-    const tVals = filteredData.map(x => parseFloat(x.weight));
-    const rawAvg = tVals.reduce((s,x)=>s+x,0) / tVals.length;
-    extraInfo.innerHTML = `<strong>📊 30日內原始精準平均：</strong><br>${rawAvg} kg`;
-    extraInfo.style.display = "block";
-    
-    modalTitleText = `📅 30日健康平均走勢`;
-  } 
-  else if (type === 'diff') {
-    filteredData = chronoList;
-    modalTitleText = `📈 歷史體重連續曲線圖`;
-
-    if (chronoList.length >= 2) {
-      const latest = chronoList[chronoList.length - 1];
-      const previous = chronoList[chronoList.length - 2];
-      const exactDiff = parseFloat(latest.weight) - parseFloat(previous.weight);
-      
-      extraInfo.innerHTML = `
-        <strong>🔄 最近一筆變動對比明細（無四捨五入）：</strong><br>
-        • 最新紀錄 (${latest.date})：${latest.weight} kg<br>
-        • 前次紀錄 (${previous.date})：${previous.weight} kg<br>
-        • 原始精確變化量：<strong>${exactDiff > 0 ? '+' : ''}${exactDiff} kg</strong>
-      `;
-      extraInfo.style.display = "block";
-    }
-  }
-
-  title.innerText = modalTitleText;
-  
-  const displayList = [...filteredData].sort((a,b) => new Date(b.date) - new Date(a.date));
-  
-  listBody.innerHTML = displayList.map(x => `
-    <tr>
-      <td>${x.date}</td>
-      <td><strong>${x.weight} kg</strong></td>
-      <td><span style="font-size:12px; opacity:0.8;">${x.note || '-'}</span></td>
-    </tr>
-  `).join("");
-
-  modal.style.display = "flex";
-
-  if (globalChartInstance) {
-    globalChartInstance.destroy();
-  }
-
-  const ctx = document.getElementById('detailChart').getContext('2d');
-  globalChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: filteredData.map(x => x.date),
-      datasets: [{
-        label: '體重 (kg)',
-        data: filteredData.map(x => parseFloat(x.weight)),
-        borderColor: labelColor,
-        backgroundColor: 'rgba(71,143,184,0.1)',
-        borderWidth: 2.5,
-        pointBackgroundColor: labelColor,
-        pointRadius: filteredData.length > 15 ? 2 : 4,
-        tension: 0.25, 
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false } 
-      },
-      scales: {
-        x: {
-          grid: { display: false },
-          ticks: { color: darkMode ? '#cbd5e0' : '#506473', font: { size: 10 } }
-        },
-        y: {
-          grid: { color: darkMode ? '#3a4756' : '#eaf2f9' },
-          ticks: { color: darkMode ? '#cbd5e0' : '#506473', font: { size: 10 } }
-        }
-      }
-    }
-  });
-}
-
-function closeWeightDetailModal() {
-  document.getElementById("weightDetailModal").style.display = "none";
-  if (globalChartInstance) {
-    globalChartInstance.destroy();
-    globalChartInstance = null;
   }
 }
 
@@ -1255,8 +1045,8 @@ function exportWeightCSV() {
 }
 
 function triggerWeightImport(){document.getElementById("importWeightFile").click();}
-async function importWeightCSV(e) {
-  const file = e.target.files[0]; if(!file) return;
+async function importWeightCSV(e){
+  const file = e.target.files[0];if(!file)return;
   const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
   
   if(isOverwrite) {
@@ -1266,23 +1056,21 @@ async function importWeightCSV(e) {
     snapAll.forEach(doc => batch.delete(doc.ref));
     await batch.commit();
   } else {
-    if(!confirm("將以[增量]模式匯入體重資料，確定？")) return;
+    if(!confirm("將以[增量]模式匯入體重資料，確定？"))return;
   }
 
   const text = await file.text();
   const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l=>l.trim());
   let count=0;
-  for(let i=1; i<lines.length; i++) {
-    const parts = lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
-    const date = parts[0], weight = parts[1], note = parts[2]||"";
-    if(!date || !weight) continue;
-    
-    await weightCol.add({date, weight: weight.toString(), note, stamp: Date.now()+i});
+  for(let i=1;i<lines.length;i++){
+    const parts=lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
+    const date=parts[0], weight=parts[1], note=parts[2]||"";
+    if(!date||!weight||isNaN(parseFloat(weight)))continue;
+    await weightCol.add({date,weight:parseFloat(weight),note,stamp:Date.now()+i});
     count++;
   }
   alert(`體重匯入完成：${count} 筆`);
   document.getElementById("importWeightFile").value="";
-  currentWeightPage = 1; 
 }
 
 function exportParaCSV() {
@@ -1576,8 +1364,8 @@ async function importAllDataJSON(e) {
         for(const item of target.weight) await coll.add(item);
       }
       if(target.deworm && target.deworm.length) {
-        const collDeworm = db.collection(`catDeworm_${catId}`);
-        for(const item of target.deworm) await collDeworm.add(item);
+        const coll = db.collection(`catDeworm_${catId}`);
+        for(const item of target.deworm) await coll.add(item);
       }
     }
 
