@@ -968,7 +968,7 @@ async function delWeight(stamp){
   s.forEach(x=>x.ref.delete());
 }
 
-// 體重分頁渲染 + 新到舊排序（全新美化版：含 12345 頁碼與頁碼搜尋框）
+// 體重分頁渲染 + 新到舊排序（含自動去零點零零邏輯）
 function renderWeight(){
   // 強制由新到舊排序
   const allList = [...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -979,11 +979,11 @@ function renderWeight(){
   const totalPage = Math.ceil(allList.length / WEIGHT_PAGE_SIZE) || 1;
   if(weightCurrentPage > totalPage) weightCurrentPage = totalPage;
 
-  // 1. 生成表格內容
+  // 1. 生成表格內容 (使用 parseFloat 自動去掉結尾無意義的 0)
   document.getElementById("weightBody").innerHTML = pageList.map(x=>`
   <tr>
     <td>${x.date}</td>
-    <td>${x.weight}</td>
+    <td>${parseFloat(x.weight)}</td>
     <td>${x.note||"-"}</td>
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
@@ -1072,7 +1072,6 @@ function renderWeight(){
         <button class="btn-page-nav" onclick="weightPrevPage()" ${weightCurrentPage<=1?'disabled':''}>上一頁</button>
   `;
 
-  // 動態計算顯示的頁碼（最多顯示前後鄰近頁碼，避免頁數太多時炸開）
   let startPage = Math.max(1, weightCurrentPage - 2);
   let endPage = Math.min(totalPage, startPage + 4);
   if (endPage - startPage < 4) {
@@ -1095,12 +1094,10 @@ function renderWeight(){
     </div>
   `;
 
-  // 移除舊的分頁區塊並重新插入最新狀態
   const oldPagination = document.querySelector(".weight-pagination-wrap");
   if(oldPagination) oldPagination.remove();
   document.getElementById("weightBody").parentNode.insertAdjacentHTML("afterend", paginationHtml);
 
-  // 監聽搜尋輸入框的 Enter 事件
   setTimeout(() => {
     const input = document.getElementById("targetPageInput");
     if(input) {
@@ -1110,12 +1107,12 @@ function renderWeight(){
     }
   }, 50);
 
-  // 3. 更新上方統計數據
+  // 3. 更新上方統計數據 (同樣加上自動去掉無意義 .00 的邏輯)
   if(allList.length){
-    document.getElementById("weightLatest").innerText=`最新：${allList[0].weight} kg`;
+    document.getElementById("weightLatest").innerText=`最新：${parseFloat(allList[0].weight)} kg`;
     const vals=allList.map(x=>parseFloat(x.weight));
-    const avg = (vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
-    const diff = allList.length>=2 ? (vals[0]-vals[1]).toFixed(2) : 0;
+    const avg = parseFloat((vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2));
+    const diff = allList.length>=2 ? parseFloat((vals[0]-vals[1]).toFixed(2)) : 0;
 
     let maxItem = allList[0];
     let minItem = allList[0];
@@ -1124,8 +1121,8 @@ function renderWeight(){
       if (parseFloat(x.weight) < parseFloat(minItem.weight)) minItem = x;
     });
 
-    document.getElementById("wMax").innerHTML=`${maxItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
-    document.getElementById("wMin").innerHTML=`${minItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
+    document.getElementById("wMax").innerHTML=`${parseFloat(maxItem.weight)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
+    document.getElementById("wMin").innerHTML=`${parseFloat(minItem.weight)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
     document.getElementById("wAvg").innerText=avg+" kg";
     document.getElementById("wDiff").innerText=diff+" kg";
   } else {
