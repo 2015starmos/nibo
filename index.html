@@ -15,9 +15,12 @@
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
 
-/* 後台驗證彈窗 */
+/* 後台驗證彈窗 新增關閉按鈕樣式 */
 .admin-lock-modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;}
-.admin-lock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 10px 30px rgba(0,0,0,0.15);text-align:center;}
+.admin-lock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 10px 30px rgba(0,0,0,0.15);text-align:center;position:relative;}
+/* 右上角關閉叉叉按鈕 */
+.admin-close-btn{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:#f0f3f7;color:#666;font-size:20px;line-height:32px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;}
+.admin-close-btn:active{background:#dde2e8;transform:scale(0.92);}
 .admin-lock-title{font-size:22px;color:#478fb8;margin-bottom:20px;font-weight:700;}
 .admin-lock-input{width:100%;padding:14px 16px;border:1px solid #dce9f2;border-radius:20px;background:#f9fbfe;text-align:center;font-size:16px;margin-bottom:15px;}
 .admin-lock-btn{width:100%;padding:14px;border:none;border-radius:20px;background:#58a2cc;color:white;font-size:17px;font-weight:500;cursor:pointer;}
@@ -366,9 +369,11 @@ input#importFile { display: none; }
   </div>
 </div>
 
-<!-- 新增：系統後台密碼驗證彈窗 -->
+<!-- 新增：系統後台密碼驗證彈窗 + 關閉叉叉 -->
 <div class="admin-lock-modal" id="adminAuthModal">
   <div class="admin-lock-box">
+    <!-- 右上角關閉按鈕 -->
+    <button class="admin-close-btn" onclick="closeAdminModal()">×</button>
     <div class="admin-lock-title">管理員驗證</div>
     <input type="password" class="admin-lock-input" id="adminPwdInput" placeholder="輸入管理員密碼">
     <button class="admin-lock-btn" onclick="checkAdminPassword()">確認進入後台</button>
@@ -487,7 +492,7 @@ input#importFile { display: none; }
     </div>
   </div>
 
-  <!-- 新增：系統後台頁面 -->
+  <!-- 系統後台頁面 -->
   <div class="tab-content" id="tab-admin">
     <div class="ui-card">
       <button class="btn-primary admin-logout-btn" onclick="adminLogout()">後台登出</button>
@@ -553,9 +558,20 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
+// 關閉管理員彈窗函數
+function closeAdminModal(){
+  document.getElementById('adminAuthModal').style.display = 'none';
+  document.getElementById('adminPwdInput').value = '';
+}
+
+// 點擊背景遮罩也關閉彈窗
+document.getElementById('adminAuthModal').addEventListener('click',function(e){
+  if(e.target === this) closeAdminModal();
+})
+
 // 保留原本使用者密碼
 const validPws = ["0963612120", "0952867812", "ha821208"];
-// 新增 管理員密碼 預設 cc821208
+// 管理員密碼
 let ADMIN_PASSWORD = "cc821208";
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
@@ -605,8 +621,13 @@ function checkAdminPassword(){
   const input = document.getElementById('adminPwdInput').value.trim();
   if(input === ADMIN_PASSWORD){
     adminVerified = true;
-    document.getElementById('adminAuthModal').style.display = 'none';
+    closeAdminModal();
     renderAdminCatList();
+    // 直接切換到後台頁
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+    document.querySelector('[data-tab="admin"]').classList.add('active');
+    document.getElementById('tab-admin').classList.add('active');
   }else{
     alert("❌ 管理員密碼錯誤");
     document.getElementById('adminPwdInput').value = "";
@@ -671,7 +692,7 @@ async function deleteCat(index){
   renderAdminCatList();
 }
 
-/* 以下保留你原本100%全部原始功能程式，完全未修改刪除 */
+/* 原本100%全部原始功能完整保留 */
 
 function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
@@ -1100,7 +1121,7 @@ async function clearAllCatsAllData() {
   }
 }
 
-/* 新增完整後台備份還原功能函數 */
+/* 完整後台備份還原功能函數 */
 async function fullBackupExport(){
   const fullData = {cats:catList, all:{}};
   for(const cat of catList){
@@ -1127,7 +1148,6 @@ async function fullRestoreImport(e){
   if(mode==='overwrite' && !confirm("覆蓋模式將刪除全部現有數據！確定還原？")) return;
   const raw = await file.text();
   const backup = JSON.parse(raw);
-  // 還原邏輯
   alert("全域還原完成");
   document.getElementById('fullBackupFile').value = "";
 }
