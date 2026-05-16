@@ -818,10 +818,9 @@ function listenAllData(){
   });
   weightUnsubscribe = weightCol.onSnapshot(snap=>{
     weightData=[]; snap.forEach(d=>weightData.push(d.data()));
-    // 自動判斷超5筆切換下一頁
     const total = weightData.length;
-    const maxPage = Math.ceil(total / WEIGHT_PAGE_SIZE);
-    if(weightCurrentPage < maxPage) weightCurrentPage = maxPage;
+    const maxPage = Math.ceil(total / WEIGHT_PAGE_SIZE) || 1;
+    if(weightCurrentPage > maxPage) weightCurrentPage = maxPage;
     renderWeight();
   });
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
@@ -969,7 +968,7 @@ async function delWeight(stamp){
   s.forEach(x=>x.ref.delete());
 }
 
-// 體重分頁渲染 + 新到舊排序
+// 體重分頁渲染 + 新到舊排序（全新美化版：含 12345 頁碼與頁碼搜尋框）
 function renderWeight(){
   // 強制由新到舊排序
   const allList = [...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
@@ -977,22 +976,141 @@ function renderWeight(){
   const end = start + WEIGHT_PAGE_SIZE;
   const pageList = allList.slice(start, end);
 
-  // 分頁按鈕HTML
-  const totalPage = Math.ceil(allList.length / WEIGHT_PAGE_SIZE);
-  let pageBtnHtml = `<div style="display:flex;gap:8px;justify-content:center;margin:10px 0;">`;
-  pageBtnHtml += `<button class="btn-clear-day" onclick="weightPrevPage()" ${weightCurrentPage<=1?'disabled':''}>上一頁</button>`;
-  pageBtnHtml += `<span>第${weightCurrentPage}/${totalPage}頁</span>`;
-  pageBtnHtml += `<button class="btn-clear-day" onclick="weightNextPage()" ${weightCurrentPage>=totalPage?'disabled':''}>下一頁</button>`;
-  pageBtnHtml += `</div>`;
+  const totalPage = Math.ceil(allList.length / WEIGHT_PAGE_SIZE) || 1;
+  if(weightCurrentPage > totalPage) weightCurrentPage = totalPage;
 
+  // 1. 生成表格內容
   document.getElementById("weightBody").innerHTML = pageList.map(x=>`
   <tr>
     <td>${x.date}</td>
     <td>${x.weight}</td>
     <td>${x.note||"-"}</td>
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
-  </tr>`).join("") + pageBtnHtml;
+  </tr>`).join("");
 
+  // 2. 建立美化版分頁組件（動態插入樣式與結構）
+  let paginationHtml = `
+    <style>
+      .weight-pagination-wrap {
+        margin: 20px 0 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+      }
+      .weight-page-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        width: 100%;
+      }
+      .btn-page-nav {
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        background: var(--input-bg);
+        color: var(--text-main);
+        border-radius: 10px;
+        font-size: 13px;
+        cursor: pointer;
+      }
+      .btn-page-nav:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .btn-page-num {
+        min-width: 32px;
+        height: 32px;
+        padding: 0 6px;
+        border: none;
+        background: var(--btn-gray);
+        color: var(--text-main);
+        border-radius: 10px;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .btn-page-num.active {
+        background: var(--primary);
+        color: #fff;
+        font-weight: bold;
+      }
+      .weight-page-search {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--text-main);
+      }
+      .input-page-go {
+        width: 50px;
+        padding: 5px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--input-bg);
+        color: var(--text-main);
+        text-align: center;
+        font-size: 13px;
+      }
+      .btn-page-go {
+        padding: 5px 10px;
+        border: none;
+        background: var(--primary-light);
+        color: var(--primary);
+        border-radius: 8px;
+        font-size: 13px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+    </style>
+    <div class="weight-pagination-wrap">
+      <div class="weight-page-row">
+        <button class="btn-page-nav" onclick="weightPrevPage()" ${weightCurrentPage<=1?'disabled':''}>上一頁</button>
+  `;
+
+  // 動態計算顯示的頁碼（最多顯示前後鄰近頁碼，避免頁數太多時炸開）
+  let startPage = Math.max(1, weightCurrentPage - 2);
+  let endPage = Math.min(totalPage, startPage + 4);
+  if (endPage - startPage < 4) {
+    startPage = Math.max(1, endPage - 4);
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    paginationHtml += `<button class="btn-page-num ${i===weightCurrentPage?'active':''}" onclick="weightGoToPage(${i})">${i}</button>`;
+  }
+
+  paginationHtml += `
+        <button class="btn-page-nav" onclick="weightNextPage()" ${weightCurrentPage>=totalPage?'disabled':''}>下一頁</button>
+      </div>
+      <div class="weight-page-search">
+        <span>共 ${totalPage} 頁，跳至</span>
+        <input type="number" class="input-page-go" id="targetPageInput" min="1" max="${totalPage}" value="${weightCurrentPage}" inputmode="numeric">
+        <span>頁</span>
+        <button class="btn-page-go" onclick="weightSearchPage()">確定</button>
+      </div>
+    </div>
+  `;
+
+  // 移除舊的分頁區塊並重新插入最新狀態
+  const oldPagination = document.querySelector(".weight-pagination-wrap");
+  if(oldPagination) oldPagination.remove();
+  document.getElementById("weightBody").parentNode.insertAdjacentHTML("afterend", paginationHtml);
+
+  // 監聽搜尋輸入框的 Enter 事件
+  setTimeout(() => {
+    const input = document.getElementById("targetPageInput");
+    if(input) {
+      input.addEventListener("keydown", e => {
+        if(e.key === "Enter") weightSearchPage();
+      });
+    }
+  }, 50);
+
+  // 3. 更新上方統計數據
   if(allList.length){
     document.getElementById("weightLatest").innerText=`最新：${allList[0].weight} kg`;
     const vals=allList.map(x=>parseFloat(x.weight));
@@ -1018,19 +1136,42 @@ function renderWeight(){
     document.getElementById("wDiff").innerText="0 kg";
   }
 }
-// 體重換頁函數
+
+// 體重換頁控制函數組
 function weightPrevPage(){
   if(weightCurrentPage>1){
     weightCurrentPage--;
     renderWeight();
   }
 }
+
 function weightNextPage(){
-  const total = Math.ceil(weightData.length / WEIGHT_PAGE_SIZE);
+  const total = Math.ceil(weightData.length / WEIGHT_PAGE_SIZE) || 1;
   if(weightCurrentPage<total){
     weightCurrentPage++;
     renderWeight();
   }
+}
+
+function weightGoToPage(page){
+  weightCurrentPage = page;
+  renderWeight();
+}
+
+function weightSearchPage(){
+  const input = document.getElementById("targetPageInput");
+  if(!input) return;
+  let page = parseInt(input.value, 10);
+  const total = Math.ceil(weightData.length / WEIGHT_PAGE_SIZE) || 1;
+  
+  if(isNaN(page) || page < 1) {
+    page = 1;
+  } else if(page > total) {
+    page = total;
+  }
+  
+  weightCurrentPage = page;
+  renderWeight();
 }
 
 async function addDeworm(){
