@@ -730,16 +730,15 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
-// 🔒 異動重點 1：將原本寫死的明文密碼，全部替換成不重複的 SHA-256 雜湊編碼
-// 這串亂碼無法被反向解碼，就算按 F12 來看也毫無意義。
+// 🔒 SHA-256 密碼雜湊編碼陣列
 let validPwHashes = [
-  "76495116744047240f9076f62f3f9fecbf5643fc99cb9e8697960309e3bc8322", // 原 0963...
-  "a9d0db3b41785f81e695b2149b1ff580ee46fc1f5446059d332612b0e77699db", // 原 0952...
-  "1bc3861fb685b880fbfa4b619f7fb066440ec22efbf5788fa1284d7f76634fe7"  // 原 ha82...
+  "76495116744047240f9076f62f3f9fecbf5643fc99cb9e8697960309e3bc8322", // 0963...
+  "a9d0db3b41785f81e695b2149b1ff580ee46fc1f5446059d332612b0e77699db", // 0952...
+  "1bc3861fb685b880fbfa4b619f7fb066440ec22efbf5788fa1284d7f76634fe7"  // ha82...
 ];
 
-// 🔒 異動重點 2：後台專用密碼雜湊化
-const ADMIN_SECRET_HASH = "b4fe22c713b5ee0cb71b87ff4a68940ec6ee5f2780e0c8b6b66b4458f276c99c"; // 原 cc82...
+// 🔒 後台管理員專屬加密密碼 (cc821208)
+const ADMIN_SECRET_HASH = "b4fe22c713b5ee0cb71b87ff4a68940ec6ee5f2780e0c8b6b66b4458f276c99c";
 
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
@@ -754,7 +753,7 @@ let myWeightChart = null;
 let myLightboxChart = null;
 let chartDaysFilter = 7; 
 
-// 🔒 異動重點 3：新增一個內建標準 SHA-256 加密函式，負責把使用者輸入的密碼即時轉為亂碼作對比
+// 標準 SHA-256 加密功能
 async function sha256(message) {
   const msgBuffer = new TextEncoder().encode(message);
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -792,7 +791,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
-// 🔒 異動重點 4：改為非同步比對雜湊值，保障解鎖安全
 async function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
@@ -938,7 +936,6 @@ function executeTabSwitch(element, tabName) {
   }
 }
 
-// 🔒 異動重點 5：改為非同步比對後台管理員專屬的雜湊密碼
 async function verifyAdminTab() {
   const pwd = document.getElementById("adminModalPwd").value.trim();
   const inputHash = await sha256(pwd);
@@ -1029,7 +1026,6 @@ async function delOne(stamp){
   snap.forEach(d=>d.ref.delete());
 }
 
-// 🔒 異動重點 6：清空今日紀錄時，密碼檢查機制改為非同步雜湊比對
 async function clearDayRecord(){
   if(!confirm("⚠️ 確定要清空「當天選取日期」的所有飲水紀錄嗎？")) return;
   
@@ -1135,7 +1131,6 @@ async function delWeight(stamp){
   s.forEach(x=>x.ref.delete());
 }
 
-// 體重分頁渲染 + 新到舊排序（含自動去零點零零邏輯）
 function renderWeight(){
   const allList = [...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   const start = (weightCurrentPage - 1) * WEIGHT_PAGE_SIZE;
@@ -1450,7 +1445,6 @@ async function importParaCSV(e){
   document.getElementById("importParaFile").value="";
 }
 
-// 🔒 異動重點 7：清空全部數據時，密碼檢查機制改為非同步雜湊比對
 async function showClearAllConfirm() {
   if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) return;
 
@@ -1541,7 +1535,7 @@ async function deleteCatProfile(id) {
   }
 }
 
-// 🔒 異動重點 8：更新前台解鎖密碼時，改為將新輸入的密碼進行 SHA-256 雜湊編碼再推進陣列儲存
+// 🔒 修正漏洞：修正加密名稱比對，使更新密碼邏輯完全正確運作
 async function updateAdminPassword() {
   const oldPwd = document.getElementById("oldAdminPwd").value.trim();
   const newPwd = document.getElementById("newAdminPwd").value.trim();
@@ -1718,7 +1712,6 @@ async function importAllDataJSON(e) {
   }
 }
 
-// 體重曲線圖核心邏輯
 function setChartRange(days, element) {
   chartDaysFilter = days;
   document.querySelectorAll('.chart-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1815,7 +1808,6 @@ function updateWeightChart() {
   }
 }
 
-// 放大功能邏輯
 function openChartLightbox() {
   if (!weightData || weightData.length === 0) return;
   document.getElementById("chartLightbox").style.display = "flex";
