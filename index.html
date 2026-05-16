@@ -557,7 +557,29 @@ input#importFile { display: none; }
   </div>
 
   <div class="tab-content" id="tab-weight">
-    <!-- 🟢 體重曲線圖卡片（已置於體重紀錄輸入卡片正上方） -->
+    <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
+    
+    <div class="ui-card">
+      <input class="form-input" type="date" id="weightDate">
+      <input class="form-input" type="number" step="0.01" min="0" id="weightVal" placeholder="輸入體重 kg">
+      <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
+      <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
+    </div>
+
+    <div class="ui-card">
+      <div class="today-total-box" id="weightLatest">最新體重：0 kg</div>
+      <table class="record-table">
+        <thead><tr><th>日期</th><th>體重</th><th>備註</th><th>刪除</th></tr></thead>
+        <tbody id="weightBody"></tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportWeightCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="triggerWeightImport()">📥 匯入CSV</button>
+      </div>
+      <input type="file" id="importWeightFile" accept=".csv" style="display:none;" onchange="importWeightCSV(event)">
+    </div>
+
+    <!-- 🟢 體重曲線圖卡片（已修正：精確置於「體重統計」卡片正上方） -->
     <div class="ui-card">
       <div style="text-align:center; margin-bottom:12px; font-weight:500;">📈 體重趨勢曲線圖</div>
       
@@ -582,27 +604,7 @@ input#importFile { display: none; }
       </div>
     </div>
 
-    <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
-    <div class="ui-card">
-      <input class="form-input" type="date" id="weightDate">
-      <input class="form-input" type="number" step="0.01" min="0" id="weightVal" placeholder="輸入體重 kg">
-      <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
-      <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
-    </div>
-
-    <div class="ui-card">
-      <div class="today-total-box" id="weightLatest">最新體重：0 kg</div>
-      <table class="record-table">
-        <thead><tr><th>日期</th><th>體重</th><th>備註</th><th>刪除</th></tr></thead>
-        <tbody id="weightBody"></tbody>
-      </table>
-      <div class="btn-row">
-        <button class="btn-export" onclick="exportWeightCSV()">📤 匯出CSV</button>
-        <button class="btn-import" onclick="triggerWeightImport()">📥 匯入CSV</button>
-      </div>
-      <input type="file" id="importWeightFile" accept=".csv" style="display:none;" onchange="importWeightCSV(event)">
-    </div>
-
+    <!-- 體重統計卡片 -->
     <div class="ui-card">
       <div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計</div>
       <div class="stat-grid">
@@ -707,7 +709,7 @@ input#importFile { display: none; }
 </div>
 </div>
 
-<!-- 🟢 圖表全螢幕放大燈箱 -->
+<!-- 圖表全螢幕放大燈箱 -->
 <div class="chart-lightbox" id="chartLightbox">
   <div class="chart-lightbox-box">
     <button class="chart-lightbox-close" onclick="closeChartLightbox()">&times;</button>
@@ -737,7 +739,7 @@ let isAdminAuthenticated = false;
 const WEIGHT_PAGE_SIZE = 5;
 let weightCurrentPage = 1;
 
-// 🟢 圖表全域變數
+// 圖表全域變數
 let myWeightChart = null;
 let myLightboxChart = null;
 let chartDaysFilter = 7; 
@@ -906,7 +908,7 @@ function executeTabSwitch(element, tabName) {
   if(tabName==="water")document.getElementById("tab-water").classList.add("active");
   if(tabName==="weight") {
     document.getElementById("tab-weight").classList.add("active");
-    // 🟢 切換到體重分頁時，重新調整並重繪圖表
+    // 切換到體重分頁時，重新調整並重繪圖表
     setTimeout(() => { if(myWeightChart) myWeightChart.resize(); }, 100);
   }
   if(tabName==="deworm")document.getElementById("tab-deworm").classList.add("active");
@@ -961,7 +963,7 @@ function listenAllData(){
     const maxPage = Math.ceil(total / WEIGHT_PAGE_SIZE) || 1;
     if(weightCurrentPage > maxPage) weightCurrentPage = maxPage;
     renderWeight();
-    // 🟢 體重數據更新時重繪曲線圖
+    // 體重數據更新時重繪曲線圖
     updateWeightChart();
   });
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
@@ -983,7 +985,7 @@ function toggleDarkMode(){
   darkMode=!darkMode;
   document.body.classList.toggle("dark-mode");
   localStorage.setItem('darkMode', darkMode);
-  // 🟢 切換主題時同步更新圖表顏色
+  // 切換主題時同步更新圖表顏色
   updateWeightChart();
 }
 
@@ -1688,7 +1690,7 @@ async function importAllDataJSON(e) {
   }
 }
 
-// 🟢 體重曲線圖核心邏輯
+// 體重曲線圖核心邏輯
 function setChartRange(days, element) {
   chartDaysFilter = days;
   document.querySelectorAll('.chart-tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -1709,17 +1711,14 @@ function triggerCustomChartDate() {
 
 function updateWeightChart() {
   if (!weightData || weightData.length === 0) {
-    // 沒有數據時清空圖表
     if(myWeightChart) { myWeightChart.destroy(); myWeightChart = null; }
     if(myLightboxChart) { myLightboxChart.destroy(); myLightboxChart = null; }
     return;
   }
 
-  // 由舊到新排序供圖表由左至右顯示
   let sortedData = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date));
   const today = new Date();
 
-  // 日期篩選過濾
   if (chartDaysFilter !== 'all') {
     if (chartDaysFilter === 'custom') {
       const startVal = document.getElementById("chartStart").value;
@@ -1728,7 +1727,6 @@ function updateWeightChart() {
         sortedData = sortedData.filter(x => new Date(x.date) >= new Date(startVal));
       }
       if (endVal) {
-        // 包含結束當天
         let ed = new Date(endVal);
         ed.setHours(23,59,59,999);
         sortedData = sortedData.filter(x => new Date(x.date) <= ed);
@@ -1743,7 +1741,6 @@ function updateWeightChart() {
   const labels = sortedData.map(x => x.date);
   const dataPoints = sortedData.map(x => parseFloat(x.weight));
 
-  // 根據當前深淺色模式調整圖表色彩配置
   const isDark = document.body.classList.contains('dark-mode');
   const primaryColor = isDark ? '#63b3e0' : '#478fb8';
   const gridColor = isDark ? '#3a4756' : '#eaf2f9';
@@ -1780,25 +1777,22 @@ function updateWeightChart() {
     }
   };
 
-  // 渲染主圖表
   const ctx = document.getElementById('weightChart').getContext('2d');
   if (myWeightChart) {
     myWeightChart.destroy();
   }
   myWeightChart = new Chart(ctx, chartConfig);
 
-  // 如果放大燈箱正在開啟，同步渲染燈箱圖表
   if (document.getElementById("chartLightbox").style.display === "flex") {
     renderLightboxChart(chartConfig);
   }
 }
 
-// 🟢 放大功能邏輯
+// 放大功能邏輯
 function openChartLightbox() {
   if (!weightData || weightData.length === 0) return;
   document.getElementById("chartLightbox").style.display = "flex";
   
-  // 複製主圖表的設定至燈箱圖表
   let sortedData = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date));
   if (chartDaysFilter !== 'all') {
     if (chartDaysFilter === 'custom') {
