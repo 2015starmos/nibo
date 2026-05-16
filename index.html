@@ -383,6 +383,34 @@ input#importFile { display: none; }
   gap: 8px;
   margin-bottom: 8px;
 }
+
+/* 體重分頁控制元件樣式 */
+.pagination-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.page-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-main);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.page-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -466,7 +494,7 @@ input#importFile { display: none; }
     <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
-      <input class="form-input" type="number" step="0.01" min="0" id="weightVal" placeholder="輸入體重 kg">
+      <input class="form-input" type="number" step="0.0001" min="0" id="weightVal" placeholder="輸入體重 kg">
       <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
       <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
     </div>
@@ -477,6 +505,10 @@ input#importFile { display: none; }
         <thead><tr><th>日期</th><th>體重</th><th>備註</th><th>刪除</th></tr></thead>
         <tbody id="weightBody"></tbody>
       </table>
+      
+      <!-- 體重分頁導覽列 -->
+      <div class="pagination-wrap" id="weightPagination"></div>
+
       <div class="btn-row">
         <button class="btn-export" onclick="exportWeightCSV()">📤 匯出CSV</button>
         <button class="btn-import" onclick="triggerWeightImport()">📥 匯入CSV</button>
@@ -601,6 +633,9 @@ let validPws = ["0963612120", "0952867812", "ha821208"];
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
 let isAdminAuthenticated = false; 
+
+// 體重目前所在頁碼
+let currentWeightPage = 1;
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -737,6 +772,7 @@ function switchCat(){
   recordData = [];
   weightData = [];
   dewormData = [];
+  currentWeightPage = 1; // 切換貓咪時重設頁碼
   renderPage();
   renderWeight();
   renderDeworm();
@@ -911,7 +947,7 @@ async function importCSV(e){
   r.onload=async ev=>{
     const lines=ev.target.result.replace(/^\uFEFF/, "").split("\n").filter(l=>l.trim());
     let count=0;
-    for(let i=1;i<lines.length;i++){
+    for(let i=1; i<lines.length; i++){
       const [d,t,mlStr]=lines[i].split(",");
       const ml=parseInt(mlStr);
       if(d&&t&&!isNaN(ml)&&ml>0){
@@ -951,6 +987,7 @@ async function addWeight(){
   await weightCol.add({date:d,weight:v,note:n,stamp:Date.now()});
   document.getElementById("weightVal").value="";
   document.getElementById("weightNote").value="";
+  currentWeightPage = 1; // 新增後切回第一頁看最新資料
 }
 
 async function delWeight(stamp){
@@ -960,38 +997,67 @@ async function delWeight(stamp){
 }
 
 function renderWeight(){
-  const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById("weightBody").innerHTML=list.map(x=>`
+  // 1. 最新排序：優先比對日期(新->舊)，若同日期則比對時間戳記(新->舊)
+  const list=[...weightData].sort((a,b)=>{
+    if(b.date !== a.date) return new Date(b.date) - new Date(a.date);
+    return (b.stamp || 0) - (a.stamp || 0);
+  });
+
+  // 2. 分頁計算邏輯（每頁 10 筆）
+  const itemsPerPage = 10;
+  const totalItems = list.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+  if (currentWeightPage > totalPages) {
+    currentWeightPage = totalPages;
+  }
+
+  const startIndex = (currentWeightPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedList = list.slice(startIndex, endIndex);
+
+  // 3. 渲染當前頁面的 10 筆表格資料（移除所有的 .toFixed(2) 不進行四捨五入）
+  document.getElementById("weightBody").innerHTML=paginatedList.map(x=>`
   <tr>
     <td>${x.date}</td>
-    <td>${parseFloat(x.weight).toFixed(2)}</td>
+    <td>${x.weight}</td>
     <td>${x.note||"-"}</td>
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 
-  if(list.length){
-    document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
-    const vals=list.map(x=>parseFloat(x.weight));
-    const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
-    const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
+  // 4. 渲染分頁按鈕導覽列
+  const paginWrap = document.getElementById("weightPagination");
+  if(totalPages > 1) {
+    let paginHtml = `<button class="page-btn" ${currentWeightPage === 1 ? 'disabled' : ''} onclick="changeWeightPage(${currentWeightPage - 1})">上一頁</button>`;
+    for(let i = 1; i <= totalPages; i++) {
+      paginHtml += `<button class="page-btn ${currentWeightPage === i ? 'active' : ''}" onclick="changeWeightPage(${i})">${i}</button>`;
+    }
+    paginHtml += `<button class="page-btn" ${currentWeightPage === totalPages ? 'disabled' : ''} onclick="changeWeightPage(${currentWeightPage + 1})">下一頁</button>`;
+    paginWrap.innerHTML = paginHtml;
+  } else {
+    paginWrap.innerHTML = "";
+  }
 
-    // 🎯 核心更新：精準尋找最高與最低體重對應的年月日
+  // 5. 體重數據統計區塊（亦全面移除 .toFixed(2) 四捨五入）
+  if(list.length){
+    document.getElementById("weightLatest").innerText=`最新：${list[0].weight} kg`;
+    const vals=list.map(x=>parseFloat(x.weight));
+    
+    // 平均值依舊維持計算，但因可能產生無限小數，這裡保留完整呈現不特別限制，或您可自行調整
+    const avg=vals.reduce((s,x)=>s+x,0)/vals.length;
+    const diff=list.length Meso=2 ? (vals[0]-vals[1]) : 0;
+
     let maxItem = list[0];
     let minItem = list[0];
     list.forEach(x => {
-      if (parseFloat(x.weight) > parseFloat(maxItem.weight)) {
-        maxItem = x;
-      }
-      if (parseFloat(x.weight) < parseFloat(minItem.weight)) {
-        minItem = x;
-      }
+      if (parseFloat(x.weight) > parseFloat(maxItem.weight)) maxItem = x;
+      if (parseFloat(x.weight) < parseFloat(minItem.weight)) minItem = x;
     });
 
-    // 格式化輸出，將日期以半透明小字顯示在體重下方
-    document.getElementById("wMax").innerHTML=`${parseFloat(maxItem.weight).toFixed(2)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
-    document.getElementById("wMin").innerHTML=`${parseFloat(minItem.weight).toFixed(2)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
-    document.getElementById("wAvg").innerText=avg+" kg";
-    document.getElementById("wDiff").innerText=diff+" kg";
+    document.getElementById("wMax").innerHTML=`${maxItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
+    document.getElementById("wMin").innerHTML=`${minItem.weight} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
+    document.getElementById("wAvg").innerText=avg + " kg";
+    document.getElementById("wDiff").innerText=diff + " kg";
   } else {
     document.getElementById("weightLatest").innerText=`最新：0 kg`;
     document.getElementById("wMax").innerHTML="0 kg";
@@ -999,6 +1065,12 @@ function renderWeight(){
     document.getElementById("wAvg").innerText="0 kg";
     document.getElementById("wDiff").innerText="0 kg";
   }
+}
+
+// 切換頁碼函數
+function changeWeightPage(page) {
+  currentWeightPage = page;
+  renderWeight();
 }
 
 async function addDeworm(){
@@ -1031,9 +1103,14 @@ function renderDeworm(){
 function exportWeightCSV() {
   if (!weightData.length) {alert("目前沒有體重紀錄");return;}
   let csv = "\uFEFF日期,體重(kg),備註\n";
-  weightData.forEach(item => {
+  // 匯出時一併採用由新到舊的排序
+  const list=[...weightData].sort((a,b)=>{
+    if(b.date !== a.date) return new Date(b.date) - new Date(a.date);
+    return (b.stamp || 0) - (a.stamp || 0);
+  });
+  list.forEach(item => {
     const d = (item.date || "");
-    const w = item.weight;
+    const w = item.weight; // 不四捨五入
     const n = (item.note || "").replace(/"/g, '""');
     csv += `"${d}","${w}","${n}"\n`;
   });
@@ -1065,11 +1142,13 @@ async function importWeightCSV(e){
   for(let i=1;i<lines.length;i++){
     const parts=lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
     const date=parts[0], weight=parts[1], note=parts[2]||"";
-    if(!date||!weight||isNaN(parseFloat(weight)))continue;
+    if(!date||!weight||isNaN(parseFloat(weight))) continue;
+    // 匯入時精確保留原文字數值，不進行四捨五入限制
     await weightCol.add({date,weight:parseFloat(weight),note,stamp:Date.now()+i});
     count++;
   }
   alert(`體重匯入完成：${count} 筆`);
+  currentWeightPage = 1;
   document.getElementById("importWeightFile").value="";
 }
 
