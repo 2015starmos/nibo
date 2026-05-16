@@ -549,7 +549,6 @@ let ADMIN_PASSWORD = "cc821208";
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
 let adminVerified = false;
-let activeTab = "water"; // 記住當前分頁
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -573,10 +572,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('dark-mode');
   }
 
-  // 點擊分頁儲存當前頁
   document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      activeTab = btn.dataset.tab;
       if(btn.dataset.tab === 'admin' && !adminVerified){
         document.getElementById('adminAuthModal').style.display = 'flex';
       }else{
@@ -599,7 +596,7 @@ function checkAdminPassword(){
     adminVerified = true;
     closeAdminModal();
     renderAdminCatList();
-    switchTab(activeTab);
+    switchTab('admin');
   }else{
     alert("❌ 管理員密碼錯誤");
     document.getElementById('adminPwdInput').value = "";
@@ -687,10 +684,7 @@ let waterUnsubscribe,weightUnsubscribe,dewormUnsubscribe;
 let recordData=[],weightData=[],dewormData=[];
 let darkMode = localStorage.getItem('darkMode') === 'true';
 
-function initCatSystem(){ 
-  renderCatSelect(); 
-  setNow(); 
-}
+function initCatSystem(){ renderCatSelect(); switchCat(); setNow(); }
 function renderCatSelect(){
   document.getElementById("catSelect").innerHTML = catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
 }
@@ -705,7 +699,6 @@ function addNewCat(){
   switchCat();renderAdminCatList();
 }
 
-// 切換貓咪保留當前頁面，不跳回首頁
 function switchCat(){
   waterUnsubscribe?.();weightUnsubscribe?.();dewormUnsubscribe?.();
   currentCat = document.getElementById("catSelect").value;
@@ -713,7 +706,6 @@ function switchCat(){
   currentCatName = cat?.name||"貓咪";
   recordData=[];weightData=[];dewormData=[];
   listenAllData();
-  switchTab(activeTab);
   renderPage();renderWeight();renderDeworm();
 }
 
@@ -779,7 +771,7 @@ function renderPage(){
 }
 document.getElementById("selectDate").addEventListener("change",renderPage);
 
-// 體重完全原值顯示 無四捨五入
+// 體重新增 原生存值不捨入
 async function addWeight(){
   const d=document.getElementById("weightDate").value;
   const w=Number(document.getElementById("weightVal").value);
@@ -795,6 +787,7 @@ async function delWeight(stamp){
   snap.forEach(x=>x.ref.delete());
 }
 
+// 體重渲染 完全原值顯示 無捨位
 function renderWeight(){
   const list = [...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   document.getElementById("weightBody").innerHTML = list.map(x=>`
