@@ -326,6 +326,14 @@ input#importFile { display: none; }
   padding: 12px 6px;
   text-align: center;
 }
+/* 讓可點擊的統計項目有回饋感 */
+.stat-clickable {
+  cursor: pointer;
+}
+.stat-clickable:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
 .stat-label { font-size: 12px; color: var(--primary); margin-bottom: 3px; }
 .stat-num { font-size: 16px; font-weight: 600; line-height: 1.3; }
 
@@ -383,6 +391,64 @@ input#importFile { display: none; }
   gap: 8px;
   margin-bottom: 8px;
 }
+
+/* 全新自訂：詳情彈窗共用樣式 */
+.detail-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.detail-modal-box {
+  width: 100%;
+  max-width: 420px;
+  background: var(--card-bg);
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+.detail-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+.detail-modal-title {
+  font-size: 18px;
+  color: var(--primary);
+  font-weight: 600;
+}
+.detail-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 22px;
+  color: var(--text-main);
+  cursor: pointer;
+  padding: 0 5px;
+}
+.detail-modal-body {
+  overflow-y: auto;
+  flex: 1;
+  padding-right: 4px;
+}
+.detail-summary-box {
+  background: var(--primary-light);
+  padding: 12px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -411,6 +477,43 @@ input#importFile { display: none; }
     <button class="btn-clear-day" onclick="cancelAdminTab()" style="margin-top: 8px; width: 100%;">取消</button>
   </div>
 </div>
+
+<div class="detail-modal-backdrop" id="avgModal" style="display: none;">
+  <div class="detail-modal-box">
+    <div class="detail-modal-header">
+      <div class="detail-modal-title">📈 30日體重詳細分析</div>
+      <button class="detail-modal-close" onclick="closeAvgModal()">×</button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="detail-summary-box" id="avgSummary">
+        正在統計區間數據...
+      </div>
+      <table class="record-table">
+        <thead><tr><th>日期</th><th>體重</th><th>備註</th></tr></thead>
+        <tbody id="avgModalBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="detail-modal-backdrop" id="diffModal" style="display: none;">
+  <div class="detail-modal-box">
+    <div class="detail-modal-header">
+      <div class="detail-modal-title">📊 歷史體重波動變化</div>
+      <button class="detail-modal-close" onclick="closeDiffModal()">×</button>
+    </div>
+    <div class="detail-modal-body">
+      <div class="detail-summary-box" id="diffSummary">
+        正在計算波動特徵...
+      </div>
+      <table class="record-table">
+        <thead><tr><th>日期</th><th>體重</th><th>變動幅值</th></tr></thead>
+        <tbody id="diffModalBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 
 <div class="main-content">
 <div class="wrapper">
@@ -485,12 +588,12 @@ input#importFile { display: none; }
     </div>
 
     <div class="ui-card">
-      <div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計</div>
+      <div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計 (點擊看詳情)</div>
       <div class="stat-grid">
         <div class="stat-item"><div class="stat-label">最高體重</div><div class="stat-num" id="wMax">0 kg</div></div>
         <div class="stat-item"><div class="stat-label">最低體重</div><div class="stat-num" id="wMin">0 kg</div></div>
-        <div class="stat-item"><div class="stat-label">30日平均</div><div class="stat-num" id="wAvg">0 kg</div></div>
-        <div class="stat-item"><div class="stat-label">最近變化</div><div class="stat-num" id="wDiff">0 kg</div></div>
+        <div class="stat-item stat-clickable" onclick="openAvgModal()"><div class="stat-label">30日平均 🔍</div><div class="stat-num" id="wAvg">0 kg</div></div>
+        <div class="stat-item stat-clickable" onclick="openDiffModal()"><div class="stat-label">最近變化 🔍</div><div class="stat-num" id="wDiff">0 kg</div></div>
       </div>
     </div>
   </div>
@@ -822,6 +925,10 @@ function listenAllData(){
     const maxPage = Math.ceil(total / WEIGHT_PAGE_SIZE) || 1;
     if(weightCurrentPage > maxPage) weightCurrentPage = maxPage;
     renderWeight();
+    
+    // 如果對應的詳情視窗開著，同步更新內部資料
+    if(document.getElementById("avgModal").style.display === "flex") updateAvgModalContent();
+    if(document.getElementById("diffModal").style.display === "flex") updateDiffModalContent();
   });
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
@@ -1111,7 +1218,20 @@ function renderWeight(){
   if(allList.length){
     document.getElementById("weightLatest").innerText=`最新：${parseFloat(allList[0].weight)} kg`;
     const vals=allList.map(x=>parseFloat(x.weight));
-    const avg = parseFloat((vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2));
+    
+    // 計算30日平均 (這裡改為只計算近30日的時間區間平均)
+    const now = new Date();
+    const cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const recent30DaysList = allList.filter(x => new Date(x.date) >= cutoffDate);
+    
+    let avg;
+    if(recent30DaysList.length) {
+      const sum30 = recent30DaysList.reduce((s,x)=>s+parseFloat(x.weight), 0);
+      avg = parseFloat((sum30 / recent30DaysList.length).toFixed(2));
+    } else {
+      avg = parseFloat((vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2));
+    }
+
     const diff = allList.length>=2 ? parseFloat((vals[0]-vals[1]).toFixed(2)) : 0;
 
     let maxItem = allList[0];
@@ -1124,7 +1244,7 @@ function renderWeight(){
     document.getElementById("wMax").innerHTML=`${parseFloat(maxItem.weight)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
     document.getElementById("wMin").innerHTML=`${parseFloat(minItem.weight)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
     document.getElementById("wAvg").innerText=avg+" kg";
-    document.getElementById("wDiff").innerText=diff+" kg";
+    document.getElementById("wDiff").innerText=(diff > 0 ? "+" + diff : diff)+" kg";
   } else {
     document.getElementById("weightLatest").innerText=`最新：0 kg`;
     document.getElementById("wMax").innerHTML="0 kg";
@@ -1132,6 +1252,110 @@ function renderWeight(){
     document.getElementById("wAvg").innerText="0 kg";
     document.getElementById("wDiff").innerText="0 kg";
   }
+}
+
+// 全新自訂：30日平均詳情邏輯
+function openAvgModal() {
+  document.getElementById("avgModal").style.display = "flex";
+  updateAvgModalContent();
+}
+function closeAvgModal() {
+  document.getElementById("avgModal").style.display = "none";
+}
+function updateAvgModalContent() {
+  const allList = [...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const now = new Date();
+  const cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  
+  // 篩選近30天
+  const filtered = allList.filter(x => new Date(x.date) >= cutoffDate);
+  
+  if(!filtered.length) {
+    document.getElementById("avgSummary").innerText = "近 30 天內暫無體重紀錄數據。";
+    document.getElementById("avgModalBody").innerHTML = `<tr><td colspan="3" style="color:#aaa;">無區間資料</td></tr>`;
+    return;
+  }
+
+  const weights = filtered.map(x => parseFloat(x.weight));
+  const max = Math.max(...weights);
+  const min = Math.min(...weights);
+  const avg = (weights.reduce((a,b)=>a+b, 0) / weights.length).toFixed(2);
+
+  document.getElementById("avgSummary").innerHTML = `
+    🎯 <b>${currentCatName}</b> 近 30 天統計資訊：<br>
+    • 區間有效紀錄：<b>${filtered.length}</b> 筆<br>
+    • 區間平均體重：<span class="text-high"><b>${parseFloat(avg)} kg</b></span><br>
+    • 區間最高 / 最低：<b>${max} kg</b> / <b>${min} kg</b>
+  `;
+
+  document.getElementById("avgModalBody").innerHTML = filtered.map(x => `
+    <tr>
+      <td>${x.date}</td>
+      <td>${parseFloat(x.weight)} kg</td>
+      <td>${x.note || "-"}</td>
+    </tr>
+  `).join("");
+}
+
+// 全新自訂：最近變化波動詳情邏輯
+function openDiffModal() {
+  document.getElementById("diffModal").style.display = "flex";
+  updateDiffModalContent();
+}
+function closeDiffModal() {
+  document.getElementById("diffModal").style.display = "none";
+}
+function updateDiffModalContent() {
+  // 由舊到新排列以便計算增減幅度
+  const cronList = [...weightData].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  
+  if(cronList.length < 2) {
+    document.getElementById("diffSummary").innerText = "需要至少 2 筆以上的體重紀錄才能分析變化趨勢。";
+    document.getElementById("diffModalBody").innerHTML = `<tr><td colspan="3" style="color:#aaa;">紀錄不足</td></tr>`;
+    return;
+  }
+
+  // 計算每次變動幅值
+  let diffRecords = [];
+  for(let i = cronList.length - 1; i > 0; i--) {
+    const current = parseFloat(cronList[i].weight);
+    const previous = parseFloat(cronList[i-1].weight);
+    const dVal = parseFloat((current - previous).toFixed(2));
+    
+    let displayDiff = "";
+    if(dVal > 0) displayDiff = `<span style="color:var(--danger); font-weight:500;">+${dVal} kg 🔺</span>`;
+    else if(dVal < 0) displayDiff = `<span style="color:var(--green); font-weight:500;">${dVal} kg 🔻</span>`;
+    else displayDiff = `<span style="color:#888;">持平</span>`;
+
+    diffRecords.push({
+      date: cronList[i].date,
+      weight: current,
+      diffHtml: displayDiff
+    });
+  }
+
+  const latestDiff = parseFloat((parseFloat(cronList[cronList.length-1].weight) - parseFloat(cronList[cronList.length-2].weight)).toFixed(2));
+  let summaryHtml = `分析最新一筆與前一次紀錄比較，`;
+  if(latestDiff > 0) summaryHtml += `體重增加了 <span class="text-low"><b>+${latestDiff} kg</b></span>。建議關注是否伴隨飲食過量。`;
+  else if(latestDiff < 0) summaryHtml += `體重減輕了 <span class="text-normal"><b>${latestDiff} kg</b></span>。請注意是否屬於正常減重範圍。`;
+  else summaryHtml += `體重與上一次<b>完全相同</b>，保持平穩。`;
+
+  document.getElementById("diffSummary").innerHTML = `💡 <b>最新趨勢分析</b>：<br>${summaryHtml}`;
+  document.getElementById("diffModalBody").innerHTML = diffRecords.map(x => `
+    <tr>
+      <td>${x.date}</td>
+      <td>${x.weight} kg</td>
+      <td>${x.diffHtml}</td>
+    </tr>
+  `).join("");
+}
+
+// 點擊彈窗外部空白處可直接關閉視窗
+window.onclick = function(event) {
+  const avgM = document.getElementById("avgModal");
+  const diffM = document.getElementById("diffModal");
+  if (event.target === avgM) closeAvgModal();
+  if (event.target === diffM) closeDiffModal();
 }
 
 // 體重換頁控制函數組
@@ -1229,7 +1453,7 @@ async function importWeightCSV(e){
     if(!confirm("將以[增量]模式匯入體重資料，確定？"))return;
   }
 
-  const text = await file.text();
+  const text = file.text();
   const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l=>l.trim());
   let count=0;
   for(let i=1;i<lines.length;i++){
