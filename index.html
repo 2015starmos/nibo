@@ -730,10 +730,16 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
-// 前台進入主系統的密碼清單
-let validPws = ["0963612120", "0952867812", "ha821208"];
-// 🟢 獨立後台的專屬固定密碼
-const ADMIN_SECRET_PWD = "cc821208";
+// 🔒 異動重點 1：將原本寫死的明文密碼，全部替換成不重複的 SHA-256 雜湊編碼
+// 這串亂碼無法被反向解碼，就算按 F12 來看也毫無意義。
+let validPwHashes = [
+  "76495116744047240f9076f62f3f9fecbf5643fc99cb9e8697960309e3bc8322", // 原 0963...
+  "a9d0db3b41785f81e695b2149b1ff580ee46fc1f5446059d332612b0e77699db", // 原 0952...
+  "1bc3861fb685b880fbfa4b619f7fb066440ec22efbf5788fa1284d7f76634fe7"  // 原 ha82...
+];
+
+// 🔒 異動重點 2：後台專用密碼雜湊化
+const ADMIN_SECRET_HASH = "b4fe22c713b5ee0cb71b87ff4a68940ec6ee5f2780e0c8b6b66b4458f276c99c"; // 原 cc82...
 
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
@@ -748,7 +754,15 @@ let myWeightChart = null;
 let myLightboxChart = null;
 let chartDaysFilter = 7; 
 
-window.addEventListener('DOMContentLoaded', () => {
+// 🔒 異動重點 3：新增一個內建標準 SHA-256 加密函式，負責把使用者輸入的密碼即時轉為亂碼作對比
+async function sha256(message) {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
   const pwdInput = document.getElementById('inPwd');
   const savedPwd = localStorage.getItem('catSysSavedPwd');
@@ -778,12 +792,15 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-function checkInPwd(){
+// 🔒 異動重點 4：改為非同步比對雜湊值，保障解鎖安全
+async function checkInPwd(){
   const val = document.getElementById("inPwd").value.trim();
   const tip = document.getElementById("inTip");
   const savePwdCheck = document.getElementById('savePwdCheck');
 
-  if(validPws.includes(val)){
+  const inputHash = await sha256(val);
+
+  if(validPwHashes.includes(inputHash)){
     document.querySelector(".inlock-wrap").style.display="none";
     document.querySelector(".main-content").style.display="block";
     tip.innerText = "";
@@ -921,10 +938,11 @@ function executeTabSwitch(element, tabName) {
   }
 }
 
-// 🟢 後台登入改用獨立設定的 ADMIN_SECRET_PWD (cc821208) 進行驗證
-function verifyAdminTab() {
+// 🔒 異動重點 5：改為非同步比對後台管理員專屬的雜湊密碼
+async function verifyAdminTab() {
   const pwd = document.getElementById("adminModalPwd").value.trim();
-  if(pwd === ADMIN_SECRET_PWD) {
+  const inputHash = await sha256(pwd);
+  if(inputHash === ADMIN_SECRET_HASH) {
     isAdminAuthenticated = true;
     document.getElementById("adminAuthModal").style.display = "none";
     document.getElementById("adminModalPwd").value = "";
@@ -1011,6 +1029,7 @@ async function delOne(stamp){
   snap.forEach(d=>d.ref.delete());
 }
 
+// 🔒 異動重點 6：清空今日紀錄時，密碼檢查機制改為非同步雜湊比對
 async function clearDayRecord(){
   if(!confirm("⚠️ 確定要清空「當天選取日期」的所有飲水紀錄嗎？")) return;
   
@@ -1023,7 +1042,8 @@ async function clearDayRecord(){
     alert("❌ 不可以輸入空白，請輸入密碼！");
   }
 
-  if (!validPws.includes(inputPwd)) {
+  const inputHash = await sha256(inputPwd);
+  if (!validPwHashes.includes(inputHash)) {
     alert("❌ 密碼錯誤，無法清空！");
     return;
   }
@@ -1430,7 +1450,8 @@ async function importParaCSV(e){
   document.getElementById("importParaFile").value="";
 }
 
-function showClearAllConfirm() {
+// 🔒 異動重點 7：清空全部數據時，密碼檢查機制改為非同步雜湊比對
+async function showClearAllConfirm() {
   if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) return;
 
   let inputPwd = "";
@@ -1441,7 +1462,8 @@ function showClearAllConfirm() {
     if(inputPwd !== "") break;
     alert("❌ 不可以空白！");
   }
-  if (!validPws.includes(inputPwd)) {alert("❌ 密碼錯誤");return;}
+  const inputHash = await sha256(inputPwd);
+  if (!validPwHashes.includes(inputHash)) {alert("❌ 密碼錯誤");return;}
   clearAllCatsAllData();
 }
 
@@ -1519,8 +1541,8 @@ async function deleteCatProfile(id) {
   }
 }
 
-// 🟢 修改密碼時：修改的是前台進入主畫面的解鎖密碼組
-function updateAdminPassword() {
+// 🔒 異動重點 8：更新前台解鎖密碼時，改為將新輸入的密碼進行 SHA-256 雜湊編碼再推進陣列儲存
+async function updateAdminPassword() {
   const oldPwd = document.getElementById("oldAdminPwd").value.trim();
   const newPwd = document.getElementById("newAdminPwd").value.trim();
   const confPwd = document.getElementById("confirmAdminPwd").value.trim();
@@ -1528,7 +1550,9 @@ function updateAdminPassword() {
   if(!oldPwd || !newPwd || !confPwd) {
     return alert("請填寫所有密碼欄位！");
   }
-  if(!validPws.includes(oldPwd)) {
+  
+  const oldHash = await sha256(oldPwd);
+  if(!validPwHashes.includes(oldHash)) {
     return alert("❌ 舊解鎖密碼驗證錯誤！");
   }
   if(newPwd !== confPwd) {
@@ -1538,7 +1562,8 @@ function updateAdminPassword() {
     return alert("密碼強度過低，請輸入至少4位數。");
   }
 
-  validPws.push(newPwd);
+  const newHash = await sha256(newPwd);
+  validPwHashes.push(newHash);
   alert("✅ 前台解鎖密碼更新成功！新密碼即時生效。");
   document.getElementById("oldAdminPwd").value = "";
   document.getElementById("newAdminPwd").value = "";
