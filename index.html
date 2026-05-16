@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="format-detection" content="telephone=no">
+<meta format-detection="telephone=no">
 <title>貓貓の健康全紀錄</title>
 
 <style>
@@ -384,86 +384,102 @@ input#importFile { display: none; }
   margin-bottom: 8px;
 }
 
-/* 📊 體重趨勢曲線圖增強樣式 */
-.chart-container-box {
-  position: relative;
-  width: 100%;
-  cursor: pointer;
-  margin-top: 10px;
-}
-.chart-container-box:hover {
-  opacity: 0.92;
-}
-.chart-header-row {
+/* 體重曲線圖專用美化樣式 */
+.chart-filter-wrap {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 10px;
   margin-bottom: 12px;
 }
-.chart-title-text {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-main);
+.chart-quick-tabs {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
-.chart-filter-select {
-  padding: 6px 12px;
-  border-radius: 10px;
+.chart-tab-btn {
+  flex: 1;
+  white-space: nowrap;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
   background: var(--input-bg);
   color: var(--text-main);
-  font-size: 13px;
   cursor: pointer;
 }
-.chart-tap-tip {
-  text-align: center;
-  font-size: 11px;
-  color: var(--text-main);
-  opacity: 0.6;
-  margin-top: 4px;
+.chart-tab-btn.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
 }
-
-/* 🔍 全螢幕圖表燈箱樣式 */
-.chart-fullscreen-modal {
-  position: fixed;
-  inset: 0;
-  background: var(--card-bg);
-  z-index: 10000;
-  display: none;
-  flex-direction: column;
-  padding: 24px 16px;
-}
-.chart-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-.chart-modal-close-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: var(--btn-gray);
-  color: var(--text-main);
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
+.chart-custom-date {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
 }
-.chart-modal-close-btn:active {
-  transform: scale(0.9);
-}
-.chart-fullscreen-body {
+.chart-date-input {
   flex: 1;
+  padding: 8px;
+  font-size: 13px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--input-bg);
+  color: var(--text-main);
+  text-align: center;
+}
+.chart-container {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: 220px;
+  cursor: zoom-in;
+}
+
+/* 圖表放大燈箱樣式 */
+.chart-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.chart-lightbox-box {
+  width: 100%;
+  max-width: 800px;
+  background: var(--card-bg);
+  border-radius: 28px;
+  padding: 24px 16px 16px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  position: relative;
+}
+.chart-lightbox-close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  font-size: 28px;
+  color: var(--text-main);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  line-height: 1;
+}
+.chart-lightbox-close:hover {
+  color: var(--danger);
+}
+.lightbox-chart-container {
+  width: 100%;
+  height: 60vh;
+  min-height: 300px;
 }
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<!-- 引入 Chart.js 圖表庫 -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
@@ -487,16 +503,6 @@ input#importFile { display: none; }
     <input type="password" class="form-input" id="adminModalPwd" placeholder="輸入管理員密碼" style="margin-bottom: 16px;">
     <button class="btn-primary" onclick="verifyAdminTab()">確認進入後台</button>
     <button class="btn-clear-day" onclick="cancelAdminTab()" style="margin-top: 8px; width: 100%;">取消</button>
-  </div>
-</div>
-
-<div class="chart-fullscreen-modal" id="chartModal">
-  <div class="chart-modal-header">
-    <div class="chart-title-text" id="chartModalTitle">🐾 體重趨勢全螢幕放大檢視</div>
-    <button class="chart-modal-close-btn" onclick="closeChartModal()">✕</button>
-  </div>
-  <div class="chart-fullscreen-body">
-    <canvas id="weightFullscreenChart"></canvas>
   </div>
 </div>
 
@@ -551,25 +557,32 @@ input#importFile { display: none; }
   </div>
 
   <div class="tab-content" id="tab-weight">
-    <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
-    
+    <!-- 🟢 體重曲線圖卡片（已置於體重紀錄輸入卡片正上方） -->
     <div class="ui-card">
-      <div class="chart-header-row">
-        <div class="chart-title-text">📈 體重變化曲線圖</div>
-        <select class="chart-filter-select" id="chartRangeSelect" onchange="updateWeightChart()">
-          <option value="7">最近 7 次紀錄</option>
-          <option value="15" selected>最近 15 次紀錄</option>
-          <option value="30">最近 30 次紀錄</option>
-          <option value="90days">最近 90 天內</option>
-          <option value="all">全部歷史紀錄</option>
-        </select>
+      <div style="text-align:center; margin-bottom:12px; font-weight:500;">📈 體重趨勢曲線圖</div>
+      
+      <div class="chart-filter-wrap">
+        <div class="chart-quick-tabs">
+          <button class="chart-tab-btn active" onclick="setChartRange(7, this)">7天</button>
+          <button class="chart-tab-btn" onclick="setChartRange(30, this)">1個月</button>
+          <button class="chart-tab-btn" onclick="setChartRange(90, this)">3個月</button>
+          <button class="chart-tab-btn" onclick="setChartRange(180, this)">半年</button>
+          <button class="chart-tab-btn" onclick="setChartRange(365, this)">1年</button>
+          <button class="chart-tab-btn" onclick="setChartRange('all', this)">全部</button>
+        </div>
+        <div class="chart-custom-date">
+          <input type="date" class="chart-date-input" id="chartStart" onchange="triggerCustomChartDate()">
+          <span style="font-size:12px;">至</span>
+          <input type="date" class="chart-date-input" id="chartEnd" onchange="triggerCustomChartDate()">
+        </div>
       </div>
-      <div class="chart-container-box" onclick="openChartModal()">
-        <canvas id="weightInlineChart"></canvas>
+
+      <div class="chart-container" onclick="openChartLightbox()">
+        <canvas id="weightChart"></canvas>
       </div>
-      <div class="chart-tap-tip">💡 點擊曲線圖區域可全螢幕放大檢視</div>
     </div>
 
+    <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
       <input class="form-input" type="number" step="0.01" min="0" id="weightVal" placeholder="輸入體重 kg">
@@ -694,6 +707,17 @@ input#importFile { display: none; }
 </div>
 </div>
 
+<!-- 🟢 圖表全螢幕放大燈箱 -->
+<div class="chart-lightbox" id="chartLightbox">
+  <div class="chart-lightbox-box">
+    <button class="chart-lightbox-close" onclick="closeChartLightbox()">&times;</button>
+    <div style="text-align:center; margin-bottom:10px; font-weight:500; font-size:16px;">🔍 體重趨勢圖（放大模式）</div>
+    <div class="lightbox-chart-container">
+      <canvas id="lightboxWeightChart"></canvas>
+    </div>
+  </div>
+</div>
+
 <script>
 
 document.oncontextmenu = () => false;
@@ -713,9 +737,10 @@ let isAdminAuthenticated = false;
 const WEIGHT_PAGE_SIZE = 5;
 let weightCurrentPage = 1;
 
-// 圖表全域執行實例變數
-let inlineChartInstance = null;
-let fullscreenChartInstance = null;
+// 🟢 圖表全域變數
+let myWeightChart = null;
+let myLightboxChart = null;
+let chartDaysFilter = 7; 
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -881,8 +906,8 @@ function executeTabSwitch(element, tabName) {
   if(tabName==="water")document.getElementById("tab-water").classList.add("active");
   if(tabName==="weight") {
     document.getElementById("tab-weight").classList.add("active");
-    // 切換到體重分頁時，強制重新配置渲染曲線圖以校正大小
-    setTimeout(updateWeightChart, 60);
+    // 🟢 切換到體重分頁時，重新調整並重繪圖表
+    setTimeout(() => { if(myWeightChart) myWeightChart.resize(); }, 100);
   }
   if(tabName==="deworm")document.getElementById("tab-deworm").classList.add("active");
   if(tabName==="admin") {
@@ -936,7 +961,7 @@ function listenAllData(){
     const maxPage = Math.ceil(total / WEIGHT_PAGE_SIZE) || 1;
     if(weightCurrentPage > maxPage) weightCurrentPage = maxPage;
     renderWeight();
-    // 雲端同步更新時，即時重繪曲線圖
+    // 🟢 體重數據更新時重繪曲線圖
     updateWeightChart();
   });
   dewormUnsubscribe = dewormCol.onSnapshot(snap=>{
@@ -958,7 +983,7 @@ function toggleDarkMode(){
   darkMode=!darkMode;
   document.body.classList.toggle("dark-mode");
   localStorage.setItem('darkMode', darkMode);
-  // 切換深淺色主題時同步重繪圖表修正文字顯色
+  // 🟢 切換主題時同步更新圖表顏色
   updateWeightChart();
 }
 
@@ -1096,7 +1121,6 @@ function renderWeight(){
   const totalPage = Math.ceil(allList.length / WEIGHT_PAGE_SIZE) || 1;
   if(weightCurrentPage > totalPage) weightCurrentPage = totalPage;
 
-  // 1. 生成表格內容
   document.getElementById("weightBody").innerHTML = pageList.map(x=>`
   <tr>
     <td>${x.date}</td>
@@ -1105,7 +1129,6 @@ function renderWeight(){
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 
-  // 2. 建立美化版分頁組件
   let paginationHtml = `
     <style>
       .weight-pagination-wrap {
@@ -1224,7 +1247,6 @@ function renderWeight(){
     }
   }, 50);
 
-  // 3. 更新上方統計數據
   if(allList.length){
     document.getElementById("weightLatest").innerText=`最新：${parseFloat(allList[0].weight)} kg`;
     const vals=allList.map(x=>parseFloat(x.weight));
@@ -1285,153 +1307,6 @@ function weightSearchPage(){
   
   weightCurrentPage = page;
   renderWeight();
-}
-
-/* 📊 體重數據過濾處理與趨勢圖控制核心函數組 */
-function getFilteredWeightData() {
-  // 將資料按日期時間序由舊到新排序，以便左到右繪製曲線
-  let sortedData = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date));
-  const filterRange = document.getElementById("chartRangeSelect").value;
-  
-  if (filterRange === "7") {
-    return sortedData.slice(-7);
-  } else if (filterRange === "15") {
-    return sortedData.slice(-15);
-  } else if (filterRange === "30") {
-    return sortedData.slice(-30);
-  } else if (filterRange === "90days") {
-    const deadline = Date.now() - 90 * 24 * 60 * 60 * 1000;
-    return sortedData.filter(x => new Date(x.date).getTime() >= deadline);
-  }
-  return sortedData; // 全部歷史
-}
-
-function updateWeightChart() {
-  // 若未處於體重分頁，暫緩載入以避免 Canvas 壓縮變形
-  if (!document.getElementById("tab-weight").classList.contains("active")) return;
-
-  const dataset = getFilteredWeightData();
-  const labels = dataset.map(x => x.date.slice(5)); // 去除年份顯示月份與日期 (MM-DD)
-  const dataPoints = dataset.map(x => parseFloat(x.weight));
-
-  // 動態判斷深淺色模式文字色彩
-  const isDark = document.body.classList.contains("dark-mode");
-  const textColor = isDark ? "#cbd5e0" : "#506473";
-  const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
-  const primaryColor = isDark ? "#63b3e0" : "#478fb8";
-
-  const chartConfig = {
-    type: 'line',
-    data: {
-      labels: labels,
-      datasets: [{
-        label: `${currentCatName} 體重曲線 (kg)`,
-        data: dataPoints,
-        borderColor: primaryColor,
-        backgroundColor: isDark ? 'rgba(99,179,224,0.15)' : 'rgba(71,143,184,0.12)',
-        borderWidth: 2.5,
-        pointBackgroundColor: primaryColor,
-        pointRadius: 4,
-        pointHoverRadius: 6,
-        tension: 0.25,
-        fill: true
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          labels: { color: textColor, font: { family: 'sans-serif', size: 12 } }
-        },
-        tooltip: { intersect: false, mode: 'index' }
-      },
-      scales: {
-        x: {
-          grid: { color: gridColor },
-          ticks: { color: textColor, font: { size: 11 } }
-        },
-        y: {
-          grid: { color: gridColor },
-          ticks: { color: textColor, font: { size: 11 } }
-        }
-      }
-    }
-  };
-
-  // 1. 渲染嵌入型卡片曲線圖 (卡片介面)
-  const inlineCtx = document.getElementById("weightInlineChart");
-  if (inlineCtx) {
-    if (inlineChartInstance) inlineChartInstance.destroy();
-    inlineChartInstance = new Chart(inlineCtx, chartConfig);
-  }
-
-  // 2. 渲染放大版燈箱曲線圖 (如果燈箱此時正開啟中)
-  const fullscreenCtx = document.getElementById("weightFullscreenChart");
-  if (fullscreenCtx && document.getElementById("chartModal").style.display === "flex") {
-    if (fullscreenChartInstance) fullscreenChartInstance.destroy();
-    fullscreenChartInstance = new Chart(fullscreenCtx, chartConfig);
-  }
-}
-
-function openChartModal() {
-  const modal = document.getElementById("chartModal");
-  document.getElementById("chartModalTitle").innerText = `🐾 ${currentCatName} 體重趨勢全螢幕放大檢視`;
-  modal.style.display = "flex";
-  
-  // 燈箱佈局就緒後，延遲繪製滿版放大圖表
-  setTimeout(() => {
-    const dataset = getFilteredWeightData();
-    const labels = dataset.map(x => x.date); // 放大版顯示完整 YYYY-MM-DD
-    const dataPoints = dataset.map(x => parseFloat(x.weight));
-
-    const isDark = document.body.classList.contains("dark-mode");
-    const textColor = isDark ? "#cbd5e0" : "#506473";
-    const gridColor = isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)";
-    const primaryColor = isDark ? "#63b3e0" : "#478fb8";
-
-    if (fullscreenChartInstance) fullscreenChartInstance.destroy();
-    
-    const ctx = document.getElementById("weightFullscreenChart").getContext("2d");
-    fullscreenChartInstance = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: `${currentCatName} 體重 (kg)`,
-          data: dataPoints,
-          borderColor: primaryColor,
-          backgroundColor: isDark ? 'rgba(99,179,224,0.08)' : 'rgba(71,143,184,0.05)',
-          borderWidth: 3,
-          pointBackgroundColor: primaryColor,
-          pointRadius: 5,
-          pointHoverRadius: 8,
-          tension: 0.2,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { labels: { color: textColor, font: { size: 14, weight: '600' } } },
-          tooltip: { padding: 12, bodyFontSize: 14, titleFontSize: 14 }
-        },
-        scales: {
-          x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 12 } } },
-          y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 12 } } }
-        }
-      }
-    });
-  }, 100);
-}
-
-function closeChartModal() {
-  document.getElementById("chartModal").style.display = "none";
-  if (fullscreenChartInstance) {
-    fullscreenChartInstance.destroy();
-    fullscreenChartInstance = null;
-  }
 }
 
 async function addDeworm(){
@@ -1810,6 +1685,187 @@ async function importAllDataJSON(e) {
     alert("❌ 解析還原出錯: " + err.message);
   } finally {
     document.getElementById("importAllFile").value = "";
+  }
+}
+
+// 🟢 體重曲線圖核心邏輯
+function setChartRange(days, element) {
+  chartDaysFilter = days;
+  document.querySelectorAll('.chart-tab-btn').forEach(btn => btn.classList.remove('active'));
+  if(element) element.classList.add('active');
+  
+  // 清空自訂日期欄位以防混淆
+  document.getElementById("chartStart").value = "";
+  document.getElementById("chartEnd").value = "";
+  
+  updateWeightChart();
+}
+
+function triggerCustomChartDate() {
+  chartDaysFilter = 'custom';
+  document.querySelectorAll('.chart-tab-btn').forEach(btn => btn.classList.remove('active'));
+  updateWeightChart();
+}
+
+function updateWeightChart() {
+  if (!weightData || weightData.length === 0) {
+    // 沒有數據時清空圖表
+    if(myWeightChart) { myWeightChart.destroy(); myWeightChart = null; }
+    if(myLightboxChart) { myLightboxChart.destroy(); myLightboxChart = null; }
+    return;
+  }
+
+  // 由舊到新排序供圖表由左至右顯示
+  let sortedData = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date));
+  const today = new Date();
+
+  // 日期篩選過濾
+  if (chartDaysFilter !== 'all') {
+    if (chartDaysFilter === 'custom') {
+      const startVal = document.getElementById("chartStart").value;
+      const endVal = document.getElementById("chartEnd").value;
+      if (startVal) {
+        sortedData = sortedData.filter(x => new Date(x.date) >= new Date(startVal));
+      }
+      if (endVal) {
+        // 包含結束當天
+        let ed = new Date(endVal);
+        ed.setHours(23,59,59,999);
+        sortedData = sortedData.filter(x => new Date(x.date) <= ed);
+      }
+    } else {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(today.getDate() - parseInt(chartDaysFilter));
+      sortedData = sortedData.filter(x => new Date(x.date) >= cutoffDate);
+    }
+  }
+
+  const labels = sortedData.map(x => x.date);
+  const dataPoints = sortedData.map(x => parseFloat(x.weight));
+
+  // 根據當前深淺色模式調整圖表色彩配置
+  const isDark = document.body.classList.contains('dark-mode');
+  const primaryColor = isDark ? '#63b3e0' : '#478fb8';
+  const gridColor = isDark ? '#3a4756' : '#eaf2f9';
+  const textColor = isDark ? '#cbd5e0' : '#506473';
+
+  const chartConfig = {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: `${currentCatName} 體重 (kg)`,
+        data: dataPoints,
+        borderColor: primaryColor,
+        backgroundColor: isDark ? 'rgba(99,179,224,0.15)' : 'rgba(71,143,184,0.15)',
+        borderWidth: 3,
+        pointBackgroundColor: primaryColor,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.2,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: textColor, font: { family: 'sans-serif', size: 12 } } },
+        tooltip: { callbacks: { label: (context) => ` ${context.parsed.y} kg` } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor } }
+      }
+    }
+  };
+
+  // 渲染主圖表
+  const ctx = document.getElementById('weightChart').getContext('2d');
+  if (myWeightChart) {
+    myWeightChart.destroy();
+  }
+  myWeightChart = new Chart(ctx, chartConfig);
+
+  // 如果放大燈箱正在開啟，同步渲染燈箱圖表
+  if (document.getElementById("chartLightbox").style.display === "flex") {
+    renderLightboxChart(chartConfig);
+  }
+}
+
+// 🟢 放大功能邏輯
+function openChartLightbox() {
+  if (!weightData || weightData.length === 0) return;
+  document.getElementById("chartLightbox").style.display = "flex";
+  
+  // 複製主圖表的設定至燈箱圖表
+  let sortedData = [...weightData].sort((a,b) => new Date(a.date) - new Date(b.date));
+  if (chartDaysFilter !== 'all') {
+    if (chartDaysFilter === 'custom') {
+      const startVal = document.getElementById("chartStart").value;
+      const endVal = document.getElementById("chartEnd").value;
+      if (startVal) sortedData = sortedData.filter(x => new Date(x.date) >= new Date(startVal));
+      if (endVal) {
+        let ed = new Date(endVal); ed.setHours(23,59,59,999);
+        sortedData = sortedData.filter(x => new Date(x.date) <= ed);
+      }
+    } else {
+      const cutoffDate = new Date();
+      cutoffDate.setDate(new Date().getDate() - parseInt(chartDaysFilter));
+      sortedData = sortedData.filter(x => new Date(x.date) >= cutoffDate);
+    }
+  }
+
+  const isDark = document.body.classList.contains('dark-mode');
+  const primaryColor = isDark ? '#63b3e0' : '#478fb8';
+  const gridColor = isDark ? '#3a4756' : '#eaf2f9';
+  const textColor = isDark ? '#cbd5e0' : '#506473';
+
+  const lightboxConfig = {
+    type: 'line',
+    data: {
+      labels: sortedData.map(x => x.date),
+      datasets: [{
+        label: `${currentCatName} 體重 (kg)`,
+        data: sortedData.map(x => parseFloat(x.weight)),
+        borderColor: primaryColor,
+        backgroundColor: isDark ? 'rgba(99,179,224,0.1)' : 'rgba(71,143,184,0.1)',
+        borderWidth: 4,
+        pointBackgroundColor: primaryColor,
+        pointRadius: 6,
+        tension: 0.2,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: textColor, font: { size: 14 } } }
+      },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 13 } } },
+        y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 13 } } }
+      }
+    }
+  };
+
+  renderLightboxChart(lightboxConfig);
+}
+
+function renderLightboxChart(config) {
+  const lCtx = document.getElementById('lightboxWeightChart').getContext('2d');
+  if (myLightboxChart) {
+    myLightboxChart.destroy();
+  }
+  myLightboxChart = new Chart(lCtx, config);
+}
+
+function closeChartLightbox() {
+  document.getElementById("chartLightbox").style.display = "none";
+  if (myLightboxChart) {
+    myLightboxChart.destroy();
+    myLightboxChart = null;
   }
 }
 </script>
