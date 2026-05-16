@@ -15,7 +15,6 @@
 .inlock-tip{height:20px;font-size:14px;color:#f28484;margin:6px 0;}
 .main-content{display:none;}
 
-/* 後台驗證彈窗 + 關閉按鈕 */
 .admin-lock-modal{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;}
 .admin-lock-box{width:100%;max-width:360px;background:#fff;border-radius:24px;padding:28px 20px;box-shadow:0 10px 30px rgba(0,0,0,0.15);text-align:center;position:relative;}
 .admin-close-btn{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:none;background:#f0f3f7;color:#666;font-size:20px;line-height:32px;cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center;}
@@ -317,7 +316,6 @@ body {
   cursor: pointer;
 }
 
-/* 後台專用樣式 */
 .admin-logout-btn{background:#999;color:white;margin-bottom:16px;}
 .admin-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-color);margin:6px 0;}
 .admin-btn-sm{padding:8px 14px;border-radius:12px;border:none;cursor:pointer;}
@@ -335,7 +333,6 @@ body {
 
 <body>
 
-<!-- 一般使用者解鎖 -->
 <div class="inlock-wrap">
   <div class="inlock-box">
     <div class="inlock-title">🔐 波波健康紀錄 解鎖</div>
@@ -348,7 +345,6 @@ body {
   </div>
 </div>
 
-<!-- 管理員驗證彈窗 -->
 <div class="admin-lock-modal" id="adminAuthModal">
   <div class="admin-lock-box">
     <button class="admin-close-btn" onclick="closeAdminModal()">×</button>
@@ -370,14 +366,13 @@ body {
   </div>
 
   <div class="tab-wrap">
-    <button class="tab-btn active" data-tab="water">飲水</button>
+    <button class="tab-btn" data-tab="water">飲水</button>
     <button class="tab-btn" data-tab="weight">體重</button>
     <button class="tab-btn" data-tab="deworm">驅蟲</button>
     <button class="tab-btn" data-tab="admin">系統後台</button>
   </div>
 
-  <!-- 飲水頁 -->
-  <div class="tab-content active" id="tab-water">
+  <div class="tab-content" id="tab-water">
     <div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="selectDate">
@@ -409,13 +404,11 @@ body {
     </div>
   </div>
 
-  <!-- 體重頁 (已修改最高/最低顯示日期) -->
   <div class="tab-content" id="tab-weight">
     <div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
     <div class="ui-card">
       <input class="form-input" type="date" id="weightDate">
-
-<input class="form-input" type="number" step="0.001" min="0" id="weightVal" placeholder="輸入體重 kg">
+      <input class="form-input" type="number" step="0.001" min="0" id="weightVal" placeholder="輸入體重 kg">
       <input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
       <button class="btn-primary" onclick="addWeight()">✅ 新增體重紀錄</button>
     </div>
@@ -444,7 +437,6 @@ body {
     </div>
   </div>
 
-  <!-- 驅蟲頁 -->
   <div class="tab-content" id="tab-deworm">
     <div class="info-banner">🐛 體外驅蟲紀錄｜提醒下次使用時間</div>
     <div class="ui-card">
@@ -471,11 +463,9 @@ body {
     </div>
   </div>
 
-  <!-- 系統後台頁 -->
   <div class="tab-content" id="tab-admin">
     <div class="ui-card">
       <button class="btn-primary admin-logout-btn" onclick="adminLogout()">後台登出</button>
-
       <h3 style="margin-bottom:12px;text-align:left;">🔐 密碼管理（雲端）</h3>
       <input class="form-input" type="password" id="oldAdminPwd" placeholder="舊登入密碼">
       <input class="form-input" type="password" id="newAdminPwd1" placeholder="新登入密碼">
@@ -529,7 +519,6 @@ body {
 </div>
 
 <script>
-
 document.oncontextmenu = () => false;
 document.addEventListener('keydown',e=>{
   if(e.keyCode===123) e.preventDefault();
@@ -549,7 +538,7 @@ let ADMIN_PASSWORD = "cc821208";
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
 let adminVerified = false;
-let activeTab = "water"; // 記住當前分頁
+let activeTab = localStorage.getItem('activeTab') || 'water';
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -573,17 +562,19 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.classList.add('dark-mode');
   }
 
-  // 點擊分頁儲存當前頁
   document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       activeTab = btn.dataset.tab;
+      localStorage.setItem('activeTab', activeTab);
       if(btn.dataset.tab === 'admin' && !adminVerified){
         document.getElementById('adminAuthModal').style.display = 'flex';
       }else{
-        switchTab(btn.dataset.tab);
+        switchTab(activeTab);
       }
     })
-  })
+  });
+
+  switchTab(activeTab);
 });
 
 function switchTab(t){
@@ -633,13 +624,13 @@ async function editCatName(i){
   const name = prompt("輸入新名稱：",catList[i].name);
   if(!name)return;
   catList[i].name = name;
-  localStorage.setItem("petCats",JSON.stringify(catList));
+  await saveCatListToCloud();
   renderCatSelect();renderAdminCatList();
 }
 async function deleteCat(i){
   if(!confirm("確定刪除此貓與全部紀錄？"))return;
   catList.splice(i,1);
-  localStorage.setItem("petCats",JSON.stringify(catList));
+  await saveCatListToCloud();
   renderCatSelect();renderAdminCatList();
 }
 
@@ -681,31 +672,46 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let currentCat = "default";
-let catList = JSON.parse(localStorage.getItem("petCats") || '[{"id":"default","name":"波波"}]');
+let catList = [];
 let currentCatName = "波波";
 let waterUnsubscribe,weightUnsubscribe,dewormUnsubscribe;
 let recordData=[],weightData=[],dewormData=[];
 let darkMode = localStorage.getItem('darkMode') === 'true';
 
-function initCatSystem(){ 
-  renderCatSelect(); 
-  setNow(); 
+async function initCatSystem(){
+  await loadCatListFromCloud();
+  renderCatSelect();
+  setNow();
+  switchCat();
 }
+
+async function loadCatListFromCloud(){
+  const doc = await db.collection("global").doc("catList").get();
+  if(doc.exists){
+    catList = doc.data().list;
+  }else{
+    catList = [{id:"default",name:"波波"}];
+    await saveCatListToCloud();
+  }
+}
+async function saveCatListToCloud(){
+  await db.collection("global").doc("catList").set({list:catList});
+}
+
 function renderCatSelect(){
   document.getElementById("catSelect").innerHTML = catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
 }
-function addNewCat(){
+async function addNewCat(){
   const name = prompt("輸入貓名：");
   if(!name)return;
   const id = "cat_"+Date.now();
   catList.push({id,name});
-  localStorage.setItem("petCats",JSON.stringify(catList));
+  await saveCatListToCloud();
   renderCatSelect();
   document.getElementById("catSelect").value = id;
   switchCat();renderAdminCatList();
 }
 
-// 切換貓咪保留當前頁面，不跳回首頁
 function switchCat(){
   waterUnsubscribe?.();weightUnsubscribe?.();dewormUnsubscribe?.();
   currentCat = document.getElementById("catSelect").value;
@@ -714,7 +720,6 @@ function switchCat(){
   recordData=[];weightData=[];dewormData=[];
   listenAllData();
   switchTab(activeTab);
-  renderPage();renderWeight();renderDeworm();
 }
 
 function listenAllData(){
@@ -722,9 +727,29 @@ function listenAllData(){
   const weCol = db.collection(`catWeight_${currentCat}`);
   const dCol = db.collection(`catDeworm_${currentCat}`);
 
-  waterUnsubscribe = wCol.onSnapshot(s=>{recordData=s.docs.map(x=>x.data());renderPage()});
-  weightUnsubscribe = weCol.onSnapshot(s=>{weightData=s.docs.map(x=>x.data());renderWeight()});
-  dewormUnsubscribe = dCol.onSnapshot(s=>{dewormData=s.docs.map(x=>x.data());renderDeworm()});
+  let syncCount = 0;
+  const checkSyncDone = () => {
+    syncCount++;
+    if(syncCount >=3){
+      document.getElementById("syncBadge").innerText = "☁️ 雲端同步完成";
+    }
+  };
+
+  waterUnsubscribe = wCol.onSnapshot(s=>{
+    recordData=s.docs.map(x=>x.data());
+    renderPage();
+    checkSyncDone();
+  });
+  weightUnsubscribe = weCol.onSnapshot(s=>{
+    weightData=s.docs.map(x=>x.data());
+    renderWeight();
+    checkSyncDone();
+  });
+  dewormUnsubscribe = dCol.onSnapshot(s=>{
+    dewormData=s.docs.map(x=>x.data());
+    renderDeworm();
+    checkSyncDone();
+  });
 }
 
 const setNow = () => {
@@ -779,7 +804,6 @@ function renderPage(){
 }
 document.getElementById("selectDate").addEventListener("change",renderPage);
 
-// 體重完全原值顯示 無四捨五入
 async function addWeight(){
   const d=document.getElementById("weightDate").value;
   const w=Number(document.getElementById("weightVal").value);
@@ -838,7 +862,7 @@ function renderDeworm(){
     <td>${x.date}</td>
     <td>${x.drug||"-"}</td>
     <td>${x.next||"-"}</td>
-    <td><button class='btn-delete' onclick="delDeworm(${x.stamp})">刪</button></td>
+    <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 }
 async function addDeworm(){
