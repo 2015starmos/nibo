@@ -325,6 +325,8 @@ body {
 .admin-orange{background:#e39548;color:white;}
 .admin-desc{font-size:12px;color:#d9534f;margin-top:8px;text-align:center;}
 .radio-row{display:flex;gap:20px;margin:10px 0 16px;padding:0 10px;}
+.warn-low{color:var(--warn);}
+.warn-high{color:var(--danger);}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -440,7 +442,7 @@ body {
   <div class="tab-content" id="tab-deworm">
     <div class="info-banner">🐛 體外驅蟲紀錄｜提醒下次使用時間</div>
     <div class="ui-card">
-      <input class="form-input" type="date" id="dewormDate">
+      <input class="form-input" type="date" id="dewormDate" onchange="autoNextDeworm()">
       <select class="form-input" id="dewormDrug">
         <option value="">請選擇藥品</option>
         <option value="全能貓">全能貓</option>
@@ -527,6 +529,7 @@ document.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.keyCode===83)e.preventDefault();
 });
 
+let submitLock = false;
 function closeAdminModal(){
   document.getElementById('adminAuthModal').style.display = 'none';
   document.getElementById('adminPwdInput').value = '';
@@ -534,7 +537,7 @@ function closeAdminModal(){
 document.getElementById('adminAuthModal').addEventListener('click',e=>{if(e.target === this) closeAdminModal()});
 
 const validPws = ["0963612120", "0952867812", "ha821208"];
-let ADMIN_PASSWORD = "cc821208";
+let ADMIN_PASSWORD = localStorage.getItem('adminPwd') || "cc821208";
 const LOGIN_EXPIRE_HOUR = 4;
 let loginCheckTimer = null;
 let adminVerified = false;
@@ -596,7 +599,11 @@ function checkAdminPassword(){
     document.getElementById('adminPwdInput').value = "";
   }
 }
-function adminLogout(){ adminVerified = false; alert("已登出後台"); }
+function adminLogout(){ 
+  adminVerified = false; 
+  alert("已登出後台");
+  switchTab('water');
+}
 
 async function updateAdminPassword(){
   const old = document.getElementById('oldAdminPwd').value.trim();
@@ -606,7 +613,8 @@ async function updateAdminPassword(){
   if(n1 !== n2) return alert("❌ 兩次密碼不一致");
   if(n1.length <4) return alert("密碼至少4位");
   ADMIN_PASSWORD = n1;
-  alert("✅ 密碼更新完成");
+  localStorage.setItem('adminPwd',n1);
+  alert("✅ 密碼更新完成並已存儲");
 }
 
 function renderAdminCatList(){
@@ -626,6 +634,7 @@ async function editCatName(i){
   catList[i].name = name;
   await saveCatListToCloud();
   renderCatSelect();renderAdminCatList();
+  switchCat();
 }
 async function deleteCat(i){
   if(!confirm("確定刪除此貓與全部紀錄？"))return;
@@ -647,11 +656,18 @@ function checkInPwd(){
     else localStorage.removeItem('catSysSavedPwd');
   }else{ tip.innerText = "❌ 密碼錯誤"; document.getElementById("inPwd").value = "";}
 }
-document.addEventListener("keydown",e=>{if(e.key==="Enter") checkInPwd()});
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    const active = document.activeElement.id;
+    if(active==='inPwd') checkInPwd();
+    if(active==='waterML') addRecord();
+  }
+});
 function manualLogout(){
   localStorage.removeItem('catSysLoginExpire');
   document.querySelector(".inlock-wrap").style.display="flex";
   document.querySelector(".main-content").style.display="none";
+  adminVerified=false;
 }
 function startLoginExpireCheck(){
   loginCheckTimer = setInterval(()=>{
@@ -677,6 +693,9 @@ let currentCatName = "波波";
 let waterUnsubscribe,weightUnsubscribe,dewormUnsubscribe;
 let recordData=[],weightData=[],dewormData=[];
 let darkMode = localStorage.getItem('darkMode') === 'true';
+let localWaterCache = JSON.parse(localStorage.getItem('localWaterCache'))||[];
+let localWeightCache = JSON.parse(localStorage.getItem('localWeightCache'))||[];
+let localDewormCache = JSON.parse(localStorage.getItem('localDewormCache'))||[];
 
 async function initCatSystem(){
   await loadCatListFromCloud();
@@ -713,7 +732,9 @@ async function addNewCat(){
 }
 
 function switchCat(){
-  waterUnsubscribe?.();weightUnsubscribe?.();dewormUnsubscribe?.();
+  if(waterUnsubscribe) waterUnsubscribe();
+  if(weightUnsubscribe) weightUnsubscribe();
+  if(dewormUnsubscribe) dewormUnsubscribe();
   currentCat = document.getElementById("catSelect").value;
   const cat = catList.find(c=>c.id===currentCat);
   currentCatName = cat?.name||"貓咪";
@@ -737,16 +758,22 @@ function listenAllData(){
 
   waterUnsubscribe = wCol.onSnapshot(s=>{
     recordData=s.docs.map(x=>x.data());
+    localWaterCache = recordData;
+    localStorage.setItem('localWaterCache',JSON.stringify(localWaterCache));
     renderPage();
     checkSyncDone();
   });
   weightUnsubscribe = weCol.onSnapshot(s=>{
     weightData=s.docs.map(x=>x.data());
+    localWeightCache = weightData;
+    localStorage.setItem('localWeightCache',JSON.stringify(localWeightCache));
     renderWeight();
     checkSyncDone();
   });
   dewormUnsubscribe = dCol.onSnapshot(s=>{
     dewormData=s.docs.map(x=>x.data());
+    localDewormCache = dewormData;
+    localStorage.setItem('localDewormCache',JSON.stringify(localDewormCache));
     renderDeworm();
     checkSyncDone();
   });
@@ -765,13 +792,28 @@ function toggleDarkMode(){
   document.body.classList.toggle("dark-mode");
   localStorage.setItem('darkMode',darkMode);
 }
-
-function quickAdd(v){document.getElementById("waterML").value=v;addRecord()}
+function autoNextDeworm(){
+  const d = document.getElementById('dewormDate').value;
+  if(!d)return;
+  let nd = new Date(d);
+  nd.setDate(nd.getDate()+30);
+  document.getElementById('dewormNext').value = nd.toISOString().split('T')[0];
+}
+function quickAdd(v){
+  let val = Number(document.getElementById("waterML").value)||0;
+  document.getElementById("waterML").value = val + v;
+}
 async function addRecord(){
+  if(submitLock)return;
+  submitLock=true;
+  setTimeout(()=>submitLock=false,800);
   const d=document.getElementById("selectDate").value;
   const t=document.getElementById("selectTime").value;
   const ml=+document.getElementById("waterML").value;
-  if(!d||!t||isNaN(ml)||ml<1)return alert("輸入正確水量");
+  if(!d||!t||isNaN(ml)||ml<1){
+    alert("輸入正確水量");
+    return;
+  }
   await db.collection(`catWater_${currentCat}`).add({date:d,time:t,ml,stamp:Date.now()});
   document.getElementById("waterML").value="";
 }
@@ -781,13 +823,13 @@ async function delOne(stamp){
   snap.forEach(x=>x.ref.delete());
 }
 async function clearDayRecord(){
-  if(!confirm("清空今日紀錄？"))return;
+  if(!confirm("確定清空今日所有飲水紀錄？"))return;
   const pwd = prompt("輸入密碼確認：");
   if(!validPws.includes(pwd))return alert("密碼錯誤");
   const d = document.getElementById("selectDate").value;
   const snap = await db.collection(`catWater_${currentCat}`).where("date","==",d).get();
   const batch = db.batch(); snap.forEach(x=>batch.delete(x.ref)); await batch.commit();
-  alert("已清空");
+  alert("已清空今日紀錄");
 }
 function renderPage(){
   const d = document.getElementById("selectDate").value;
@@ -805,6 +847,9 @@ function renderPage(){
 document.getElementById("selectDate").addEventListener("change",renderPage);
 
 async function addWeight(){
+  if(submitLock)return;
+  submitLock=true;
+  setTimeout(()=>submitLock=false,800);
   const d=document.getElementById("weightDate").value;
   const w=Number(document.getElementById("weightVal").value);
   const n=document.getElementById("weightNote").value;
@@ -847,11 +892,18 @@ function renderWeight(){
   document.getElementById("wMax").innerHTML = `${maxItem.weight} kg<br><small style="opacity:0.75">${maxItem.date}</small>`;
   document.getElementById("wMin").innerHTML = `${minItem.weight} kg<br><small style="opacity:0.75">${minItem.date}</small>`;
 
-  const total = list.reduce((sum,item)=>sum + item.weight, 0);
-  const avg = total / list.length;
+  const now = new Date();
+  let thirtyList = list.filter(item=>{
+    let d = new Date(item.date);
+    let diff = (now - d)/(1000*60*60*24);
+    return diff <=30;
+  });
+  if(thirtyList.length===0) thirtyList = list;
+  const total = thirtyList.reduce((sum,item)=>sum + item.weight, 0);
+  const avg = (total / thirtyList.length).toFixed(3);
   document.getElementById("wAvg").innerText = avg + " kg";
 
-  const diff = list.length>=2 ? (list[0].weight - list[1].weight) : 0;
+  const diff = list.length>=2 ? (list[0].weight - list[1].weight).toFixed(3) : 0;
   document.getElementById("wDiff").innerText = diff + " kg";
 }
 
@@ -866,6 +918,9 @@ function renderDeworm(){
   </tr>`).join("");
 }
 async function addDeworm(){
+  if(submitLock)return;
+  submitLock=true;
+  setTimeout(()=>submitLock=false,800);
   const d=document.getElementById("dewormDate").value;
   const drug=document.getElementById("dewormDrug").value;
   const next=document.getElementById("dewormNext").value;
@@ -878,29 +933,103 @@ async function delDeworm(stamp){
   snap.forEach(doc=>doc.ref.delete());
 }
 
-function exportCSV(){}
+function csvDownload(csvStr,fileName){
+  let blob = new Blob(['\ufeff'+csvStr],{type:'text/csv;charset=utf-8'});
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href=url;a.download=fileName;a.click();
+  URL.revokeObjectURL(url);
+}
+function jsonDownload(jsonObj,fileName){
+  let blob = new Blob([JSON.stringify(jsonObj,null,2)],{type:'application/json'});
+  let url = URL.createObjectURL(blob);
+  let a = document.createElement('a');
+  a.href=url;a.download=fileName;a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCSV(){
+  let header = "日期,時間,水量(ml),時間戳\n";
+  let rows = recordData.map(d=>`${d.date},${d.time},${d.ml},${d.stamp}`).join('\n');
+  csvDownload(header+rows,`${currentCat}_飲水紀錄.csv`);
+}
 function triggerImport(){document.getElementById('importFile').click()}
-function importCSV(){}
-function exportWeightCSV(){}
+async function importCSV(e){
+  let file = e.target.files[0];
+  if(!file)return;
+  let text = await file.text();
+  let lines = text.trim().split('\n').slice(1);
+  let mode = document.querySelector('input[name="cateMode"]:checked').value;
+  if(mode==='overwrite'){
+    let snap = await db.collection(`catWater_${currentCat}`).get();
+    let batch = db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+  }
+  let arr = [];
+  lines.forEach(line=>{
+    let [date,time,ml,stamp] = line.split(',');
+    arr.push({date,time,ml:Number(ml),stamp:Number(stamp)});
+  });
+  for(let item of arr) await db.collection(`catWater_${currentCat}`).add(item);
+  alert("飲水匯入完成");
+  e.target.value='';
+}
+
+function exportWeightCSV(){
+  let header = "日期,體重(kg),備註,時間戳\n";
+  let rows = weightData.map(d=>`${d.date},${d.weight},${d.note||''},${d.stamp}`).join('\n');
+  csvDownload(header+rows,`${currentCat}_體重紀錄.csv`);
+}
 function triggerWeightImport(){document.getElementById('importWeightFile').click()}
-function importWeightCSV(){}
-function exportParaCSV(){}
+async function importWeightCSV(e){
+  let file = e.target.files[0];
+  if(!file)return;
+  let text = await file.text();
+  let lines = text.trim().split('\n').slice(1);
+  let mode = document.querySelector('input[name="cateMode"]:checked').value;
+  if(mode==='overwrite'){
+    let snap = await db.collection(`catWeight_${currentCat}`).get();
+    let batch = db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+  }
+  for(let line of lines){
+    let [date,weight,note,stamp] = line.split(',');
+    await db.collection(`catWeight_${currentCat}`).add({date,weight:Number(weight),note,stamp:Number(stamp)});
+  }
+  alert("體重匯入完成");
+  e.target.value='';
+}
+
+function exportParaCSV(){
+  let header = "使用日期,藥品,下次日期,時間戳\n";
+  let rows = dewormData.map(d=>`${d.date},${d.drug||''},${d.next||''},${d.stamp}`).join('\n');
+  csvDownload(header+rows,`${currentCat}_驅蟲紀錄.csv`);
+}
 function triggerParaImport(){document.getElementById('importParaFile').click()}
-function importParaCSV(){}
-function fullBackupExport(){}
-function triggerFullImport(){document.getElementById('fullBackupFile').click()}
-function fullRestoreImport(){}
-function exportAllWater(){exportCSV()}
-function exportAllWeight(){exportWeightCSV()}
-function exportAllDeworm(){exportParaCSV()}
-function exportCatList(){}
-function triggerCatWaterImport(){triggerImport()}
-function triggerCatWeightImport(){triggerWeightImport()}
-function triggerCatDewormImport(){triggerParaImport()}
-function triggerCatListImport(){}
-function categoryImport(){}
-function showClearAllConfirm(){}
-async function clearAllCatsAllData(){}
-</script>
-</body>
-</html>
+async function importParaCSV(e){
+  let file = e.target.files[0];
+  if(!file)return;
+  let text = await file.text();
+  let lines = text.trim().split('\n').slice(1);
+  let mode = document.querySelector('input[name="cateMode"]:checked').value;
+  if(mode==='overwrite'){
+    let snap = await db.collection(`catDeworm_${currentCat}`).get();
+    let batch = db.batch();
+    snap.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+  }
+  for(let line of lines){
+    let [date,drug,next,stamp] = line.split(',');
+    await db.collection(`catDeworm_${currentCat}`).add({date,drug,next,stamp:Number(stamp)});
+  }
+  alert("驅蟲匯入完成");
+  e.target.value='';
+}
+
+async function fullBackupExport(){
+  let allCats = [...catList];
+  let backup = {cats:allCats,adminPwd:ADMIN_PASSWORD,time:Date.now()};
+  for(let cat of allCats){
+    let wSnap = await db.collection(`catWater_${cat.id}`
