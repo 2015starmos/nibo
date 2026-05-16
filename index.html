@@ -2,9 +2,9 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
 <meta name="format-detection" content="telephone=no">
-<title>貓咪健康專業後台｜進站密碼+後台密碼</title>
+<title>貓咪健康專業後台｜純雲端版</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -20,7 +20,8 @@
 body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gradient(160deg,var(--bg1),var(--bg2));color:var(--text);padding:16px;min-height:100vh}
 .wrapper{max-width:560px;margin:0 auto}
 .main-title{text-align:center;font-size:24px;color:var(--pri);font-weight:600;margin-bottom:12px}
-.sync-badge{text-align:center;font-size:12px;color:var(--success);margin-bottom:8px}
+.sync-badge{text-align:center;font-size:12px;color:var(--warn);margin-bottom:8px}
+.sync-badge.ok{color:var(--success)}
 .theme-switch{display:block;margin:0 auto 16px;border:none;background:var(--pri-light);color:var(--pri);padding:8px 16px;border-radius:20px;cursor:pointer}
 .cat-selector{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
 .cat-select{padding:10px 14px;border-radius:16px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);width:180px;font-size:15px;text-align:center}
@@ -45,37 +46,46 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 .cat-admin-btn{padding:6px 10px;border-radius:12px;border:none;font-size:13px;cursor:pointer;margin:0 2px}
 .cat-admin-edit{background:var(--pri-light);color:var(--pri)}
 .cat-admin-del{background:var(--danger);color:#fff}
-
-/* 進站密碼彈窗（一進來就顯示） */
 .inlock-wrap-start{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px}
 .inlock-box{width:100%;max-width:340px;background:var(--card);border-radius:20px;padding:24px}
 .inlock-title{font-size:18px;color:var(--pri);text-align:center;margin-bottom:16px;font-weight:600}
 .inlock-input{width:100%;padding:12px;border:1px solid var(--border);border-radius:16px;background:var(--input-bg);text-align:center;font-size:16px;margin-bottom:10px}
 .inlock-btn{width:100%;padding:12px;border-radius:16px;background:var(--pri);color:#fff;border:none;font-size:16px}
 .inlock-tip{text-align:center;font-size:14px;color:var(--danger);height:20px}
-
-/* 後台密碼彈窗（只有點後台才顯示） */
 .inlock-wrap-admin{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px}
-
 .file-hide{display:none}
 .title-split{font-size:16px;font-weight:600;margin:10px 0 6px;color:var(--pri)}
 .mode-check{display:flex;align-items:center;gap:6px;margin:8px 0;font-size:14px}
 .tip-text{font-size:12px;color:var(--danger);margin-top:6px}
 .item-row{padding:8px 0;border-bottom:1px solid var(--border)}
+.quick-btn-group{display:flex;gap:10px;margin-bottom:10px;}
+.btn-quick{flex:1;padding:10px;border:1px solid var(--pri);background:transparent;color:var(--pri);border-radius:15px;cursor:pointer;font-weight:500;}
+.btn-quick:active{background:var(--pri);color:#fff;transform:scale(0.97);}
+.today-total-box{text-align:center;font-size:22px;font-weight:600;padding:10px 0;}
+.text-low{color:#e39548;}
+.text-normal{color:#34a873;}
+.text-high{color:#58a2cc;}
+.warn-low,.warn-high{text-align:center;font-size:14px;margin-bottom:12px;line-height:1.5;}
+.record-table{width:100%;border-collapse:separate;border-spacing:0 8px;table-layout:fixed;}
+.record-table th{background:var(--table-head,var(--pri-light));color:var(--pri);padding:10px 4px;border-radius:14px;font-weight:500;font-size:13px;}
+.record-table td{background:var(--table-bg,var(--input-bg));text-align:center;padding:10px 4px;font-size:14px;word-break:break-word;}
+.btn-delete{border:none;background:var(--danger);color:#fff;padding:4px 6px;border-radius:8px;cursor:pointer;font-size:11px;}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.stat-item{background:var(--pri-light);border-radius:20px;padding:12px 6px;text-align:center;}
+.stat-label{font-size:12px;color:var(--pri);margin-bottom:3px;}
+.stat-num{font-size:16px;font-weight:600;}
 </style>
 </head>
 <body>
-<!-- 一進網頁就彈：使用者密碼驗證 -->
 <div class="inlock-wrap-start" id="startLock">
 <div class="inlock-box">
-<div class="inlock-title">請輸入使用者密碼</div>
+<div class="inlock-title">請輸入使用者密碼（雲端驗證）</div>
 <input class="inlock-input" type="password" id="startPwdIn" placeholder="輸入密碼">
 <div class="inlock-tip" id="startTip"></div>
 <button class="inlock-btn" onclick="checkStartPwd()">進入系統</button>
 </div>
 </div>
 
-<!-- 點後台才彈：管理員密碼驗證 -->
 <div class="inlock-wrap-admin" id="adminLock">
 <div class="inlock-box">
 <div class="inlock-title">管理員驗證</div>
@@ -86,7 +96,7 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 </div>
 
 <div class="wrapper" id="mainWrapper" style="display:none;">
-<h1 class="main-title">🐾貓咪健康管理系統</h1>
+<h1 class="main-title">🐾貓咪健康管理系統（純雲端）</h1>
 <div class="sync-badge" id="syncBadge">雲端連線中</div>
 <button class="theme-switch" onclick="toggleDarkMode()">切換深色模式</button>
 
@@ -102,63 +112,121 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <button class="tab-btn" data-tab="admin">系統後台</button>
 </div>
 
+<!-- 飲水頁 完整還原舊版介面 -->
 <div class="tab-content active" id="tab-water">
-<div class="info-banner">每日建議飲水量150-210ml</div>
+<div class="info-banner">💧 貓咪建議目標：150ml ～ 210ml / 每日</div>
 <div class="ui-card">
 <input class="form-input" type="date" id="selDate">
 <input class="form-input" type="time" id="selTime">
-<input class="form-input" type="number" id="waterNum" placeholder="輸入水量ml">
-<button class="btn-primary" onclick="addWaterLog()">新增紀錄</button>
+<div class="quick-btn-group">
+<button class="btn-quick" onclick="quickAdd(25)">+25ml</button>
+<button class="btn-quick" onclick="quickAdd(50)">+50ml</button>
+<button class="btn-quick" onclick="quickAdd(75)">+75ml</button>
 </div>
-<div class="ui-card" id="waterListBox"></div>
+<input class="form-input" type="number" id="waterNum" placeholder="手動輸入水量 ml" inputmode="numeric" min="1">
+<button class="btn-primary" onclick="addWaterLog()">✅ 新增飲水紀錄</button>
 </div>
 
+<div class="ui-card">
+<div class="today-total-box" id="totalShow">今日總計：0 ml</div>
+<div id="warnTip"></div>
+<table class="record-table">
+<thead>
+<tr><th>時間</th><th>飲水量</th><th>操作</th></tr>
+</thead>
+<tbody id="recordBody"></tbody>
+</table>
+<div class="btn-row">
+<button class="btn-block" onclick="clearDayRecord()">🗑️ 清空今日</button>
+<button class="btn-block" onclick="exportAllWater()">📤 匯出CSV</button>
+<button class="btn-block" onclick="triggerImpWater()">📥 匯入CSV</button>
+</div>
+<input type="file" class="file-hide" id="impWaterFile" accept=".csv" onchange="impWaterData(event)">
+</div>
+</div>
+
+<!-- 體重頁 完整還原舊版介面+統計 -->
 <div class="tab-content" id="tab-weight">
-<div class="info-banner">體重趨勢追蹤</div>
+<div class="info-banner">⏲️ 體重趨勢追蹤｜自動計算增減</div>
 <div class="ui-card">
 <input class="form-input" type="date" id="weightDate">
-<input class="form-input" type="number" step="0.01" id="weightNum" placeholder="體重kg">
-<input class="form-input" id="weightNote" placeholder="備註">
-<button class="btn-primary" onclick="addWeightLog()">新增體重</button>
-</div>
-<div class="ui-card" id="weightListBox"></div>
+<input class="form-input" type="number" step="0.01" min="0" id="weightNum" placeholder="輸入體重 kg">
+<input class="form-input" id="weightNote" placeholder="備註（飯前/飯後）">
+<button class="btn-primary" onclick="addWeightLog()">✅ 新增體重紀錄</button>
 </div>
 
+<div class="ui-card">
+<div class="today-total-box" id="weightLatest">最新體重：0 kg</div>
+<table class="record-table">
+<thead><tr><th>日期</th><th>體重</th><th>備註</th><th>刪除</th></tr></thead>
+<tbody id="weightBody"></tbody>
+</table>
+<div class="btn-row">
+<button class="btn-block" onclick="exportAllWeight()">📤 匯出CSV</button>
+<button class="btn-block" onclick="triggerImpWeight()">📥 匯入CSV</button>
+</div>
+<input type="file" class="file-hide" id="impWeightFile" accept=".csv" onchange="impWeightData(event)">
+</div>
+
+<div class="ui-card">
+<div style="text-align:center; margin-bottom:10px; font-weight:500;">📈 體重統計</div>
+<div class="stat-grid">
+<div class="stat-item"><div class="stat-label">最高體重</div><div class="stat-num" id="wMax">0 kg</div></div>
+<div class="stat-item"><div class="stat-label">最低體重</div><div class="stat-num" id="wMin">0 kg</div></div>
+<div class="stat-item"><div class="stat-label">30日平均</div><div class="stat-num" id="wAvg">0 kg</div></div>
+<div class="stat-item"><div class="stat-label">最近變化</div><div class="stat-num" id="wDiff">0 kg</div></div>
+</div>
+</div>
+</div>
+
+<!-- 驅蟲頁 完整舊版介面 -->
 <div class="tab-content" id="tab-deworm">
-<div class="info-banner">驅蟲時間備註</div>
+<div class="info-banner">🐛 體外驅蟲紀錄｜提醒下次使用時間</div>
 <div class="ui-card">
 <input class="form-input" type="date" id="dewormDate">
-<input class="form-input" id="dewormDrug" placeholder="藥品名稱">
-<input class="form-input" type="date" id="dewormNext">
-<button class="btn-primary" onclick="addDewormLog()">新增紀錄</button>
-</div>
-<div class="ui-card" id="dewormListBox"></div>
+<select class="form-input" id="dewormDrug">
+<option value="">請選擇藥品</option>
+<option value="全能貓">全能貓</option>
+<option value="寵愛">寵愛</option>
+</select>
+<input class="form-input" type="date" id="dewormNext" placeholder="預計下次使用日期">
+<button class="btn-primary" onclick="addDewormLog()">✅ 新增驅蟲紀錄</button>
 </div>
 
+<div class="ui-card">
+<table class="record-table">
+<thead><tr><th>使用日期</th><th>藥品</th><th>下次日期</th><th>刪除</th></tr></thead>
+<tbody id="dewormBody"></tbody>
+</table>
+<div class="btn-row">
+<button class="btn-block" onclick="exportAllDeworm()">📤 匯出CSV</button>
+<button class="btn-block" onclick="triggerImpDeworm()">📥 匯入CSV</button>
+</div>
+<input type="file" class="file-hide" id="impDewormFile" accept=".csv" onchange="impDewormData(event)">
+</div>
+</div>
+
+<!-- 後台維持你新版原本 -->
 <div class="tab-content" id="tab-admin">
 <div class="info-banner">專業管理後台｜管理密碼cc821208</div>
-
 <div class="ui-card">
 <div class="btn-row">
 <button class="btn-block btn-logout" onclick="logoutAdmin()">後台登出</button>
 </div>
 </div>
-
 <div class="ui-card">
-<div class="title-split">🔐密碼管理</div>
+<div class="title-split">🔐密碼管理（雲端）</div>
 <input class="form-input" type="password" id="oldUserPwd" placeholder="舊登入密碼">
 <input class="form-input" type="password" id="newUserPwd" placeholder="新登入密碼">
 <input class="form-input" type="password" id="newUserPwd2" placeholder="確認新密碼">
 <button class="btn-primary" onclick="updateUserPwd()">更新使用者密碼</button>
 <div id="pwdTip" style="text-align:center;margin-top:6px;font-size:14px"></div>
 </div>
-
 <div class="ui-card">
-<div class="title-split">🐾貓咪檔案管理</div>
+<div class="title-split">🐾貓咪檔案管理（雲端）</div>
 <div id="catAdminList"></div>
 <button class="btn-primary" onclick="addNewCat()">新增貓咪</button>
 </div>
-
 <div class="ui-card">
 <div class="title-split">💾全域備份與還原</div>
 <div class="mode-check">
@@ -174,7 +242,6 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <input type="file" class="file-hide" id="fullRestoreFile" accept=".json" onchange="fullRestore(event)">
 <p class="tip-text">覆蓋=清空舊數據還原｜增量=保留舊數據追加</p>
 </div>
-
 <div class="ui-card">
 <div class="title-split">📂分類匯入匯出</div>
 <div class="mode-check">
@@ -199,12 +266,8 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <button class="btn-block" onclick="triggerImpDeworm()">匯入驅蟲數據</button>
 <button class="btn-block" onclick="triggerImpCat()">匯入貓咪清單</button>
 </div>
-<input type="file" class="file-hide" id="impWaterFile" accept=".csv" onchange="impWaterData(event)">
-<input type="file" class="file-hide" id="impWeightFile" accept=".csv" onchange="impWeightData(event)">
-<input type="file" class="file-hide" id="impDewormFile" accept=".csv" onchange="impDewormData(event)">
 <input type="file" class="file-hide" id="impCatFile" accept=".json" onchange="impCatData(event)">
 </div>
-
 <div class="ui-card">
 <div class="title-split">🗑數據清理</div>
 <button class="btn-danger-full" onclick="clearAllData()">清空全部數據</button>
@@ -215,43 +278,76 @@ body{font-family:"微軟正黑體",Noto Sans TC,sans-serif;background:linear-gra
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script>
-// 使用者密碼（一進網頁要輸入的三組）
-const START_PASSWORDS = ["0963612120", "0952867812", "ha821208"];
-// 管理員密碼（進後台要輸入）
+// ========== 固定管理員密碼（後台用） ==========
 const ADMIN_PWD = "cc821208";
 
+// ========== 全域變數 ==========
 let adminAuth = false;
-let catList = JSON.parse(localStorage.getItem("petCats")||'[{"id":"c0","name":"波波"}]');
-let currentCat = catList[0].id;
+let catList = [];
+let currentCat = "";
 let waterData=[],weightData=[],dewormData=[];
 let wSub,wgSub,dwSub;
+let cloudPasswords = [];
 
-// ---- 一進網頁：使用者密碼驗證 ----
-function checkStartPwd(){
+// ========== Firebase 初始化 ==========
+const fbConfig={
+apiKey:"AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",
+authDomain:"naibo-health.firebaseapp.com",
+projectId:"naibo-health",
+storageBucket:"naibo-health.firebasestorage.app",
+messagingSenderId:"1008746304734",
+appId:"1:1008746304734:web:33b87646673ee83b975e4f"
+};
+firebase.initializeApp(fbConfig);
+const db=firebase.firestore();
+db.settings({ persistence: false });
+
+// ========== 讀取雲端密碼 ==========
+(async function loadCloudPasswords(){
+  try{
+    const doc=await db.collection("system").doc("config").get();
+    if(doc.exists){
+      const data=doc.data();
+      cloudPasswords=data.userPasswords||["0963612120","0952867812","ha821208"];
+    }else{
+      await db.collection("system").doc("config").set({
+        userPasswords:["0963612120","0952867812","ha821208"]
+      });
+      cloudPasswords=["0963612120","0952867812","ha821208"];
+    }
+  }catch(e){
+    cloudPasswords=["0963612120","0952867812","ha821208"];
+  }
+})();
+
+// ========== 進站密碼驗證 ==========
+async function checkStartPwd(){
   let val = document.getElementById("startPwdIn").value.trim();
   let tip = document.getElementById("startTip");
-  if(START_PASSWORDS.includes(val)){
+  const doc=await db.collection("system").doc("config").get();
+  if(doc.exists) cloudPasswords=doc.data().userPasswords||[];
+
+  if(cloudPasswords.includes(val)){
     document.getElementById("startLock").style.display="none";
     document.getElementById("mainWrapper").style.display="block";
     tip.innerText="";
-    init(); // 進入後才初始化系統
+    await init();
   }else{
     tip.innerText="密碼錯誤";
     document.getElementById("startPwdIn").value="";
   }
 }
 
-// ---- 後台登出 ----
+// ========== 後台登出 ==========
 function logoutAdmin(){
   adminAuth = false;
   alert("已登出管理員權限");
-  document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
-  document.querySelectorAll(".tab-content").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tab-btn,.tab-content").forEach(el=>el.classList.remove("active"));
   document.querySelector('[data-tab="water"]').classList.add("active");
   document.getElementById("tab-water").classList.add("active");
 }
 
-// ---- 管理員密碼驗證（點後台才觸發）----
+// ========== 管理員密碼驗證 ==========
 function checkAdminPwd(){
   let val = document.getElementById("adminPwdIn").value.trim();
   let tip = document.getElementById("adminTip");
@@ -260,8 +356,7 @@ function checkAdminPwd(){
     document.getElementById("adminLock").style.display="none";
     tip.innerText="";
     renderAdminPage();
-    document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".tab-btn,.tab-content").forEach(el=>el.classList.remove("active"));
     document.querySelector('[data-tab="admin"]').classList.add("active");
     document.getElementById("tab-admin").classList.add("active");
   }else{
@@ -270,7 +365,7 @@ function checkAdminPwd(){
   }
 }
 
-// ---- 分頁切換 ----
+// ========== 分頁切換 ==========
 document.querySelectorAll(".tab-btn").forEach(b=>{
   b.onclick=function(){
     let t = this.dataset.tab;
@@ -280,30 +375,50 @@ document.querySelectorAll(".tab-btn").forEach(b=>{
       document.getElementById("adminTip").innerText="";
       return;
     }
-    document.querySelectorAll(".tab-btn").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(".tab-content").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".tab-btn,.tab-content").forEach(el=>el.classList.remove("active"));
     this.classList.add("active");
     document.getElementById("tab-"+t).classList.add("active");
   }
 })
 
-const fbConfig={apiKey:"AIzaSyD4iT2_YhVoBvOSVWz_-ZNJcR9BjEqHhaE",authDomain:"naibo-health.firebaseapp.com",projectId:"naibo-health",storageBucket:"naibo-health.firebasestorage.app",messagingSenderId:"1008746304734",appId:"1:1008746304734:web:33b87646673ee83b975e4f"};
-firebase.initializeApp(fbConfig);
-const db=firebase.firestore();
+// ========== 初始化 ==========
+async function init(){
+  try{
+    const snap=await db.collection("cats").get();
+    catList=[];
+    snap.forEach(d=>catList.push({id:d.id,...d.data()}));
+    if(catList.length===0){
+      await db.collection("cats").add({name:"波波"});
+      catList=[{id:"",name:"波波"}];
+    }
+    currentCat=catList[0].id;
+    renderCatSel();
+    switchCat();
+    document.getElementById("syncBadge").innerText="✅ 雲端已連線";
+    document.getElementById("syncBadge").classList.add("ok");
+    let d=new Date().toISOString().split("T")[0];
+    document.getElementById("selDate").value=d;
+    document.getElementById("weightDate").value=d;
+    document.getElementById("dewormDate").value=d;
+    let nowTime = new Date().toTimeString().slice(0,5);
+    document.getElementById("selTime").value = nowTime;
+    const settingDoc=await db.collection("system").doc("setting").get();
+    if(settingDoc.exists && settingDoc.data().dark){
+      document.body.classList.add("dark-mode");
+    }
+  }catch(e){
+    document.getElementById("syncBadge").innerText="❌ 雲端連線失敗";
+  }
+}
 
-function init(){
-  renderCatSel();
-  switchCat();
-  let d=new Date().toISOString().split("T")[0];
-  document.getElementById("selDate").value=d;
-  document.getElementById("weightDate").value=d;
-  document.getElementById("dewormDate").value=d;
-  if(localStorage.getItem("dark")==="1"){document.body.classList.add("dark-mode")}
-}
-function toggleDarkMode(){
+// ========== 深色模式 ==========
+async function toggleDarkMode(){
   document.body.classList.toggle("dark-mode");
-  localStorage.setItem("dark",document.body.classList.contains("dark-mode")?"1":"0");
+  const isDark=document.body.classList.contains("dark-mode");
+  await db.collection("system").doc("setting").set({dark:isDark},{merge:true});
 }
+
+// ========== 貓咪選單 ==========
 function renderCatSel(){
   let sel=document.getElementById("catSelect");
   sel.innerHTML=catList.map(c=>`<option value="${c.id}">${c.name}</option>`).join("");
@@ -319,24 +434,25 @@ function renderAdminPage(){
     </div>
   </div>`).join("");
 }
-function addNewCat(){
+
+// ========== 貓咪增改刪 ==========
+async function addNewCat(){
   let n=prompt("輸入貓咪名稱");if(!n)return;
-  let id="cat_"+Date.now();
-  catList.push({id,name:n});
-  localStorage.setItem("petCats",JSON.stringify(catList));
+  const ref=await db.collection("cats").add({name:n});
+  catList.push({id:ref.id,name:n});
   renderCatSel();renderAdminPage();
 }
-function editCat(id){
+async function editCat(id){
   let o=catList.find(x=>x.id===id);
   let n=prompt("修改名稱",o.name);if(!n||n===o.name)return;
+  await db.collection("cats").doc(id).update({name:n});
   o.name=n;
-  localStorage.setItem("petCats",JSON.stringify(catList));
   renderCatSel();renderAdminPage();
 }
 async function delCat(id){
   let p=prompt("輸入管理員密碼確認");if(p!==ADMIN_PWD)return alert("密碼錯誤");
   let c=catList.find(x=>x.id===id);
-  if(!confirm("確認刪除"+c.name+"及所有數據"))return;
+  if(!confirm("確認刪除"+c.name+"及所有雲端數據"))return;
   let colls=[`catWater_${id}`,`catWeight_${id}`,`catDeworm_${id}`];
   for(let cl of colls){
     let s=await db.collection(cl).get();
@@ -344,12 +460,13 @@ async function delCat(id){
     s.forEach(d=>batch.delete(d.ref));
     await batch.commit();
   }
+  await db.collection("cats").doc(id).delete();
   catList=catList.filter(x=>x.id!==id);
-  localStorage.setItem("petCats",JSON.stringify(catList));
   renderCatSel();renderAdminPage();
   switchCat();
 }
 
+// ========== 切換貓咪訂閱資料 ==========
 function switchCat(){
   if(wSub)wSub();if(wgSub)wgSub();if(dwSub)dwSub();
   currentCat=document.getElementById("catSelect").value;
@@ -362,11 +479,18 @@ function switchCat(){
   dwSub=dwCol.onSnapshot(s=>{dewormData=[];s.forEach(d=>dewormData.push(d.data()));renderDeworm()});
 }
 
+// ========== 快速新增水量 ==========
+function quickAdd(v){
+  document.getElementById("waterNum").value=v;
+  addWaterLog();
+}
+
+// ========== 新增紀錄 ==========
 async function addWaterLog(){
   let d=document.getElementById("selDate").value;
   let t=document.getElementById("selTime").value;
   let ml=+document.getElementById("waterNum").value;
-  if(!d||!t||!ml)return;
+  if(!d||!t||!ml)return alert("請輸入正確水量");
   await db.collection("catWater_"+currentCat).add({date:d,time:t,ml,stamp:Date.now()});
   document.getElementById("waterNum").value="";
 }
@@ -374,7 +498,7 @@ async function addWeightLog(){
   let d=document.getElementById("weightDate").value;
   let w=+document.getElementById("weightNum").value;
   let n=document.getElementById("weightNote").value;
-  if(!d||!w)return;
+  if(!d||!w)return alert("請輸入正確體重");
   await db.collection("catWeight_"+currentCat).add({date:d,weight:w,note:n,stamp:Date.now()});
   document.getElementById("weightNum").value="";
   document.getElementById("weightNote").value="";
@@ -383,18 +507,102 @@ async function addDewormLog(){
   let d=document.getElementById("dewormDate").value;
   let drug=document.getElementById("dewormDrug").value;
   let next=document.getElementById("dewormNext").value;
-  if(!d||!drug)return;
-  await db.collection("catDeworm_"+currentCat).add({date:d,drug,next,stamp:Date.now()});
+  if(!d||!drug)return alert("請輸入完整資訊");
+  await db.collection("catDeworm_"+currentCat).add({date:d,drug,nextDate:next,stamp:Date.now()});
   document.getElementById("dewormDrug").value="";
 }
 
+// ========== 刪除單筆 ==========
+async function delOne(stamp){
+  if(!confirm("確定刪除此筆紀錄？")) return;
+  const snap=await db.collection("catWater_"+currentCat).where("stamp","==",stamp).get();
+  snap.forEach(d=>d.ref.delete());
+}
+async function delWeight(stamp){
+  if(!confirm("確定刪除此筆體重？")) return;
+  const s=await db.collection("catWeight_"+currentCat).where("stamp","==",stamp).get();
+  s.forEach(x=>x.ref.delete());
+}
+async function delDeworm(stamp){
+  if(!confirm("確定刪除此筆驅蟲？")) return;
+  const s=await db.collection("catDeworm_"+currentCat).where("stamp","==",stamp).get();
+  s.forEach(x=>x.ref.delete());
+}
+
+// ========== 清空今日飲水 ==========
+async function clearDayRecord(){
+  if(!confirm("⚠️ 確定清空選取日期飲水紀錄？")) return;
+  let inputPwd = prompt("請輸入登入密碼確認：");
+  if(!cloudPasswords.includes(inputPwd?.trim())){
+    alert("密碼錯誤");return;
+  }
+  const d=document.getElementById("selDate").value;
+  const snap=await db.collection("catWater_"+currentCat).where("date","==",d).get();
+  const batch=db.batch();
+  snap.forEach(doc=>batch.delete(doc.ref));
+  await batch.commit();
+  alert("今日紀錄已清空");
+}
+
+// ========== 渲染完整舊版畫面 ==========
+function renderWater(){
+  const d=document.getElementById("selDate").value;
+  const list=waterData.filter(x=>x.date===d).sort((a,b)=>b.time.localeCompare(a.time));
+  const total=list.reduce((s,x)=>s+x.ml,0);
+  let cls="text-low",tip="";
+  if(total>=150&&total<=210){cls="text-normal";tip="<div class='warn-high'>✅ 達標</div>"}
+  else if(total>210){cls="text-high";tip="<div class='warn-high'>⚠️ 過量</div>"}
+  else if(total>0){tip="<div class='warn-low'>⚠️ 不足</div>"}
+  document.getElementById("totalShow").innerHTML=`今日：<span class="${cls}">${total}</span> ml`;
+  document.getElementById("warnTip").innerHTML=tip;
+  document.getElementById("recordBody").innerHTML=list.map(x=>`
+  <tr><td>${x.time}</td><td>${x.ml}ml</td><td><button class='btn-delete' onclick='delOne(${x.stamp})'>刪</button></td></tr>`).join("");
+}
+
+function renderWeight(){
+  const list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("weightBody").innerHTML=list.map(x=>`
+  <tr>
+    <td>${x.date}</td>
+    <td>${parseFloat(x.weight).toFixed(2)}</td>
+    <td>${x.note||"-"}</td>
+    <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
+  </tr>`).join("");
+
+  if(list.length){
+    document.getElementById("weightLatest").innerText=`最新：${parseFloat(list[0].weight).toFixed(2)} kg`;
+    const vals=list.map(x=>parseFloat(x.weight));
+    const max=Math.max(...vals).toFixed(2);
+    const min=Math.min(...vals).toFixed(2);
+    const avg=(vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2);
+    const diff=list.length>=2?(vals[0]-vals[1]).toFixed(2):0;
+    document.getElementById("wMax").innerText=max+" kg";
+    document.getElementById("wMin").innerText=min+" kg";
+    document.getElementById("wAvg").innerText=avg+" kg";
+    document.getElementById("wDiff").innerText=diff+" kg";
+  }
+}
+
+function renderDeworm(){
+  const list=[...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById("dewormBody").innerHTML=list.map(x=>`
+  <tr>
+    <td>${x.date}</td>
+    <td>${x.drug}</td>
+    <td>${x.nextDate||"-"}</td>
+    <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td>
+  </tr>`).join("");
+}
+
+document.getElementById("selDate").addEventListener("change",renderWater);
+
+// ========== 備份還原、匯入匯出、密碼修改、清空數據 完全保留你新版原有 ==========
 async function fullBackup(){
   let now = new Date();
-  let dateStr = now.getFullYear()+""+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0');
-  let timeStr = now.getHours().toString().padStart(2,'0')+now.getMinutes().toString().padStart(2,'0');
+  let dateStr = now.getFullYear()+String(now.getMonth()+1).padStart(2,'0')+String(now.getDate()).padStart(2,'0');
+  let timeStr = String(now.getHours()).padStart(2,'0')+String(now.getMinutes()).padStart(2,'0');
   let catNames = catList.map(c=>c.name).join("");
   let fileName = `貓咪全備份_${catNames}_${dateStr}_${timeStr}.json`;
-
   let allData={cats:catList,water:[],weight:[],deworm:[],backupTime:now.toLocaleString()};
   for(let c of catList){
     let w=await db.collection("catWater_"+c.id).get();
@@ -407,96 +615,83 @@ async function fullBackup(){
   let blob=new Blob([JSON.stringify(allData,null,2)],{type:"application/json"});
   let a=document.createElement("a");
   a.href=URL.createObjectURL(blob);
-  a.download=fileName;
-  a.click();
+  a.download=fileName;a.click();
   URL.revokeObjectURL(a.href);
 }
 function triggerFullRestore(){document.getElementById("fullRestoreFile").click()}
 async function fullRestore(e){
   let p=prompt("輸入管理員密碼還原");if(p!==ADMIN_PWD)return;
   let mode = getFullMode();
-  if(!confirm(mode==="cover"?"確認覆蓋還原全部數據":"確認增量追加數據"))return;
+  if(!confirm(mode==="cover"?"確認覆蓋還原全部雲端數據":"確認增量追加雲端數據"))return;
   let f=e.target.files[0];
   let txt=await f.text();
   let data=JSON.parse(txt);
-  localStorage.setItem("petCats",JSON.stringify(data.cats));
+  if(mode==="cover"){
+    let oldCats=await db.collection("cats").get();
+    let batch=db.batch();
+    oldCats.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+  }
+  for(let c of data.cats){
+    await db.collection("cats").doc(c.id).set({name:c.name},{merge:true});
+  }
   catList=data.cats;renderCatSel();renderAdminPage();
-
   for(let w of data.water){
     let col=db.collection("catWater_"+w.cid);
-    if(mode==="cover"){
-      let batch=db.batch();
-      let old=await col.get();old.forEach(d=>batch.delete(d.ref));
-      await batch.commit();
-    }
+    if(mode==="cover") await clearColl(col);
     let batch=db.batch();
-    for(let item of w.list)batch.set(col.doc(),{...item,stamp:Date.now()+Math.random()*10000});
+    w.list.forEach(item=>batch.set(col.doc(),{...item,stamp:Date.now()+Math.random()*10000}));
     await batch.commit();
   }
   for(let wg of data.weight){
     let col=db.collection("catWeight_"+wg.cid);
-    if(mode==="cover"){
-      let batch=db.batch();
-      let old=await col.get();old.forEach(d=>batch.delete(d.ref));
-      await batch.commit();
-    }
+    if(mode==="cover") await clearColl(col);
     let batch=db.batch();
-    for(let item of wg.list)batch.set(col.doc(),{...item,stamp:Date.now()+Math.random()*10000});
+    wg.list.forEach(item=>batch.set(col.doc(),{...item,stamp:Date.now()+Math.random()*10000}));
     await batch.commit();
   }
   for(let dw of data.deworm){
     let col=db.collection("catDeworm_"+dw.cid);
-    if(mode==="cover"){
-      let batch=db.batch();
-      let old=await col.get();old.forEach(d=>batch.delete(d.ref));
-      await batch.commit();
-    }
+    if(mode==="cover") await clearColl(col);
     let batch=db.batch();
-    for(let item of dw.list)batch.set(col.doc(),{...item,stamp:Date.now()+Math.random()*10000});
+    dw.list.forEach(item=>batch.set(col.doc(),{...item,stamp:Date.now()+Math.random()*10000}));
     await batch.commit();
   }
   alert(mode==="cover"?"覆蓋還原完成":"增量匯入完成");
   switchCat();
+  e.target.value="";
 }
-
-function getFullMode(){
-  return document.getElementById("fullCover").checked ? "cover" : "add";
-}
-function getCsvMode(){
-  return document.getElementById("csvCover").checked ? "cover" : "add";
-}
-
+function getFullMode(){return document.getElementById("fullCover").checked?"cover":"add"}
+function getCsvMode(){return document.getElementById("csvCover").checked?"cover":"add"}
 function exportAllWater(){
-  let now = new Date();
-  let dstr = now.getFullYear()+""+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0');
+  let dstr = getFileDateStr();
   let csv="\uFEFF貓咪,日期,時間,水量\n";
-  catList.forEach(c=>{
-    waterData.forEach(d=>csv+=`${c.name},${d.date},${d.time},${d.ml}\n`)
-  });
-  downFile(csv,`全部飲水紀錄_${dstr}.csv`);
+  waterData.forEach(d=>csv+=`${getCatName(currentCat)},${d.date},${d.time},${d.ml}\n`);
+  downFile(csv,`${getCatName(currentCat)}_飲水紀錄_${dstr}.csv`);
 }
 function exportAllWeight(){
-  let now = new Date();
-  let dstr = now.getFullYear()+""+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0');
+  let dstr = getFileDateStr();
   let csv="\uFEFF貓咪,日期,體重,備註\n";
-  catList.forEach(c=>{
-    weightData.forEach(d=>csv+=`${c.name},${d.date},${d.weight},${d.note||""}\n`)
-  });
-  downFile(csv,`全部體重紀錄_${dstr}.csv`);
+  weightData.forEach(d=>csv+=`${getCatName(currentCat)},${d.date},${d.weight},${d.note||""}\n`);
+  downFile(csv,`${getCatName(currentCat)}_體重紀錄_${dstr}.csv`);
 }
 function exportAllDeworm(){
-  let now = new Date();
-  let dstr = now.getFullYear()+""+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0');
+  let dstr = getFileDateStr();
   let csv="\uFEFF貓咪,日期,藥品,下次日期\n";
-  catList.forEach(c=>{
-    dewormData.forEach(d=>csv+=`${c.name},${d.date},${d.drug},${d.next||""}\n`)
-  });
-  downFile(csv,`全部驅蟲紀錄_${dstr}.csv`);
+  dewormData.forEach(d=>csv+=`${getCatName(currentCat)},${d.date},${d.drug},${d.nextDate||""}\n`);
+  downFile(csv,`${getCatName(currentCat)}_驅蟲紀錄_${dstr}.csv`);
 }
 function exportCatInfo(){
-  let now = new Date();
-  let dstr = now.getFullYear()+""+(now.getMonth()+1).toString().padStart(2,'0')+now.getDate().toString().padStart(2,'0');
+  let dstr = getFileDateStr();
   downFile(JSON.stringify(catList,null,2),`貓咪清單_${dstr}.json`);
+}
+function getFileDateStr(){
+  let d=new Date();
+  return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+}
+function getCatName(cid){
+  let c=catList.find(x=>x.id===cid);
+  return c?c.name:"未知";
 }
 function downFile(content,name){
   let b=new Blob([content]);
@@ -504,143 +699,111 @@ function downFile(content,name){
   a.href=URL.createObjectURL(b);a.download=name;a.click();
   URL.revokeObjectURL(a.href);
 }
-
 function triggerImpWater(){document.getElementById("impWaterFile").click()}
 function triggerImpWeight(){document.getElementById("impWeightFile").click()}
 function triggerImpDeworm(){document.getElementById("impDewormFile").click()}
 function triggerImpCat(){document.getElementById("impCatFile").click()}
-
 async function impWaterData(e){
-  let p=prompt("管理員密碼確認");if(p!==ADMIN_PWD)return;
+  if(prompt("管理員密碼確認")!==ADMIN_PWD)return;
   let mode=getCsvMode();
-  let f=e.target.files[0];
-  let txt=await f.text();
+  let txt=await e.target.files[0].text();
   let lines=txt.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
   let col=db.collection("catWater_"+currentCat);
-  if(mode==="cover"){
-    let batch=db.batch();
-    let old=await col.get();old.forEach(d=>batch.delete(d.ref));
-    await batch.commit();
-  }
+  if(mode==="cover")await clearColl(col);
   let cnt=0;
   for(let i=1;i<lines.length;i++){
     let arr=lines[i].split(",");
     let date=arr[1]?.trim(),time=arr[2]?.trim(),ml=parseInt(arr[3]||"0");
     if(date&&time&&ml>0){
-      await col.add({date,time,ml,stamp:Date.now()+i});
-      cnt++;
+      await col.add({date,time,ml,stamp:Date.now()+i});cnt++;
     }
   }
   alert(`飲水匯入${cnt}筆｜${mode==="cover"?"覆蓋":"增量"}`);
   e.target.value="";
 }
 async function impWeightData(e){
-  let p=prompt("管理員密碼確認");if(p!==ADMIN_PWD)return;
+  if(prompt("管理員密碼確認")!==ADMIN_PWD)return;
   let mode=getCsvMode();
-  let f=e.target.files[0];
-  let txt=await f.text();
+  let txt=await e.target.files[0].text();
   let lines=txt.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
   let col=db.collection("catWeight_"+currentCat);
-  if(mode==="cover"){
-    let batch=db.batch();
-    let old=await col.get();old.forEach(d=>batch.delete(d.ref));
-    await batch.commit();
-  }
+  if(mode==="cover")await clearColl(col);
   let cnt=0;
   for(let i=1;i<lines.length;i++){
     let arr=lines[i].split(",");
     let date=arr[1]?.trim(),w=parseFloat(arr[2]||"0"),note=arr[3]?.trim()||"";
     if(date&&w>0){
-      await col.add({date,weight:w,note,stamp:Date.now()+i});
-      cnt++;
+      await col.add({date,weight:w,note,stamp:Date.now()+i});cnt++;
     }
   }
   alert(`體重匯入${cnt}筆｜${mode==="cover"?"覆蓋":"增量"}`);
   e.target.value="";
 }
 async function impDewormData(e){
-  let p=prompt("管理員密碼確認");if(p!==ADMIN_PWD)return;
+  if(prompt("管理員密碼確認")!==ADMIN_PWD)return;
   let mode=getCsvMode();
-  let f=e.target.files[0];
-  let txt=await f.text();
+  let txt=await e.target.files[0].text();
   let lines=txt.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
   let col=db.collection("catDeworm_"+currentCat);
-  if(mode==="cover"){
-    let batch=db.batch();
-    let old=await col.get();old.forEach(d=>batch.delete(d.ref));
-    await batch.commit();
-  }
+  if(mode==="cover")await clearColl(col);
   let cnt=0;
   for(let i=1;i<lines.length;i++){
     let arr=lines[i].split(",");
     let date=arr[1]?.trim(),drug=arr[2]?.trim(),next=arr[3]?.trim()||"";
     if(date&&drug){
-      await col.add({date,drug,nextDate:next,stamp:Date.now()+i});
-      cnt++;
+      await col.add({date,drug,nextDate:next,stamp:Date.now()+i});cnt++;
     }
   }
   alert(`驅蟲匯入${cnt}筆｜${mode==="cover"?"覆蓋":"增量"}`);
   e.target.value="";
 }
 async function impCatData(e){
-  let p=prompt("管理員密碼確認");if(p!==ADMIN_PWD)return;
-  let f=e.target.files[0];
-  let txt=await f.text();
+  if(prompt("管理員密碼確認")!==ADMIN_PWD)return;
+  let txt=await e.target.files[0].text();
   let list=JSON.parse(txt);
+  let oldCats=await db.collection("cats").get();
+  let batch=db.batch();
+  oldCats.forEach(d=>batch.delete(d.ref));
+  await batch.commit();
+  for(let c of list)await db.collection("cats").doc(c.id).set({name:c.name});
   catList=list;
-  localStorage.setItem("petCats",JSON.stringify(catList));
   renderCatSel();renderAdminPage();switchCat();
   alert("貓咪清單匯入完成");
   e.target.value="";
 }
-
-function updateUserPwd(){
+async function clearColl(col){
+  let batch=db.batch();
+  let snap=await col.get();
+  snap.forEach(d=>batch.delete(d.ref));
+  await batch.commit();
+}
+async function updateUserPwd(){
   let old=document.getElementById("oldUserPwd").value.trim();
   let n1=document.getElementById("newUserPwd").value.trim();
   let n2=document.getElementById("newUserPwd2").value.trim();
   let tip=document.getElementById("pwdTip");
-  if(!START_PASSWORDS.includes(old)){tip.innerText="舊密碼錯誤";tip.style.color="var(--danger)";return}
+  const doc=await db.collection("system").doc("config").get();
+  cloudPasswords=doc.data().userPasswords||[];
+  if(!cloudPasswords.includes(old)){tip.innerText="舊密碼錯誤";tip.style.color="var(--danger)";return}
   if(n1!==n2){tip.innerText="兩次新密碼不一致";tip.style.color="var(--danger)";return}
   if(n1.length<4){tip.innerText="密碼至少4位";tip.style.color="var(--danger)";return}
-  // 更換使用者密碼清單
-  START_PASSWORDS.length=0;
-  START_PASSWORDS.push(n1);
-  localStorage.setItem("userPwdSet",JSON.stringify([n1]));
-  tip.innerText="使用者密碼更新成功";tip.style.color="var(--success)";
+  await db.collection("system").doc("config").update({userPasswords:[n1]});
+  cloudPasswords=[n1];
+  tip.innerText="使用者密碼更新成功（已存雲端）";
+  tip.style.color="var(--success)";
+  document.getElementById("oldUserPwd").value="";
+  document.getElementById("newUserPwd").value="";
+  document.getElementById("newUserPwd2").value="";
 }
-
 async function clearAllData(){
-  let p=prompt("管理員密碼確認清空");if(p!==ADMIN_PWD)return;
-  if(!confirm("徹底清空所有數據無法恢復"))return;
+  if(prompt("管理員密碼確認清空")!==ADMIN_PWD)return;
+  if(!confirm("徹底清空所有雲端數據無法恢復"))return;
   for(let c of catList){
-    let cols=["catWater_"+c.id,"catWeight_"+c.id,"catDeworm_"+c.id];
-    for(let cl of cols){
-      let s=await db.collection(cl).get();
-      let batch=db.batch();
-      s.forEach(d=>batch.delete(d.ref));
-      await batch.commit();
-    }
+    await clearColl(db.collection("catWater_"+c.id));
+    await clearColl(db.collection("catWeight_"+c.id));
+    await clearColl(db.collection("catDeworm_"+c.id));
   }
-  alert("全部數據已清空");switchCat();
-}
-
-function renderWater(){
-  let d=document.getElementById("selDate").value;
-  let list=waterData.filter(x=>x.date===d).sort((a,b)=>b.time.localeCompare(a.time));
-  let total=list.reduce((s,x)=>s+x.ml,0);
-  document.getElementById("waterListBox").innerHTML=`
-  <div style="text-align:center;font-size:20px;margin-bottom:10px">今日總計：${total}ml</div>
-  ${list.map(x=>`<div class="item-row">${x.time}｜${x.ml}ml</div>`).join("")}`;
-}
-function renderWeight(){
-  let list=[...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById("weightListBox").innerHTML=list.map(x=>`
-  <div class="item-row">${x.date}｜${x.weight}kg｜${x.note||""}</div>`).join("");
-}
-function renderDeworm(){
-  let list=[...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById("dewormListBox").innerHTML=list.map(x=>`
-  <div class="item-row">${x.date}｜${x.drug}｜下次${x.next||""}</div>`).join("");
+  alert("全部雲端數據已清空");switchCat();
 }
 </script>
 </body>
