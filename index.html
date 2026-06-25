@@ -291,6 +291,8 @@ input#importFile { display: none; }
   margin-bottom: 12px;
   line-height: 1.5;
 }
+.text-expired { color: var(--danger); font-weight: 600; }
+.text-soon { color: var(--warn); font-weight: 600; }
 
 .record-table {
   width: 100%;
@@ -427,6 +429,7 @@ input#importFile { display: none; }
     <button class="tab-btn active" data-tab="water">飲水紀錄</button>
     <button class="tab-btn" data-tab="weight">體重紀錄</button>
     <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
+    <button class="tab-btn" data-tab="medicine">用藥/就醫備忘</button>
     <button class="tab-btn" data-tab="admin" id="tabBtnAdmin">系統後台</button>
   </div>
 
@@ -495,22 +498,29 @@ input#importFile { display: none; }
     </div>
   </div>
 
+  <!-- 修改後驅蟲模組 -->
   <div class="tab-content" id="tab-deworm">
-    <div class="info-banner">🐛 體外驅蟲紀錄｜提醒下次使用時間</div>
+    <div class="info-banner">🐛 體外驅蟲紀錄｜自動推算下次日期，7天內黃字、過期紅字提醒</div>
     <div class="ui-card">
-      <input class="form-input" type="date" id="dewormDate">
+      <input class="form-input" type="date" id="dewormDate" onchange="autoCalcNextDeworm()">
       <select class="form-input" id="dewormDrug">
         <option value="">請選擇藥品</option>
         <option value="全能貓">全能貓</option>
         <option value="寵     愛">寵   愛</option>
       </select>
-      <input class="form-input" type="date" id="dewormNext" placeholder="預計下次使用日期">
+      <select class="form-input" id="dewormCycle" onchange="autoCalcNextDeworm()">
+        <option value="">自動間隔週期</option>
+        <option value="30">30 天</option>
+        <option value="45">45 天</option>
+        <option value="60">60 天</option>
+      </select>
+      <input class="form-input" type="date" id="dewormNext" placeholder="預計下次使用日期(可手動修改)">
       <button class="btn-primary" onclick="addDeworm()">✅ 新增驅蟲紀錄</button>
     </div>
 
     <div class="ui-card">
       <table class="record-table">
-        <thead><tr><th>使用日期</th><th>藥品</th><th>下次日期</th><th>刪除</th></tr></thead>
+        <thead><tr><th>使用日期</th><th>藥品</th><th>下次日期</th><th>狀態</th><th>刪除</th></tr></thead>
         <tbody id="dewormBody"></tbody>
       </table>
       <div class="btn-row">
@@ -518,6 +528,43 @@ input#importFile { display: none; }
         <button class="btn-import" onclick="triggerParaImport()">📥 匯入CSV</button>
       </div>
       <input type="file" id="importParaFile" accept=".csv" style="display:none;" onchange="importParaCSV(event)">
+    </div>
+  </div>
+
+  <!-- 新增：用藥/就醫備忘模組 -->
+  <div class="tab-content" id="tab-medicine">
+    <div class="info-banner">💊 用藥/就醫備忘｜支援連續療程一鍵批量新增、到期醒目提醒</div>
+    <div class="ui-card">
+      <input class="form-input" type="date" id="medStartDate" placeholder="起始用藥/就醫日期">
+      <input class="form-input" id="medName" placeholder="藥品名稱">
+      <input class="form-input" id="medDosage" placeholder="劑量">
+      <input class="form-input" id="medFreq" placeholder="頻率(例:一天兩次)">
+      <div class="quick-btn-group">
+        <input class="form-input" type="number" id="medCourseDay" min="1" value="7" style="flex:1" placeholder="療程天數">
+        <button class="btn-quick" onclick="batchAddMedicine()">連續療程批量新增</button>
+      </div>
+      <input class="form-input" id="medNote" placeholder="備註">
+      <input class="form-input" type="date" id="medNextVisit" placeholder="下次回診日">
+      <button class="btn-primary" onclick="singleAddMedicine()">✅ 單筆新增備忘</button>
+    </div>
+    <div class="ui-card">
+      <table class="record-table">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>藥品</th>
+            <th>回診日</th>
+            <th>狀態</th>
+            <th>刪除</th>
+          </tr>
+        </thead>
+        <tbody id="medicineBody"></tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportMedicineCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="triggerMedicineImport()">📥 匯入CSV</button>
+      </div>
+      <input type="file" id="importMedicineFile" accept=".csv" style="display:none;" onchange="importMedicineCSV(event)">
     </div>
   </div>
 
@@ -566,6 +613,9 @@ input#importFile { display: none; }
       </div>
       <div class="grid-3col">
         <button class="btn-export" onclick="exportParaCSV()">匯出全部驅蟲</button>
+        <button class="btn-export" onclick="exportMedicineCSV()">匯出全部用藥</button>
+      </div>
+      <div class="grid-3col">
         <button class="btn-export" onclick="exportAdminCatListCSV()">匯出貓咪清單</button>
       </div>
       <div class="grid-3col" style="margin-top:12px;">
@@ -574,6 +624,9 @@ input#importFile { display: none; }
       </div>
       <div class="grid-3col">
         <button class="btn-import" onclick="triggerParaImport()">匯入驅蟲數據</button>
+        <button class="btn-import" onclick="triggerMedicineImport()">匯入用藥數據</button>
+      </div>
+      <div class="grid-3col">
         <button class="btn-import" onclick="triggerCatListImport()">匯入貓咪清單</button>
       </div>
       <input type="file" id="importCatListFile" accept=".csv" style="display:none;" onchange="importCatListCSV(event)">
@@ -708,6 +761,7 @@ let currentCatName = "波波";
 let waterUnsubscribe = null;
 let weightUnsubscribe = null;
 let dewormUnsubscribe = null;
+let medicineUnsubscribe = null;
 
 function initCatSystem(){
   renderCatSelect();
@@ -734,6 +788,7 @@ function switchCat(){
   if(waterUnsubscribe) waterUnsubscribe();
   if(weightUnsubscribe) weightUnsubscribe();
   if(dewormUnsubscribe) dewormUnsubscribe();
+  if(medicineUnsubscribe) medicineUnsubscribe();
 
   currentCat = document.getElementById("catSelect").value;
   const catObj = catList.find(c=>c.id === currentCat);
@@ -742,10 +797,12 @@ function switchCat(){
   recordData = [];
   weightData = [];
   dewormData = [];
+  medicineData = [];
   weightCurrentPage = 1;
   renderPage();
   renderWeight();
   renderDeworm();
+  renderMedicine();
 
   listenAllData();
 }
@@ -771,6 +828,7 @@ function executeTabSwitch(element, tabName) {
   if(tabName==="water")document.getElementById("tab-water").classList.add("active");
   if(tabName==="weight")document.getElementById("tab-weight").classList.add("active");
   if(tabName==="deworm")document.getElementById("tab-deworm").classList.add("active");
+  if(tabName==="medicine")document.getElementById("tab-medicine").classList.add("active");
   if(tabName==="admin") {
     document.getElementById("tab-admin").classList.add("active");
     renderAdminCatList();
@@ -802,14 +860,15 @@ function adminLogout() {
   alert("後台已安全登出。");
 }
 
-let waterCol, weightCol, dewormCol;
-let recordData = [], weightData = [], dewormData = [];
+let waterCol, weightCol, dewormCol, medicineCol;
+let recordData = [], weightData = [], dewormData = [], medicineData = [];
 let darkMode = localStorage.getItem('darkMode') === 'true';
 
 function listenAllData(){
   waterCol = db.collection(`catWater_${currentCat}`);
   weightCol = db.collection(`catWeight_${currentCat}`);
   dewormCol = db.collection(`catDeworm_${currentCat}`);
+  medicineCol = db.collection(`catMedicine_${currentCat}`);
 
   waterUnsubscribe = waterCol.onSnapshot(snap=>{
     recordData=[]; snap.forEach(d=>recordData.push(d.data()));
@@ -827,6 +886,10 @@ function listenAllData(){
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
     renderDeworm();
   });
+  medicineUnsubscribe = medicineCol.onSnapshot(snap=>{
+    medicineData=[]; snap.forEach(d=>medicineData.push(d.data()));
+    renderMedicine();
+  });
 }
 
 const setNow = () => {
@@ -836,6 +899,8 @@ const setNow = () => {
   document.getElementById('selectTime').value = nowTime;
   document.getElementById('weightDate').value = today;
   document.getElementById('dewormDate').value = today;
+  document.getElementById('medStartDate').value = today;
+  autoCalcNextDeworm();
 };
 
 function toggleDarkMode(){
@@ -1034,521 +1099,4 @@ function renderWeight(){
         align-items: center;
         justify-content: center;
       }
-      .btn-page-num.active {
-        background: var(--primary);
-        color: #fff;
-        font-weight: bold;
-      }
-      .weight-page-search {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        color: var(--text-main);
-      }
-      .input-page-go {
-        width: 50px;
-        padding: 5px;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        background: var(--input-bg);
-        color: var(--text-main);
-        text-align: center;
-        font-size: 13px;
-      }
-      .btn-page-go {
-        padding: 5px 10px;
-        border: none;
-        background: var(--primary-light);
-        color: var(--primary);
-        border-radius: 8px;
-        font-size: 13px;
-        cursor: pointer;
-        font-weight: 500;
-      }
-    </style>
-    <div class="weight-pagination-wrap">
-      <div class="weight-page-row">
-        <button class="btn-page-nav" onclick="weightPrevPage()" ${weightCurrentPage<=1?'disabled':''}>上一頁</button>
-  `;
-
-  let startPage = Math.max(1, weightCurrentPage - 2);
-  let endPage = Math.min(totalPage, startPage + 4);
-  if (endPage - startPage < 4) {
-    startPage = Math.max(1, endPage - 4);
-  }
-
-  for (let i = startPage; i <= endPage; i++) {
-    paginationHtml += `<button class="btn-page-num ${i===weightCurrentPage?'active':''}" onclick="weightGoToPage(${i})">${i}</button>`;
-  }
-
-  paginationHtml += `
-        <button class="btn-page-nav" onclick="weightNextPage()" ${weightCurrentPage>=totalPage?'disabled':''}>下一頁</button>
-      </div>
-      <div class="weight-page-search">
-        <span>共 ${totalPage} 頁，跳至</span>
-        <input type="number" class="input-page-go" id="targetPageInput" min="1" max="${totalPage}" value="${weightCurrentPage}" inputmode="numeric">
-        <span>頁</span>
-        <button class="btn-page-go" onclick="weightSearchPage()">確定</button>
-      </div>
-    </div>
-  `;
-
-  const oldPagination = document.querySelector(".weight-pagination-wrap");
-  if(oldPagination) oldPagination.remove();
-  document.getElementById("weightBody").parentNode.insertAdjacentHTML("afterend", paginationHtml);
-
-  setTimeout(() => {
-    const input = document.getElementById("targetPageInput");
-    if(input) {
-      input.addEventListener("keydown", e => {
-        if(e.key === "Enter") weightSearchPage();
-      });
-    }
-  }, 50);
-
-  // 3. 更新上方統計數據 (同樣加上自動去掉無意義 .00 的邏輯)
-  if(allList.length){
-    document.getElementById("weightLatest").innerText=`最新：${parseFloat(allList[0].weight)} kg`;
-    const vals=allList.map(x=>parseFloat(x.weight));
-    const avg = parseFloat((vals.reduce((s,x)=>s+x,0)/vals.length).toFixed(2));
-    const diff = allList.length>=2 ? parseFloat((vals[0]-vals[1]).toFixed(2)) : 0;
-
-    let maxItem = allList[0];
-    let minItem = allList[0];
-    allList.forEach(x => {
-      if (parseFloat(x.weight) > parseFloat(maxItem.weight)) maxItem = x;
-      if (parseFloat(x.weight) < parseFloat(minItem.weight)) minItem = x;
-    });
-
-    document.getElementById("wMax").innerHTML=`${parseFloat(maxItem.weight)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${maxItem.date})</span>`;
-    document.getElementById("wMin").innerHTML=`${parseFloat(minItem.weight)} kg<br><span style="font-size:11px; font-weight:normal; opacity:0.75;">(${minItem.date})</span>`;
-    document.getElementById("wAvg").innerText=avg+" kg";
-    document.getElementById("wDiff").innerText=diff+" kg";
-  } else {
-    document.getElementById("weightLatest").innerText=`最新：0 kg`;
-    document.getElementById("wMax").innerHTML="0 kg";
-    document.getElementById("wMin").innerHTML="0 kg";
-    document.getElementById("wAvg").innerText="0 kg";
-    document.getElementById("wDiff").innerText="0 kg";
-  }
-}
-
-// 體重換頁控制函數組
-function weightPrevPage(){
-  if(weightCurrentPage>1){
-    weightCurrentPage--;
-    renderWeight();
-  }
-}
-
-function weightNextPage(){
-  const total = Math.ceil(weightData.length / WEIGHT_PAGE_SIZE) || 1;
-  if(weightCurrentPage<total){
-    weightCurrentPage++;
-    renderWeight();
-  }
-}
-
-function weightGoToPage(page){
-  weightCurrentPage = page;
-  renderWeight();
-}
-
-function weightSearchPage(){
-  const input = document.getElementById("targetPageInput");
-  if(!input) return;
-  let page = parseInt(input.value, 10);
-  const total = Math.ceil(weightData.length / WEIGHT_PAGE_SIZE) || 1;
-  
-  if(isNaN(page) || page < 1) {
-    page = 1;
-  } else if(page > total) {
-    page = total;
-  }
-  
-  weightCurrentPage = page;
-  renderWeight();
-}
-
-async function addDeworm(){
-  const d=document.getElementById("dewormDate").value;
-  const drug=document.getElementById("dewormDrug").value.trim();
-  const next=document.getElementById("dewormNext").value;
-  if(!d||!drug)return alert("請輸入完整資訊");
-  await dewormCol.add({date:d,drug,nextDate:next,stamp:Date.now()});
-  document.getElementById("dewormDrug").value="";
-  document.getElementById("dewormNext").value="";
-}
-
-async function delDeworm(stamp){
-  if(!confirm("確定刪除此筆驅蟲？")) return;
-  const s=await dewormCol.where("stamp","==",stamp).get();
-  s.forEach(x=>x.ref.delete());
-}
-
-function renderDeworm(){
-  const list=[...dewormData].sort((a,b)=>new Date(b.date)-new Date(a.date));
-  document.getElementById("dewormBody").innerHTML=list.map(x=>`
-  <tr>
-    <td>${x.date}</td>
-    <td>${x.drug}</td>
-    <td>${x.nextDate||"-"}</td>
-    <td><button class='btn-delete' onclick='delDeworm(${x.stamp})'>刪</button></td>
-  </tr>`).join("");
-}
-
-function exportWeightCSV() {
-  if (!weightData.length) {alert("目前沒有體重紀錄");return;}
-  let csv = "\uFEFF日期,體重(kg),備註\n";
-  weightData.forEach(item => {
-    const d = (item.date || "");
-    const w = item.weight;
-    const n = (item.note || "").replace(/"/g, '""');
-    csv += `"${d}","${w}","${n}"\n`;
-  });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv]));
-  a.download = `${currentCatName}_體重紀錄.csv`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-}
-
-function triggerWeightImport(){document.getElementById("importWeightFile").click();}
-async function importWeightCSV(e){
-  const file = e.target.files[0];if(!file)return;
-  const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
-  
-  if(isOverwrite) {
-    if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
-    const snapAll = await weightCol.get();
-    const batch = db.batch();
-    snapAll.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
-  } else {
-    if(!confirm("將以[增量]模式匯入體重資料，確定？"))return;
-  }
-
-  const text = await file.text();
-  const lines = text.replace(/^\uFEFF/, "").split("\n").filter(l=>l.trim());
-  let count=0;
-  for(let i=1;i<lines.length;i++){
-    const parts=lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
-    const date=parts[0], weight=parts[1], note=parts[2]||"";
-    if(!date||!weight||isNaN(parseFloat(weight)))continue;
-    await weightCol.add({date,weight:parseFloat(weight),note,stamp:Date.now()+i});
-    count++;
-  }
-  alert(`體重匯入完成：${count} 筆`);
-  document.getElementById("importWeightFile").value="";
-}
-
-function exportParaCSV() {
-  if (!dewormData.length) {alert("目前沒有驅蟲紀錄");return;}
-  let csv = "\uFEFF日期,藥品,下次日期\n";
-  dewormData.forEach(item => {
-    const d = (item.date || "");
-    const drug = (item.drug || "").replace(/"/g, '""');
-    const next = (item.nextDate || "");
-    csv += `"${d}","${drug}","${next}"\n`;
-  });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv]));
-  a.download = `${currentCatName}_驅蟲紀錄.csv`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-}
-
-function triggerParaImport(){document.getElementById("importParaFile").click();}
-async function importParaCSV(e){
-  const file=e.target.files[0];if(!file)return;
-  const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
-
-  if(isOverwrite) {
-    if(!confirm("匯入將覆蓋全部舊資料，確定繼續？")) return;
-    const snapAll = await dewormCol.get();
-    const batch = db.batch();
-    snapAll.forEach(doc => batch.delete(doc.ref));
-    await batch.commit();
-  } else {
-    if(!confirm("將以[增量]模式匯入驅蟲資料，確定？"))return;
-  }
-
-  const text=await file.text();
-  const lines=text.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
-  let count=0;
-  for(let i=1;i<lines.length;i++){
-    const parts=lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
-    const date=parts[0], drug=parts[1], nextDate=parts[2]||"";
-    if(!date||!drug)continue;
-    await dewormCol.add({date,drug,nextDate,stamp:Date.now()+i});
-    count++;
-  }
-  alert(`驅蟲匯入完成：${count} 筆`);
-  document.getElementById("importParaFile").value="";
-}
-
-function showClearAllConfirm() {
-  if (!confirm("⚠️ 警告：將刪除所有貓咪的「飲水、體重、驅蟲」全部資料！\n貓咪名單不會刪除，確定要繼續？")) return;
-
-  let inputPwd = "";
-  while(true){
-    inputPwd = prompt("請輸入登入密碼以確認清除：");
-    if(inputPwd === null) return;
-    inputPwd = inputPwd.trim();
-    if(inputPwd !== "") break;
-    alert("❌ 不可以空白！");
-  }
-  if (!validPws.includes(inputPwd)) {alert("❌ 密碼錯誤");return;}
-  clearAllCatsAllData();
-}
-
-async function clearAllCatsAllData() {
-  try {
-    for (const cat of catList) {
-      const colls = [`catWater_${cat.id}`, `catWeight_${cat.id}`, `catDeworm_${cat.id}`];
-      for (const collName of colls) {
-        const snap = await db.collection(collName).get();
-        const batch = db.batch();
-        snap.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-      }
-    }
-    alert("✅ 所有數據已清除！");
-  } catch (err) {
-    alert("❌ 失敗："+err.message);
-  }
-}
-
-function renderAdminCatList() {
-  const container = document.getElementById("adminCatList");
-  if(catList.length === 0) {
-    container.innerHTML = `<div style="text-align:center; padding:10px; color:#aaa;">尚無貓咪檔案</div>`;
-    return;
-  }
-  container.innerHTML = catList.map(cat => `
-    <div class="admin-cat-item">
-      <span>${cat.name || 'undefined'}</span>
-      <div>
-        <button class="btn-clear-day" style="padding:4px 10px; border-radius:8px; font-size:12px;" onclick="editCatName('${cat.id}')">編輯</button>
-        <button class="btn-delete" style="padding:4px 10px; border-radius:8px; font-size:12px;" onclick="deleteCatProfile('${cat.id}')">刪除</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-function editCatName(id) {
-  const cat = catList.find(c => c.id === id);
-  if(!cat) return;
-  const newName = prompt(`請輸入貓咪 [${cat.name}] 的新名稱:`, cat.name);
-  if(!newName || newName.trim() === "") return;
-  cat.name = newName.trim();
-  localStorage.setItem("petCats", JSON.stringify(catList));
-  renderCatSelect();
-  renderAdminCatList();
-  if(currentCat === id) currentCatName = cat.name;
-}
-
-async function deleteCatProfile(id) {
-  const cat = catList.find(c => c.id === id);
-  if(!cat) return;
-  if(!confirm(`⚠️ 警告：確定要刪除貓咪 [${cat.name}] 嗎？\n這將一併永久抹除該貓咪在雲端的飲水、體重、驅蟲所有資料且無法復原！`)) return;
-  
-  try {
-    const colls = [`catWater_${id}`, `catWeight_${id}`, `catDeworm_${id}`];
-    for (const collName of colls) {
-      const snap = await db.collection(collName).get();
-      const batch = db.batch();
-      snap.forEach(doc => batch.delete(doc.ref));
-      await batch.commit();
-    }
-    catList = catList.filter(c => c.id !== id);
-    if(catList.length === 0) {
-      catList.push({id: "default", name: "波波"});
-    }
-    localStorage.setItem("petCats", JSON.stringify(catList));
-    renderCatSelect();
-    document.getElementById("catSelect").value = catList[0].id;
-    switchCat();
-    renderAdminCatList();
-    alert("✅ 貓咪檔案與全數數據已安全移除。");
-  } catch(e) {
-    alert("❌ 刪除失敗: " + e.message);
-  }
-}
-
-function updateAdminPassword() {
-  const oldPwd = document.getElementById("oldAdminPwd").value.trim();
-  const newPwd = document.getElementById("newAdminPwd").value.trim();
-  const confPwd = document.getElementById("confirmAdminPwd").value.trim();
-
-  if(!oldPwd || !newPwd || !confPwd) {
-    return alert("請填寫所有密碼欄位！");
-  }
-  if(!validPws.includes(oldPwd)) {
-    return alert("❌ 舊登入密碼驗證錯誤！");
-  }
-  if(newPwd !== confPwd) {
-    return alert("❌ 兩次輸入的新密碼不一致！");
-  }
-  if(newPwd.length < 4) {
-    return alert("密碼強度過低，請輸入至少4位數。");
-  }
-
-  validPws.push(newPwd);
-  alert("✅ 使用者密碼更新成功！新密碼即時生效。");
-  document.getElementById("oldAdminPwd").value = "";
-  document.getElementById("newAdminPwd").value = "";
-  document.getElementById("confirmAdminPwd").value = "";
-}
-
-function exportAdminCatListCSV() {
-  if(!catList.length) return alert("無資料");
-  let csv = "\uFEFF貓咪ID,貓咪名稱\n";
-  catList.forEach(c => csv += `"${c.id}","${c.name}"\n`);
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([csv]));
-  a.download = `貓咪清單備份.csv`;
-  a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-}
-
-function triggerCatListImport() { document.getElementById("importCatListFile").click(); }
-async function importCatListCSV(e) {
-  const file = e.target.files[0]; if(!file) return;
-  const isOverwrite = document.querySelector('input[name="categoryMode"]:checked')?.value === 'overwrite';
-  
-  if(isOverwrite) {
-    if(!confirm("確定要[覆蓋匯入]貓咪名單嗎？此操作將取代現有名單。")) return;
-    catList = [];
-  } else {
-    if(!confirm("將以[增量]模式追加貓咪名單？")) return;
-  }
-
-  const text = await file.text();
-  const lines = text.replace(/^\uFEFF/,"").split("\n").filter(l=>l.trim());
-  let count = 0;
-  for(let i=1; i<lines.length; i++) {
-    const parts = lines[i].split(",").map(p=>p.replace(/^"|"$/g,"").trim());
-    const id = parts[0], name = parts[1];
-    if(!id || !name) continue;
-    if(!catList.some(c => c.id === id)) {
-      catList.push({ id, name });
-      count++;
-    }
-  }
-  localStorage.setItem("petCats", JSON.stringify(catList));
-  renderCatSelect();
-  renderAdminCatList();
-  alert(`貓咪清單匯入完成：${count} 筆`);
-  document.getElementById("importCatListFile").value = "";
-}
-
-async function exportAllDataJSON() {
-  document.getElementById("syncBadge").innerText = "⏳ 正在打包備份全域數據...";
-  try {
-    let backupPackage = {
-      version: "2026.1",
-      timestamp: Date.now(),
-      cats: catList,
-      payload: {}
-    };
-
-    for (const cat of catList) {
-      backupPackage.payload[cat.id] = { water: [], weight: [], deworm: [] };
-      
-      const waterSnap = await db.collection(`catWater_${cat.id}`).get();
-      waterSnap.forEach(d => backupPackage.payload[cat.id].water.push(d.data()));
-
-      const weightSnap = await db.collection(`catWeight_${cat.id}`).get();
-      weightSnap.forEach(d => backupPackage.payload[cat.id].weight.push(d.data()));
-
-      const dewormSnap = await db.collection(`catDeworm_${cat.id}`).get();
-      dewormSnap.forEach(d => backupPackage.payload[cat.id].deworm.push(d.data()));
-    }
-
-    const blob = new Blob([JSON.stringify(backupPackage, null, 2)], {type: "application/json"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `貓貓健康全紀錄_全域完整雲端備份_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    document.getElementById("syncBadge").innerText = "☁️ 已同步";
-    alert("✅ 雲端全域完整備份打包下載完成！");
-  } catch(err) {
-    alert("❌ 備份打包失敗: " + err.message);
-  }
-}
-
-function triggerAllRestore() { document.getElementById("importAllFile").click(); }
-async function importAllDataJSON(e) {
-  const file = e.target.files[0]; if(!file) return;
-  const isOverwrite = document.querySelector('input[name="restoreMode"]:checked')?.value === 'overwrite';
-
-  try {
-    const text = await file.text();
-    const backupData = JSON.parse(text);
-    
-    if(!backupData.version || !backupData.payload) {
-      return alert("❌ 還原失敗：此檔案非本系統標準全域Json備份檔！");
-    }
-
-    const modeText = isOverwrite ? "【覆蓋還原】" : "【增量匯入】";
-    const confirmPrompt = isOverwrite 
-      ? `⚠️ 警告：即將執行 ${modeText}！\n這會清除雲端資料庫上所有貓咪的現有全部飲水、體重、驅蟲數據，並覆蓋取代為備份檔內容！確認繼續？`
-      : `確認是否執行 ${modeText}？\n系統會保留現有雲端數據，僅追加備份檔中的新紀錄。確認繼續？`;
-
-    if(!confirm(confirmPrompt)) return;
-    document.getElementById("syncBadge").innerText = "⏳ 雲端數據還原佈署中...";
-
-    if(isOverwrite) {
-      for (const oldCat of catList) {
-        const colls = [`catWater_${oldCat.id}`, `catWeight_${oldCat.id}`, `catDeworm_${oldCat.id}`];
-        for (const cName of colls) {
-          const snap = await db.collection(cName).get();
-          const batch = db.batch();
-          snap.forEach(d => batch.delete(d.ref));
-          await batch.commit();
-        }
-      }
-      catList = backupData.cats || [];
-    } else {
-      if(backupData.cats) {
-        backupData.cats.forEach(nc => {
-          if(!catList.some(oc => oc.id === nc.id)) catList.push(nc);
-        });
-      }
-    }
-
-    localStorage.setItem("petCats", JSON.stringify(catList));
-    renderCatSelect();
-
-    for (const catId in backupData.payload) {
-      const target = backupData.payload[catId];
-      
-      if(target.water && target.water.length) {
-        const coll = db.collection(`catWater_${catId}`);
-        for(const item of target.water) await coll.add(item);
-      }
-      if(target.weight && target.weight.length) {
-        const coll = db.collection(`catWeight_${catId}`);
-        for(const item of target.weight) await coll.add(item);
-      }
-      if(target.deworm && target.deworm.length) {
-        const coll = db.collection(`catDeworm_${catId}`);
-        for(const item of target.deworm) await coll.add(item);
-      }
-    }
-
-    document.getElementById("catSelect").value = catList[0].id;
-    switchCat();
-    renderAdminCatList();
-    alert(`✅ 全域數據${modeText}還原處置已成功完成！`);
-  } catch(err) {
-    alert("❌ 解析還原出錯: " + err.message);
-  } finally {
-    document.getElementById("importAllFile").value = "";
-  }
-}
-</script>
-</body>
-</html>
+     
