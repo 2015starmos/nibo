@@ -275,6 +275,7 @@ body {
 }
 
 input#importFile { display: none; }
+input#importPeePoopFile { display: none; }
 
 .today-total-box {
   text-align: center;
@@ -436,6 +437,7 @@ input#importFile { display: none; }
     <button class="tab-btn active" data-tab="water">飲水紀錄</button>
     <button class="tab-btn" data-tab="weight">體重紀錄</button>
     <button class="tab-btn" data-tab="deworm">體外驅蟲</button>
+    <button class="tab-btn" data-tab="peepoop">排尿排便</button>
     <button class="tab-btn" data-tab="admin" id="tabBtnAdmin">系統後台</button>
   </div>
 
@@ -535,6 +537,54 @@ input#importFile { display: none; }
     </div>
   </div>
 
+  <!-- 新增：排尿排便模組 -->
+  <div class="tab-content" id="tab-peepoop">
+    <div class="info-banner">💩 排尿排便監控｜預防尿閉、腸胃異常觀察</div>
+    <div class="ui-card">
+      <input class="form-input" type="date" id="poopDate">
+      <input class="form-input" type="time" id="poopTime">
+      <input class="form-input" type="number" min="0" id="peeCount" placeholder="排尿次數">
+      <input class="form-input" type="number" min="0" id="poopCount" placeholder="排便次數">
+      <select class="form-input" id="poopType">
+        <option value="">糞便型態</option>
+        <option value="正常">正常</option>
+        <option value="軟便">軟便</option>
+        <option value="水便">水便</option>
+        <option value="便秘">便秘</option>
+        <option value="帶血">帶血</option>
+      </select>
+      <select class="form-input" id="peeVolume">
+        <option value="">尿量狀態</option>
+        <option value="偏少">偏少</option>
+        <option value="正常">正常</option>
+        <option value="偏多">偏多</option>
+      </select>
+      <input class="form-input" id="poopNote" placeholder="備註">
+      <button class="btn-primary" onclick="addPeePoop()">✅ 新增排便排尿紀錄</button>
+    </div>
+
+    <div class="ui-card">
+      <div class="today-total-box" id="peePoopSummary">今日統計</div>
+      <div id="peePoopWarn" style="text-align:center;margin:8px 0;"></div>
+      <table class="record-table">
+        <thead>
+          <tr>
+            <th>時間</th>
+            <th>尿/便</th>
+            <th>狀態</th>
+            <th>刪除</th>
+          </tr>
+        </thead>
+        <tbody id="peePoopBody"></tbody>
+      </table>
+      <div class="btn-row">
+        <button class="btn-export" onclick="exportPeePoopCSV()">📤 匯出CSV</button>
+        <button class="btn-import" onclick="triggerPeePoopImport()">📥 匯入CSV</button>
+      </div>
+      <input type="file" id="importPeePoopFile" accept=".csv" onchange="importPeePoopCSV(event)">
+    </div>
+  </div>
+
   <div class="tab-content" id="tab-admin">
     <div class="info-banner">⚙️ 專業管理後台</div>
     
@@ -580,7 +630,11 @@ input#importFile { display: none; }
       </div>
       <div class="grid-3col">
         <button class="btn-export" onclick="exportParaCSV()">匯出全部驅蟲</button>
+        <button class="btn-export" onclick="exportPeePoopCSV()">匯出排尿排便</button>
+      </div>
+      <div class="grid-3col">
         <button class="btn-export" onclick="exportAdminCatListCSV()">匯出貓咪清單</button>
+        <button class="btn-export" disabled style="opacity:0.3;">—</button>
       </div>
       <div class="grid-3col" style="margin-top:12px;">
         <button class="btn-import" onclick="triggerImport()">匯入飲水數據</button>
@@ -588,7 +642,11 @@ input#importFile { display: none; }
       </div>
       <div class="grid-3col">
         <button class="btn-import" onclick="triggerParaImport()">匯入驅蟲數據</button>
+        <button class="btn-import" onclick="triggerPeePoopImport()">匯入排尿排便</button>
+      </div>
+      <div class="grid-3col">
         <button class="btn-import" onclick="triggerCatListImport()">匯入貓咪清單</button>
+        <button class="btn-import" disabled style="opacity:0.3;">—</button>
       </div>
       <input type="file" id="importCatListFile" accept=".csv" style="display:none;" onchange="importCatListCSV(event)">
     </div>
@@ -620,6 +678,11 @@ let isAdminAuthenticated = false;
 // 體重分頁參數
 const WEIGHT_PAGE_SIZE = 5;
 let weightCurrentPage = 1;
+
+// 排尿排便全域變數
+let peePoopUnsubscribe = null;
+let peePoopData = [];
+let peePoopCol;
 
 window.addEventListener('DOMContentLoaded', () => {
   const savePwdCheck = document.getElementById('savePwdCheck');
@@ -748,6 +811,7 @@ function switchCat(){
   if(waterUnsubscribe) waterUnsubscribe();
   if(weightUnsubscribe) weightUnsubscribe();
   if(dewormUnsubscribe) dewormUnsubscribe();
+  if(peePoopUnsubscribe) peePoopUnsubscribe();
 
   currentCat = document.getElementById("catSelect").value;
   const catObj = catList.find(c=>c.id === currentCat);
@@ -756,10 +820,12 @@ function switchCat(){
   recordData = [];
   weightData = [];
   dewormData = [];
+  peePoopData = [];
   weightCurrentPage = 1;
   renderPage();
   renderWeight();
   renderDeworm();
+  renderPeePoop();
 
   listenAllData();
 }
@@ -785,6 +851,7 @@ function executeTabSwitch(element, tabName) {
   if(tabName==="water")document.getElementById("tab-water").classList.add("active");
   if(tabName==="weight")document.getElementById("tab-weight").classList.add("active");
   if(tabName==="deworm")document.getElementById("tab-deworm").classList.add("active");
+  if(tabName==="peepoop")document.getElementById("tab-peepoop").classList.add("active");
   if(tabName==="admin") {
     document.getElementById("tab-admin").classList.add("active");
     renderAdminCatList();
@@ -824,6 +891,7 @@ function listenAllData(){
   waterCol = db.collection(`catWater_${currentCat}`);
   weightCol = db.collection(`catWeight_${currentCat}`);
   dewormCol = db.collection(`catDeworm_${currentCat}`);
+  peePoopCol = db.collection(`catPeePoop_${currentCat}`);
 
   waterUnsubscribe = waterCol.onSnapshot(snap=>{
     recordData=[]; snap.forEach(d=>recordData.push(d.data()));
@@ -841,6 +909,10 @@ function listenAllData(){
     dewormData=[]; snap.forEach(d=>dewormData.push(d.data()));
     renderDeworm();
   });
+  peePoopUnsubscribe = peePoopCol.onSnapshot(snap=>{
+    peePoopData=[]; snap.forEach(d=>peePoopData.push(d.data()));
+    renderPeePoop();
+  });
 }
 
 const setNow = () => {
@@ -850,10 +922,12 @@ const setNow = () => {
   document.getElementById('selectTime').value = nowTime;
   document.getElementById('weightDate').value = today;
   document.getElementById('dewormDate').value = today;
+  document.getElementById('poopDate').value = today;
+  document.getElementById('poopTime').value = nowTime;
   calcNextDeworm();
 };
 
-// ========== 新增：驅蟲自動計算下次日期 ==========
+// ========== 驅蟲自動計算下次日期 ==========
 function calcNextDeworm(){
   const useDateStr = document.getElementById('dewormDate').value;
   const cycleDay = parseInt(document.getElementById('dewormCycle').value);
@@ -996,7 +1070,6 @@ async function delWeight(stamp){
 
 // 體重分頁渲染 + 新到舊排序（含自動去零點零零邏輯）
 function renderWeight(){
-  // 強制由新到舊排序
   const allList = [...weightData].sort((a,b)=>new Date(b.date)-new Date(a.date));
   const start = (weightCurrentPage - 1) * WEIGHT_PAGE_SIZE;
   const end = start + WEIGHT_PAGE_SIZE;
@@ -1005,7 +1078,6 @@ function renderWeight(){
   const totalPage = Math.ceil(allList.length / WEIGHT_PAGE_SIZE) || 1;
   if(weightCurrentPage > totalPage) weightCurrentPage = totalPage;
 
-  // 1. 生成表格內容 (使用 parseFloat 自動去掉結尾無意義的 0)
   document.getElementById("weightBody").innerHTML = pageList.map(x=>`
   <tr>
     <td>${x.date}</td>
@@ -1014,7 +1086,6 @@ function renderWeight(){
     <td><button class='btn-delete' onclick='delWeight(${x.stamp})'>刪</button></td>
   </tr>`).join("");
 
-  // 2. 建立美化版分頁組件（動態插入樣式與結構）
   let paginationHtml = `
     <style>
       .weight-pagination-wrap {
@@ -1022,117 +1093,3 @@ function renderWeight(){
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 12px;
-        width: 100%;
-      }
-      .weight-page-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        flex-wrap: wrap;
-        width: 100%;
-      }
-      .btn-page-nav {
-        padding: 6px 12px;
-        border: 1px solid var(--border-color);
-        background: var(--input-bg);
-        color: var(--text-main);
-        border-radius: 10px;
-        font-size: 13px;
-        cursor: pointer;
-      }
-      .btn-page-nav:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-      .btn-page-num {
-        min-width: 32px;
-        height: 32px;
-        padding: 0 6px;
-        border: none;
-        background: var(--btn-gray);
-        color: var(--text-main);
-        border-radius: 10px;
-        font-size: 13px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      .btn-page-num.active {
-        background: var(--primary);
-        color: #fff;
-        font-weight: bold;
-      }
-      .weight-page-search {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 13px;
-        color: var(--text-main);
-      }
-      .input-page-go {
-        width: 50px;
-        padding: 5px;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        background: var(--input-bg);
-        color: var(--text-main);
-        text-align: center;
-        font-size: 13px;
-      }
-      .btn-page-go {
-        padding: 5px 10px;
-        border: none;
-        background: var(--primary-light);
-        color: var(--primary);
-        border-radius: 8px;
-        font-size: 13px;
-        cursor: pointer;
-        font-weight: 500;
-      }
-    </style>
-    <div class="weight-pagination-wrap">
-      <div class="weight-page-row">
-        <button class="btn-page-nav" onclick="weightPrevPage()" ${weightCurrentPage<=1?'disabled':''}>上一頁</button>
-  `;
-
-  let startPage = Math.max(1, weightCurrentPage - 2);
-  let endPage = Math.min(totalPage, startPage + 4);
-  if (endPage - startPage < 4) {
-    startPage = Math.max(1, endPage - 4);
-  }
-
-  for (let i = startPage; i <= endPage; i++) {
-    paginationHtml += `<button class="btn-page-num ${i===weightCurrentPage?'active':''}" onclick="weightGoToPage(${i})">${i}</button>`;
-  }
-
-  paginationHtml += `
-        <button class="btn-page-nav" onclick="weightNextPage()" ${weightCurrentPage>=totalPage?'disabled':''}>下一頁</button>
-      </div>
-      <div class="weight-page-search">
-        <span>共 ${totalPage} 頁，跳至</span>
-        <input type="number" class="input-page-go" id="targetPageInput" min="1" max="${totalPage}" value="${weightCurrentPage}" inputmode="numeric">
-        <span>頁</span>
-        <button class="btn-page-go" onclick="weightSearchPage()">確定</button>
-      </div>
-    </div>
-  `;
-
-  const oldPagination = document.querySelector(".weight-pagination-wrap");
-  if(oldPagination) oldPagination.remove();
-  document.getElementById("weightBody").parentNode.insertAdjacentHTML("afterend", paginationHtml);
-
-  setTimeout(() => {
-    const input = document.getElementById("targetPageInput");
-    if(input) {
-      input.addEventListener("keydown", e => {
-        if(e.key === "Enter") weightSearchPage();
-      });
-    }
-  }, 50);
-
-  // 3. 更新上方統計數據 (同樣加上自動去掉無意義 .00 的邏輯)
-  if(allList.length){
-    document.getElementById("weightLatest").innerText=`最新：${parseFloat(allList[0].weight)} kg`
